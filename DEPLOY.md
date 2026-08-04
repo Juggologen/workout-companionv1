@@ -39,20 +39,22 @@ git commit -m "what changed"
 
 ---
 
-## 2. Create the GitHub repository
+## 2. The GitHub repository
 
-Do this part yourself — it needs your account.
+This project pushes to:
 
-1. Go to <https://github.com/new>.
-2. Name it `workout-companion`. **Public** (GitHub Pages is free on public
-   repos; private needs a paid plan).
-3. Do **not** add a README, .gitignore or licence — you already have them.
-4. Create, then run what GitHub shows you, which will be:
-
-```bash
-git remote add origin https://github.com/YOUR-USERNAME/workout-companion.git
-git push -u origin main
 ```
+https://github.com/Juggologen/workout-companionv1
+```
+
+> **The repository must be public.** GitHub Pages does not publish from a
+> private repository on the free plan — you get a 404 at the Pages URL, and so
+> does everyone you send it to. If it is private:
+> **Settings → General → scroll to Danger Zone → Change repository visibility
+> → Make public.**
+>
+> Nothing personal is committed. The tracked files were checked and contain no
+> email address, username, machine path or training data.
 
 ---
 
@@ -64,12 +66,19 @@ In the repository: **Settings → Pages → Source: Deploy from a branch**, bran
 A minute later the app is live at:
 
 ```
-https://YOUR-USERNAME.github.io/workout-companion/
+https://juggologen.github.io/workout-companionv1/
 ```
+
+The URL follows the **repository name**, so the `v1` is part of it. The
+username is lower-cased automatically.
 
 That URL is what you send your friends. HTTPS comes free, which matters — a
 service worker (and therefore offline use and home-screen install) only works
 over HTTPS.
+
+The `.nojekyll` file at the root tells Pages to publish the files as they are
+rather than running them through Jekyll, which it would otherwise do by
+default.
 
 ---
 

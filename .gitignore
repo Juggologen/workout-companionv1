@@ -1,0 +1,15 @@
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Excel lock files, created while the workbook is open
+~$*.xlsx
+
+# Local scratch
+*.tmp
+*.log
+
+# Machine-local tool settings. .claude/launch.json IS committed — it is the
+# shared dev-server config.
+.claude/settings.local.json

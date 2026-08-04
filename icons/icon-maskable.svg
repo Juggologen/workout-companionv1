@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1479ec" />
+      <stop offset="0.55" stop-color="#0b4fa8" />
+      <stop offset="1" stop-color="#f0870a" />
+    </linearGradient>
+  </defs>
+  <!-- Full bleed, artwork inside the 80% safe zone for maskable icons. -->
+  <rect width="512" height="512" fill="url(#gm)" />
+  <g stroke="#fff" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M180 200v112M332 200v112" />
+    <path d="M142 231v50M370 231v50" />
+    <path d="M180 256h152" />
+  </g>
+</svg>

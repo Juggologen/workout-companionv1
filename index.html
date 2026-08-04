@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Build a gym session from the Gym Exercise Compendium: a warm-up that builds itself, prescribed loads, a rest timer, and a time estimate." />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#161826" />
+    <title>Workout Companion</title>
+    <link rel="manifest" href="manifest.json" />
+    <!--
+      Inter is the design system's face. It is loaded from Google Fonts when
+      online and falls back to the platform sans otherwise, so an offline or
+      APK build still renders correctly — just in the system face.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <link rel="apple-touch-icon" href="icons/icon.svg" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <p style="padding: 2rem; font: 16px system-ui; color: #e9e9ed">
+        Workout Companion needs JavaScript. The exercise data and every
+        calculation run in your browser — nothing is sent anywhere.
+      </p>
+    </noscript>
+    <script type="module" src="src/app.js"></script>
+    <script>
+      // Registered after load so it never competes with the first paint.
+      // Failure is silent and harmless: without it the app simply needs a
+      // connection. See sw.js for why it fetches network-first.
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>

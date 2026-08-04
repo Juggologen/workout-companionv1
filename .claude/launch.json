@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "workout-companion",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-ExecutionPolicy", "Bypass", "-NoProfile", "-File", "tools/serve.ps1"],
+      "port": 8181
+    }
+  ]
+}

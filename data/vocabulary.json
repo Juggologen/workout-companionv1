@@ -1,0 +1,89 @@
+{
+    "meta":  {
+                 "source":  "Gym Exercise Compendium.xlsx",
+                 "generated":  "2026-08-02",
+                 "generator":  "tools/extract-workbook.ps1"
+             },
+    "equipment":  [
+                      "Bands",
+                      "Barbell",
+                      "Bodyweight",
+                      "Bodyweight/Rings",
+                      "Cable",
+                      "Dumbbell/Kettlebell",
+                      "Machine"
+                  ],
+    "patterns":  [
+                     "Carry",
+                     "Core/Anti-movement",
+                     "Hinge",
+                     "Horizontal pull",
+                     "Horizontal push",
+                     "Isolation",
+                     "Lunge/Single-leg",
+                     "Olympic/Explosive",
+                     "Plyometric",
+                     "Squat",
+                     "Vertical pull",
+                     "Vertical push"
+                 ],
+    "muscles":  [
+                    "Adductors",
+                    "Back",
+                    "Biceps",
+                    "Calves",
+                    "Chest",
+                    "Core",
+                    "Forearms",
+                    "Full body",
+                    "Glutes",
+                    "Hamstrings",
+                    "Quads",
+                    "Shoulders",
+                    "Traps",
+                    "Triceps"
+                ],
+    "primaryMuscles":  [
+                           "Adductors",
+                           "Back",
+                           "Biceps",
+                           "Calves",
+                           "Chest",
+                           "Core",
+                           "Forearms",
+                           "Full body",
+                           "Glutes",
+                           "Hamstrings",
+                           "Quads",
+                           "Shoulders",
+                           "Traps",
+                           "Triceps"
+                       ],
+    "profiles":  [
+                     "Carry",
+                     "Compound",
+                     "Core",
+                     "Heavy compound",
+                     "Isolation",
+                     "Olympic lift",
+                     "Plyometric"
+                 ],
+    "goals":  [
+                  "Explosivity",
+                  "Strength",
+                  "Muscular endurance"
+              ],
+    "warmupPhases":  [
+                         "1 Raise",
+                         "2 Mobilise",
+                         "3 Activate",
+                         "4 Specific"
+                     ],
+    "mobilityTypes":  [
+                          "Flow",
+                          "Lower body",
+                          "Upper body",
+                          "Spine",
+                          "Wind-down"
+                      ]
+}

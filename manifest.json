@@ -1,0 +1,25 @@
+{
+  "name": "Workout Companion",
+  "short_name": "Workout",
+  "description": "Build a gym session from the Gym Exercise Compendium: a warm-up that builds itself, prescribed loads, and a time estimate.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7fb",
+  "theme_color": "#0b64d6",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,2647 @@
+{
+    "meta":  {
+                 "source":  "Gym Exercise Compendium.xlsx",
+                 "generated":  "2026-08-02",
+                 "generator":  "tools/extract-workbook.ps1"
+             },
+    "items":  [
+                  {
+                      "id":  1,
+                      "name":  {
+                                   "en":  "Back Squat",
+                                   "sv":  "Knäböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Brace before you unrack; knees track over toes.  [1RM = example value, replace it]"
+                  },
+                  {
+                      "id":  2,
+                      "name":  {
+                                   "en":  "Front Squat",
+                                   "sv":  "Frontböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Core",
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Elbows high; upright torso."
+                  },
+                  {
+                      "id":  3,
+                      "name":  {
+                                   "en":  "Pause Squat",
+                                   "sv":  "Pausknäböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "2–3 s pause in the hole, stay tight."
+                  },
+                  {
+                      "id":  4,
+                      "name":  {
+                                   "en":  "Box Squat",
+                                   "sv":  "Boxknäböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Sit back to the box, don\u0027t relax on it."
+                  },
+                  {
+                      "id":  5,
+                      "name":  {
+                                   "en":  "Overhead Squat",
+                                   "sv":  "Överhuvudböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Core",
+                                        "Back"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Mobility-limited for most; start with a stick."
+                  },
+                  {
+                      "id":  6,
+                      "name":  {
+                                   "en":  "Zercher Squat",
+                                   "sv":  "Zercherböj"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Core",
+                                        "Back",
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Bar in elbow crease; use a towel for comfort."
+                  },
+                  {
+                      "id":  7,
+                      "name":  {
+                                   "en":  "Safety Bar Squat",
+                                   "sv":  "Knäböj med safety bar"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Shoulder-friendly squat variation."
+                  },
+                  {
+                      "id":  8,
+                      "name":  {
+                                   "en":  "Goblet Squat",
+                                   "sv":  "Gobletböj"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Great teaching tool and warm-up."
+                  },
+                  {
+                      "id":  9,
+                      "name":  {
+                                   "en":  "Hack Squat (Machine)",
+                                   "sv":  "Hackböj i maskin"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Fixed path; heavy quad emphasis."
+                  },
+                  {
+                      "id":  10,
+                      "name":  {
+                                   "en":  "Leg Press",
+                                   "sv":  "Benpress"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Don\u0027t let the lower back round at the bottom."
+                  },
+                  {
+                      "id":  11,
+                      "name":  {
+                                   "en":  "Belt Squat",
+                                   "sv":  "Bältesböj"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Loads the legs without loading the spine."
+                  },
+                  {
+                      "id":  12,
+                      "name":  {
+                                   "en":  "Bodyweight Squat",
+                                   "sv":  "Kroppsviktsböj"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Warm-up and endurance staple."
+                  },
+                  {
+                      "id":  13,
+                      "name":  {
+                                   "en":  "Pistol Squat",
+                                   "sv":  "Pistolböj"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Assist with a band or counterweight to learn."
+                  },
+                  {
+                      "id":  14,
+                      "name":  {
+                                   "en":  "Wall Sit",
+                                   "sv":  "Väggsittning"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Squat",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Isometric; time-based."
+                  },
+                  {
+                      "id":  15,
+                      "name":  {
+                                   "en":  "Conventional Deadlift",
+                                   "sv":  "Marklyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Set the lats, push the floor away."
+                  },
+                  {
+                      "id":  16,
+                      "name":  {
+                                   "en":  "Sumo Deadlift",
+                                   "sv":  "Sumomarklyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Hamstrings",
+                                        "Back"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Wide stance, knees out, vertical torso."
+                  },
+                  {
+                      "id":  17,
+                      "name":  {
+                                   "en":  "Romanian Deadlift",
+                                   "sv":  "Rumänsk marklyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Push hips back; stop when the back wants to round."
+                  },
+                  {
+                      "id":  18,
+                      "name":  {
+                                   "en":  "Stiff-Leg Deadlift",
+                                   "sv":  "Raka marklyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Longer range than RDL; go lighter."
+                  },
+                  {
+                      "id":  19,
+                      "name":  {
+                                   "en":  "Deficit Deadlift",
+                                   "sv":  "Deficitmarklyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back",
+                                        "Quads"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Stand on 2–5 cm; builds the start position."
+                  },
+                  {
+                      "id":  20,
+                      "name":  {
+                                   "en":  "Rack Pull",
+                                   "sv":  "Rackdrag"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings",
+                                        "Traps"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Partial range; overloads the lockout."
+                  },
+                  {
+                      "id":  21,
+                      "name":  {
+                                   "en":  "Trap Bar Deadlift",
+                                   "sv":  "Marklyft med trapbar"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings",
+                                        "Back"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "More quad, less shear than conventional."
+                  },
+                  {
+                      "id":  22,
+                      "name":  {
+                                   "en":  "Good Morning",
+                                   "sv":  "Good morning"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Start very light; hinge, don\u0027t squat."
+                  },
+                  {
+                      "id":  23,
+                      "name":  {
+                                   "en":  "Barbell Hip Thrust",
+                                   "sv":  "Höftlyft med skivstång"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Chin tucked, ribs down, squeeze at the top."
+                  },
+                  {
+                      "id":  24,
+                      "name":  {
+                                   "en":  "Glute Bridge",
+                                   "sv":  "Bäckenlyft"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Hinge",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Floor version of the hip thrust."
+                  },
+                  {
+                      "id":  25,
+                      "name":  {
+                                   "en":  "Single-Leg RDL",
+                                   "sv":  "Enbens rumänsk marklyft"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Hips square; balance is part of the work."
+                  },
+                  {
+                      "id":  26,
+                      "name":  {
+                                   "en":  "Kettlebell Deadlift",
+                                   "sv":  "Kettlebell marklyft"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Good entry point to the hinge pattern."
+                  },
+                  {
+                      "id":  27,
+                      "name":  {
+                                   "en":  "Kettlebell Swing",
+                                   "sv":  "Kettlebell swing"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings",
+                                        "Core",
+                                        "Back"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Hip snap, not a front raise."
+                  },
+                  {
+                      "id":  28,
+                      "name":  {
+                                   "en":  "Back Extension (45°)",
+                                   "sv":  "Ryggresning 45°"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Hinge",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings",
+                                        "Back"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Round or neutral spine depending on target."
+                  },
+                  {
+                      "id":  29,
+                      "name":  {
+                                   "en":  "Nordic Hamstring Curl",
+                                   "sv":  "Nordisk hamstringcurl"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Hinge",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Very high eccentric load; start with a band."
+                  },
+                  {
+                      "id":  30,
+                      "name":  {
+                                   "en":  "Cable Pull-Through",
+                                   "sv":  "Kabeldrag mellan benen"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Hinge",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Hinge pattern with constant tension."
+                  },
+                  {
+                      "id":  31,
+                      "name":  {
+                                   "en":  "Walking Lunge",
+                                   "sv":  "Gående utfall"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Long step for glutes, short step for quads."
+                  },
+                  {
+                      "id":  32,
+                      "name":  {
+                                   "en":  "Reverse Lunge",
+                                   "sv":  "Bakåtutfall"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Knee-friendlier than forward lunges."
+                  },
+                  {
+                      "id":  33,
+                      "name":  {
+                                   "en":  "Bulgarian Split Squat",
+                                   "sv":  "Bulgarisk split squat"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Brutal with modest load; count reps per leg."
+                  },
+                  {
+                      "id":  34,
+                      "name":  {
+                                   "en":  "Barbell Split Squat",
+                                   "sv":  "Split squat med skivstång"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Loadable single-leg strength builder."
+                  },
+                  {
+                      "id":  35,
+                      "name":  {
+                                   "en":  "Step-Up",
+                                   "sv":  "Uppsteg"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Don\u0027t push off the trailing leg."
+                  },
+                  {
+                      "id":  36,
+                      "name":  {
+                                   "en":  "Lateral Lunge",
+                                   "sv":  "Sidoutfall"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Adductors",
+                      "secondary":  [
+                                        "Quads",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Frontal-plane work; good for skiing/skating."
+                  },
+                  {
+                      "id":  37,
+                      "name":  {
+                                   "en":  "Curtsy Lunge",
+                                   "sv":  "Curtsyutfall"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Adductors"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Emphasises glute medius."
+                  },
+                  {
+                      "id":  38,
+                      "name":  {
+                                   "en":  "Sissy Squat",
+                                   "sv":  "Sissy squat"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Lunge/Single-leg",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Core"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Knee-dominant; build up gradually."
+                  },
+                  {
+                      "id":  39,
+                      "name":  {
+                                   "en":  "Barbell Bench Press",
+                                   "sv":  "Bänkpress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Feet planted, shoulder blades retracted."
+                  },
+                  {
+                      "id":  40,
+                      "name":  {
+                                   "en":  "Incline Bench Press",
+                                   "sv":  "Lutande bänkpress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Triceps"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "30–45° targets the upper chest."
+                  },
+                  {
+                      "id":  41,
+                      "name":  {
+                                   "en":  "Decline Bench Press",
+                                   "sv":  "Nedåtlutande bänkpress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Lower-chest emphasis, shoulder-friendly."
+                  },
+                  {
+                      "id":  42,
+                      "name":  {
+                                   "en":  "Close-Grip Bench Press",
+                                   "sv":  "Bänkpress smalt grepp"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Triceps",
+                      "secondary":  [
+                                        "Chest",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Grip just inside shoulder width."
+                  },
+                  {
+                      "id":  43,
+                      "name":  {
+                                   "en":  "Floor Press",
+                                   "sv":  "Golvpress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Limits range; easy on the shoulders."
+                  },
+                  {
+                      "id":  44,
+                      "name":  {
+                                   "en":  "Spoto Press",
+                                   "sv":  "Spotopress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Pause 2 cm off the chest."
+                  },
+                  {
+                      "id":  45,
+                      "name":  {
+                                   "en":  "Dumbbell Bench Press",
+                                   "sv":  "Hantelpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Larger range, evens out side-to-side."
+                  },
+                  {
+                      "id":  46,
+                      "name":  {
+                                   "en":  "Incline Dumbbell Press",
+                                   "sv":  "Lutande hantelpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Upper-chest builder."
+                  },
+                  {
+                      "id":  47,
+                      "name":  {
+                                   "en":  "Machine Chest Press",
+                                   "sv":  "Bröstpress i maskin"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Safe to push close to failure."
+                  },
+                  {
+                      "id":  48,
+                      "name":  {
+                                   "en":  "Push-Up",
+                                   "sv":  "Armhävning"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Body in one line; elbows ~45°."
+                  },
+                  {
+                      "id":  49,
+                      "name":  {
+                                   "en":  "Deficit Push-Up",
+                                   "sv":  "Armhävning med deficit"
+                               },
+                      "equipment":  "Bodyweight",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Hands elevated for extra range."
+                  },
+                  {
+                      "id":  50,
+                      "name":  {
+                                   "en":  "Ring Push-Up",
+                                   "sv":  "Armhävning i ringar"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Unstable; adds a big stability demand."
+                  },
+                  {
+                      "id":  51,
+                      "name":  {
+                                   "en":  "Dip",
+                                   "sv":  "Dips"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Lean forward for chest, upright for triceps."
+                  },
+                  {
+                      "id":  52,
+                      "name":  {
+                                   "en":  "Ring Dip",
+                                   "sv":  "Dips i ringar"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Turn the rings out at lockout."
+                  },
+                  {
+                      "id":  53,
+                      "name":  {
+                                   "en":  "Cable Chest Fly",
+                                   "sv":  "Kabelflyes"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Constant tension; slight elbow bend."
+                  },
+                  {
+                      "id":  54,
+                      "name":  {
+                                   "en":  "Dumbbell Fly",
+                                   "sv":  "Hantelflyes"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Control the stretch; don\u0027t go too heavy."
+                  },
+                  {
+                      "id":  55,
+                      "name":  {
+                                   "en":  "Pec Deck",
+                                   "sv":  "Pec deck"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Easy to overload safely."
+                  },
+                  {
+                      "id":  56,
+                      "name":  {
+                                   "en":  "Band Chest Press",
+                                   "sv":  "Bandpress"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Horizontal push",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Travel-friendly; tension peaks at lockout."
+                  },
+                  {
+                      "id":  57,
+                      "name":  {
+                                   "en":  "Overhead Press",
+                                   "sv":  "Militärpress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Squeeze glutes, don\u0027t lean back."
+                  },
+                  {
+                      "id":  58,
+                      "name":  {
+                                   "en":  "Push Press",
+                                   "sv":  "Push press"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Quads",
+                                        "Core"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Short dip, violent drive, lock overhead."
+                  },
+                  {
+                      "id":  59,
+                      "name":  {
+                                   "en":  "Push Jerk",
+                                   "sv":  "Push jerk"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Quads"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Re-dip under the bar to receive it."
+                  },
+                  {
+                      "id":  60,
+                      "name":  {
+                                   "en":  "Seated Dumbbell Press",
+                                   "sv":  "Sittande hantelpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Back supported; strict form."
+                  },
+                  {
+                      "id":  61,
+                      "name":  {
+                                   "en":  "Standing Dumbbell Press",
+                                   "sv":  "Stående hantelpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Core has to work to stay stacked."
+                  },
+                  {
+                      "id":  62,
+                      "name":  {
+                                   "en":  "Arnold Press",
+                                   "sv":  "Arnoldpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Rotate through the press."
+                  },
+                  {
+                      "id":  63,
+                      "name":  {
+                                   "en":  "Machine Shoulder Press",
+                                   "sv":  "Axelpress i maskin"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Fixed path; good for high-rep work."
+                  },
+                  {
+                      "id":  64,
+                      "name":  {
+                                   "en":  "Single-Arm Kettlebell Press",
+                                   "sv":  "Enarms kettlebellpress"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Anti-lateral-flexion demand on the core."
+                  },
+                  {
+                      "id":  65,
+                      "name":  {
+                                   "en":  "Landmine Press",
+                                   "sv":  "Landminepress"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Chest",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Shoulder-friendly pressing angle."
+                  },
+                  {
+                      "id":  66,
+                      "name":  {
+                                   "en":  "Handstand Push-Up",
+                                   "sv":  "Handstående armhävning"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Scale with pike push-ups on a box."
+                  },
+                  {
+                      "id":  67,
+                      "name":  {
+                                   "en":  "Z-Press",
+                                   "sv":  "Z-press"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Vertical push",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Core",
+                                        "Triceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Seated on the floor, legs straight."
+                  },
+                  {
+                      "id":  68,
+                      "name":  {
+                                   "en":  "Barbell Row",
+                                   "sv":  "Skivstångsrodd"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Torso ~45°; pull to the navel."
+                  },
+                  {
+                      "id":  69,
+                      "name":  {
+                                   "en":  "Pendlay Row",
+                                   "sv":  "Pendlayrodd"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Dead stop each rep; explosive pull."
+                  },
+                  {
+                      "id":  70,
+                      "name":  {
+                                   "en":  "Dumbbell Row",
+                                   "sv":  "Hantelrodd"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Drive the elbow back, not up."
+                  },
+                  {
+                      "id":  71,
+                      "name":  {
+                                   "en":  "Chest-Supported Row",
+                                   "sv":  "Bröststödd rodd"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Removes the lower back from the equation."
+                  },
+                  {
+                      "id":  72,
+                      "name":  {
+                                   "en":  "Seated Cable Row",
+                                   "sv":  "Sittande kabelrodd"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Keep the torso still; no rowing rhythm."
+                  },
+                  {
+                      "id":  73,
+                      "name":  {
+                                   "en":  "T-Bar Row",
+                                   "sv":  "T-bar rodd"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Heavy mid-back loading."
+                  },
+                  {
+                      "id":  74,
+                      "name":  {
+                                   "en":  "Meadows Row",
+                                   "sv":  "Meadowsrodd"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Landmine, staggered stance, one arm."
+                  },
+                  {
+                      "id":  75,
+                      "name":  {
+                                   "en":  "Inverted Row",
+                                   "sv":  "Australisk rodd"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Adjust bar height to change difficulty."
+                  },
+                  {
+                      "id":  76,
+                      "name":  {
+                                   "en":  "Ring Row",
+                                   "sv":  "Ringrodd"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Great pull-up progression."
+                  },
+                  {
+                      "id":  77,
+                      "name":  {
+                                   "en":  "Machine Row",
+                                   "sv":  "Rodd i maskin"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Traps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Consistent loading, easy to progress."
+                  },
+                  {
+                      "id":  78,
+                      "name":  {
+                                   "en":  "Face Pull",
+                                   "sv":  "Face pull"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Back",
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Rear delts and cuff; high reps work best."
+                  },
+                  {
+                      "id":  79,
+                      "name":  {
+                                   "en":  "Reverse Fly",
+                                   "sv":  "Omvända flyes"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Back",
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Light weight, pause at the top."
+                  },
+                  {
+                      "id":  80,
+                      "name":  {
+                                   "en":  "Band Pull-Apart",
+                                   "sv":  "Band pull-apart"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Horizontal pull",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Back",
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Perfect warm-up filler between press sets."
+                  },
+                  {
+                      "id":  81,
+                      "name":  {
+                                   "en":  "Pull-Up",
+                                   "sv":  "Chins (pronerat grepp)"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Chest to bar; avoid excessive kipping."
+                  },
+                  {
+                      "id":  82,
+                      "name":  {
+                                   "en":  "Chin-Up",
+                                   "sv":  "Chins (supinerat grepp)"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "More biceps than the pull-up."
+                  },
+                  {
+                      "id":  83,
+                      "name":  {
+                                   "en":  "Weighted Pull-Up",
+                                   "sv":  "Viktade chins"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Heavy compound",
+                      "cue":  "Add load once you clear 8–10 clean reps."
+                  },
+                  {
+                      "id":  84,
+                      "name":  {
+                                   "en":  "Neutral-Grip Pull-Up",
+                                   "sv":  "Chins neutralt grepp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Usually the most shoulder-friendly grip."
+                  },
+                  {
+                      "id":  85,
+                      "name":  {
+                                   "en":  "Lat Pulldown",
+                                   "sv":  "Latsdrag"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Scalable substitute for pull-ups."
+                  },
+                  {
+                      "id":  86,
+                      "name":  {
+                                   "en":  "Neutral-Grip Pulldown",
+                                   "sv":  "Latsdrag neutralt grepp"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Slightly more mid-back involvement."
+                  },
+                  {
+                      "id":  87,
+                      "name":  {
+                                   "en":  "Straight-Arm Pulldown",
+                                   "sv":  "Latsdrag raka armar"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Core",
+                                        "Triceps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Isolates the lats without elbow flexion."
+                  },
+                  {
+                      "id":  88,
+                      "name":  {
+                                   "en":  "Muscle-Up",
+                                   "sv":  "Muscle-up"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Chest",
+                                        "Triceps",
+                                        "Core"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Explosive pull plus a fast transition."
+                  },
+                  {
+                      "id":  89,
+                      "name":  {
+                                   "en":  "Band-Assisted Pull-Up",
+                                   "sv":  "Chins med band"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Vertical pull",
+                      "primary":  "Back",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Compound",
+                      "cue":  "Band assists most at the bottom."
+                  },
+                  {
+                      "id":  90,
+                      "name":  {
+                                   "en":  "Power Clean",
+                                   "sv":  "Frivändning (power)"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Traps",
+                                        "Quads"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Bar close, extend fully, then pull under."
+                  },
+                  {
+                      "id":  91,
+                      "name":  {
+                                   "en":  "Hang Clean",
+                                   "sv":  "Hängfrivändning"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Traps",
+                                        "Glutes",
+                                        "Quads"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Starts above the knee; teaches the second pull."
+                  },
+                  {
+                      "id":  92,
+                      "name":  {
+                                   "en":  "Clean \u0026 Jerk",
+                                   "sv":  "Frivändning med stöt"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Quads",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Full lift; technical, coach it."
+                  },
+                  {
+                      "id":  93,
+                      "name":  {
+                                   "en":  "Power Snatch",
+                                   "sv":  "Ryck (power)"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Traps",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Wide grip, high demand on technique and mobility."
+                  },
+                  {
+                      "id":  94,
+                      "name":  {
+                                   "en":  "Hang Snatch",
+                                   "sv":  "Hängryck"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Traps",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Warm up thoroughly before loading."
+                  },
+                  {
+                      "id":  95,
+                      "name":  {
+                                   "en":  "Clean Pull",
+                                   "sv":  "Frivändningsdrag"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Hamstrings",
+                                        "Back"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Full extension, no catch."
+                  },
+                  {
+                      "id":  96,
+                      "name":  {
+                                   "en":  "Snatch Pull",
+                                   "sv":  "Ryckdrag"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Wide grip pull; heavier than the snatch."
+                  },
+                  {
+                      "id":  97,
+                      "name":  {
+                                   "en":  "High Pull",
+                                   "sv":  "Högt drag"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Back"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Elbows high and outside."
+                  },
+                  {
+                      "id":  98,
+                      "name":  {
+                                   "en":  "Dumbbell Snatch",
+                                   "sv":  "Hantelryck"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Simplest way to train power unilaterally."
+                  },
+                  {
+                      "id":  99,
+                      "name":  {
+                                   "en":  "Kettlebell Clean",
+                                   "sv":  "Kettlebell frivändning"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Traps"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Guide the bell, don\u0027t let it flip onto the wrist."
+                  },
+                  {
+                      "id":  100,
+                      "name":  {
+                                   "en":  "Kettlebell Snatch",
+                                   "sv":  "Kettlebell ryck"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Punch through at the top."
+                  },
+                  {
+                      "id":  101,
+                      "name":  {
+                                   "en":  "Thruster",
+                                   "sv":  "Thruster"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Olympic/Explosive",
+                      "primary":  "Full body",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Quads",
+                                        "Core"
+                                    ],
+                      "profile":  "Olympic lift",
+                      "cue":  "Front squat straight into a press."
+                  },
+                  {
+                      "id":  102,
+                      "name":  {
+                                   "en":  "Box Jump",
+                                   "sv":  "Boxhopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Calves"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Step down; don\u0027t rebound off the box."
+                  },
+                  {
+                      "id":  103,
+                      "name":  {
+                                   "en":  "Broad Jump",
+                                   "sv":  "Stående längdhopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Measure distance to track progress."
+                  },
+                  {
+                      "id":  104,
+                      "name":  {
+                                   "en":  "Depth Jump",
+                                   "sv":  "Nedhopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Calves"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Advanced; short ground contact is the point."
+                  },
+                  {
+                      "id":  105,
+                      "name":  {
+                                   "en":  "Jump Squat",
+                                   "sv":  "Hoppknäböj"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Calves"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Bodyweight or very light load only."
+                  },
+                  {
+                      "id":  106,
+                      "name":  {
+                                   "en":  "Clap Push-Up",
+                                   "sv":  "Klappande armhävning"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Chest",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Upper-body power; land with soft elbows."
+                  },
+                  {
+                      "id":  107,
+                      "name":  {
+                                   "en":  "Bounding",
+                                   "sv":  "Skutthopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Calves"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Cover distance in as few strides as possible."
+                  },
+                  {
+                      "id":  108,
+                      "name":  {
+                                   "en":  "Lateral Bound",
+                                   "sv":  "Sidohopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Adductors"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Stick the landing before the next rep."
+                  },
+                  {
+                      "id":  109,
+                      "name":  {
+                                   "en":  "Pogo Hop",
+                                   "sv":  "Pogohopp"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Calves",
+                      "secondary":  [
+                                        "Quads"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Stiff ankles, minimal knee bend."
+                  },
+                  {
+                      "id":  110,
+                      "name":  {
+                                   "en":  "Medicine Ball Slam",
+                                   "sv":  "Medicinbollsslam"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Full-body follow-through."
+                  },
+                  {
+                      "id":  111,
+                      "name":  {
+                                   "en":  "Rotational Med Ball Throw",
+                                   "sv":  "Roterande medicinbollskast"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Power through the hips, not the arms."
+                  },
+                  {
+                      "id":  112,
+                      "name":  {
+                                   "en":  "Broad Jump to Box",
+                                   "sv":  "Längdhopp till box"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Plyometric",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads",
+                                        "Calves"
+                                    ],
+                      "profile":  "Plyometric",
+                      "cue":  "Horizontal into vertical power."
+                  },
+                  {
+                      "id":  113,
+                      "name":  {
+                                   "en":  "Plank",
+                                   "sv":  "Planka"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Ribs down, glutes on. Quality beats duration."
+                  },
+                  {
+                      "id":  114,
+                      "name":  {
+                                   "en":  "Side Plank",
+                                   "sv":  "Sidoplanka"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Anti-lateral flexion."
+                  },
+                  {
+                      "id":  115,
+                      "name":  {
+                                   "en":  "Pallof Press",
+                                   "sv":  "Pallofpress"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Anti-rotation; resist the pull."
+                  },
+                  {
+                      "id":  116,
+                      "name":  {
+                                   "en":  "Dead Bug",
+                                   "sv":  "Dead bug"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Quads"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Lower back stays flat on the floor."
+                  },
+                  {
+                      "id":  117,
+                      "name":  {
+                                   "en":  "Bird Dog",
+                                   "sv":  "Bird dog"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Back"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Slow and controlled; no hip rotation."
+                  },
+                  {
+                      "id":  118,
+                      "name":  {
+                                   "en":  "Hanging Leg Raise",
+                                   "sv":  "Hängande benlyft"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Forearms"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Posterior tilt at the top; no swinging."
+                  },
+                  {
+                      "id":  119,
+                      "name":  {
+                                   "en":  "Toes to Bar",
+                                   "sv":  "Toes to bar"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Forearms"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Controlled kip; keep the shoulders active."
+                  },
+                  {
+                      "id":  120,
+                      "name":  {
+                                   "en":  "Ab Wheel Rollout",
+                                   "sv":  "Rullhjul"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Anti-extension; go only as far as you can brace."
+                  },
+                  {
+                      "id":  121,
+                      "name":  {
+                                   "en":  "Cable Crunch",
+                                   "sv":  "Kabelcrunch"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Flex the spine, don\u0027t hinge at the hips."
+                  },
+                  {
+                      "id":  122,
+                      "name":  {
+                                   "en":  "Russian Twist",
+                                   "sv":  "Rysk twist"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Rotate from the trunk, chest follows hands."
+                  },
+                  {
+                      "id":  123,
+                      "name":  {
+                                   "en":  "Hollow Body Hold",
+                                   "sv":  "Hollow hold"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Quads"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Lower back pressed down throughout."
+                  },
+                  {
+                      "id":  124,
+                      "name":  {
+                                   "en":  "Copenhagen Plank",
+                                   "sv":  "Köpenhamnsplanka"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Adductors",
+                      "secondary":  [
+                                        "Core"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Strong groin/adductor builder; start short."
+                  },
+                  {
+                      "id":  125,
+                      "name":  {
+                                   "en":  "Reverse Crunch",
+                                   "sv":  "Omvänd crunch"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Curl the pelvis up, don\u0027t just swing the legs."
+                  },
+                  {
+                      "id":  126,
+                      "name":  {
+                                   "en":  "Landmine Rotation",
+                                   "sv":  "Landminerotation"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Let the feet pivot."
+                  },
+                  {
+                      "id":  127,
+                      "name":  {
+                                   "en":  "L-Sit",
+                                   "sv":  "L-sit"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Triceps",
+                                        "Quads"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Push the floor away; depress the shoulders."
+                  },
+                  {
+                      "id":  128,
+                      "name":  {
+                                   "en":  "Ring Support Hold",
+                                   "sv":  "Stödhäng i ringar"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Core",
+                                        "Triceps"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Rings turned out, arms locked."
+                  },
+                  {
+                      "id":  129,
+                      "name":  {
+                                   "en":  "Bear Crawl",
+                                   "sv":  "Björngång"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Core/Anti-movement",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Quads"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Hips low, knees hovering."
+                  },
+                  {
+                      "id":  130,
+                      "name":  {
+                                   "en":  "Farmer\u0027s Walk",
+                                   "sv":  "Farmer\u0027s walk"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Carry",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Forearms",
+                                        "Core",
+                                        "Glutes"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Tall posture; grip usually fails first."
+                  },
+                  {
+                      "id":  131,
+                      "name":  {
+                                   "en":  "Suitcase Carry",
+                                   "sv":  "Resväskebärning"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Carry",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Traps",
+                                        "Forearms"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Anti-lateral flexion; don\u0027t lean."
+                  },
+                  {
+                      "id":  132,
+                      "name":  {
+                                   "en":  "Front Rack Carry",
+                                   "sv":  "Frontrackbärning"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Carry",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Elbows up, ribs down."
+                  },
+                  {
+                      "id":  133,
+                      "name":  {
+                                   "en":  "Overhead Carry",
+                                   "sv":  "Överhuvudbärning"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Carry",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Core",
+                                        "Traps"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Locked elbows, active shoulders."
+                  },
+                  {
+                      "id":  134,
+                      "name":  {
+                                   "en":  "Zercher Carry",
+                                   "sv":  "Zercherbärning"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Carry",
+                      "primary":  "Core",
+                      "secondary":  [
+                                        "Back",
+                                        "Quads"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Very high trunk demand."
+                  },
+                  {
+                      "id":  135,
+                      "name":  {
+                                   "en":  "Sled Push",
+                                   "sv":  "Slädpress"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Carry",
+                      "primary":  "Quads",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Calves"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "No eccentric — easy to recover from."
+                  },
+                  {
+                      "id":  136,
+                      "name":  {
+                                   "en":  "Sled Drag",
+                                   "sv":  "Slädsläp"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Carry",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Glutes",
+                                        "Quads"
+                                    ],
+                      "profile":  "Carry",
+                      "cue":  "Backwards drag is great for the knees."
+                  },
+                  {
+                      "id":  137,
+                      "name":  {
+                                   "en":  "Barbell Curl",
+                                   "sv":  "Skivstångscurl"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Elbows pinned to the sides."
+                  },
+                  {
+                      "id":  138,
+                      "name":  {
+                                   "en":  "Dumbbell Curl",
+                                   "sv":  "Hantelcurl"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Supinate as you curl."
+                  },
+                  {
+                      "id":  139,
+                      "name":  {
+                                   "en":  "Hammer Curl",
+                                   "sv":  "Hammarcurl"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Neutral grip; hits brachialis."
+                  },
+                  {
+                      "id":  140,
+                      "name":  {
+                                   "en":  "Preacher Curl",
+                                   "sv":  "Scottcurl"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Strong stretch position; control the eccentric."
+                  },
+                  {
+                      "id":  141,
+                      "name":  {
+                                   "en":  "Cable Curl",
+                                   "sv":  "Kabelcurl"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Constant tension through the range."
+                  },
+                  {
+                      "id":  142,
+                      "name":  {
+                                   "en":  "Incline Dumbbell Curl",
+                                   "sv":  "Lutande hantelcurl"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Biceps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Biceps stretched at the bottom."
+                  },
+                  {
+                      "id":  143,
+                      "name":  {
+                                   "en":  "Reverse Curl",
+                                   "sv":  "Omvänd curl"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Forearms",
+                      "secondary":  [
+                                        "Biceps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Pronated grip; builds forearm mass."
+                  },
+                  {
+                      "id":  144,
+                      "name":  {
+                                   "en":  "Triceps Pushdown",
+                                   "sv":  "Triceps pushdown"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Isolation",
+                      "primary":  "Triceps",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Elbows still, full lockout."
+                  },
+                  {
+                      "id":  145,
+                      "name":  {
+                                   "en":  "Overhead Triceps Extension",
+                                   "sv":  "Fransk press"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Triceps",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Stretches the long head."
+                  },
+                  {
+                      "id":  146,
+                      "name":  {
+                                   "en":  "Skull Crusher",
+                                   "sv":  "Skullcrusher"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Triceps",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Lower behind the head, not to the nose."
+                  },
+                  {
+                      "id":  147,
+                      "name":  {
+                                   "en":  "Triceps Kickback",
+                                   "sv":  "Triceps kickback"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Triceps",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Light weight, peak contraction."
+                  },
+                  {
+                      "id":  148,
+                      "name":  {
+                                   "en":  "Wrist Curl",
+                                   "sv":  "Handledscurl"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Forearms",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "High reps; grip and forearm health."
+                  },
+                  {
+                      "id":  149,
+                      "name":  {
+                                   "en":  "Dead Hang",
+                                   "sv":  "Hängning i stång"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Isolation",
+                      "primary":  "Forearms",
+                      "secondary":  [
+                                        "Back",
+                                        "Shoulders"
+                                    ],
+                      "profile":  "Core",
+                      "cue":  "Grip and shoulder decompression."
+                  },
+                  {
+                      "id":  150,
+                      "name":  {
+                                   "en":  "Lateral Raise",
+                                   "sv":  "Sidolyft"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Lead with the elbows; stay light."
+                  },
+                  {
+                      "id":  151,
+                      "name":  {
+                                   "en":  "Cable Lateral Raise",
+                                   "sv":  "Sidolyft i kabel"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Isolation",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Tension at the bottom too."
+                  },
+                  {
+                      "id":  152,
+                      "name":  {
+                                   "en":  "Front Raise",
+                                   "sv":  "Framlyft"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Often already covered by pressing."
+                  },
+                  {
+                      "id":  153,
+                      "name":  {
+                                   "en":  "Upright Row",
+                                   "sv":  "Stående rodd"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Shoulders",
+                                        "Biceps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Wider grip is friendlier on the shoulders."
+                  },
+                  {
+                      "id":  154,
+                      "name":  {
+                                   "en":  "Barbell Shrug",
+                                   "sv":  "Shrugs med skivstång"
+                               },
+                      "equipment":  "Barbell",
+                      "pattern":  "Isolation",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Straight up and down; pause at the top."
+                  },
+                  {
+                      "id":  155,
+                      "name":  {
+                                   "en":  "Dumbbell Shrug",
+                                   "sv":  "Shrugs med hantlar"
+                               },
+                      "equipment":  "Dumbbell/Kettlebell",
+                      "pattern":  "Isolation",
+                      "primary":  "Traps",
+                      "secondary":  [
+                                        "Forearms"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Greater range than the barbell version."
+                  },
+                  {
+                      "id":  156,
+                      "name":  {
+                                   "en":  "External Rotation",
+                                   "sv":  "Utåtrotation"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Isolation",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Back"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Rotator cuff; light and high rep."
+                  },
+                  {
+                      "id":  157,
+                      "name":  {
+                                   "en":  "Band Face Pull",
+                                   "sv":  "Face pull med band"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Isolation",
+                      "primary":  "Shoulders",
+                      "secondary":  [
+                                        "Back",
+                                        "Traps"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Great daily shoulder health filler."
+                  },
+                  {
+                      "id":  158,
+                      "name":  {
+                                   "en":  "Leg Extension",
+                                   "sv":  "Benspark"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Quads",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Pause at lockout for rectus femoris."
+                  },
+                  {
+                      "id":  159,
+                      "name":  {
+                                   "en":  "Lying Leg Curl",
+                                   "sv":  "Lårcurl liggande"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+                                        "Calves"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Hips down; don\u0027t lift off the pad."
+                  },
+                  {
+                      "id":  160,
+                      "name":  {
+                                   "en":  "Seated Leg Curl",
+                                   "sv":  "Lårcurl sittande"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Hamstrings",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Hamstrings stretched at the hip — strong stimulus."
+                  },
+                  {
+                      "id":  161,
+                      "name":  {
+                                   "en":  "Standing Calf Raise",
+                                   "sv":  "Stående vadpress"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Calves",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Full stretch at the bottom, pause at the top."
+                  },
+                  {
+                      "id":  162,
+                      "name":  {
+                                   "en":  "Seated Calf Raise",
+                                   "sv":  "Sittande vadpress"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Calves",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Targets soleus with the knee bent."
+                  },
+                  {
+                      "id":  163,
+                      "name":  {
+                                   "en":  "Hip Abduction",
+                                   "sv":  "Höftabduktion"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Glutes",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Glute medius; lean forward slightly."
+                  },
+                  {
+                      "id":  164,
+                      "name":  {
+                                   "en":  "Hip Adduction",
+                                   "sv":  "Höftadduktion"
+                               },
+                      "equipment":  "Machine",
+                      "pattern":  "Isolation",
+                      "primary":  "Adductors",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Groin strength; useful for skiing and skating."
+                  },
+                  {
+                      "id":  165,
+                      "name":  {
+                                   "en":  "Cable Glute Kickback",
+                                   "sv":  "Kabelspark bakåt"
+                               },
+                      "equipment":  "Cable",
+                      "pattern":  "Isolation",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Hamstrings"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Squeeze at the top, no lumbar extension."
+                  },
+                  {
+                      "id":  166,
+                      "name":  {
+                                   "en":  "Banded Monster Walk",
+                                   "sv":  "Monster walk med band"
+                               },
+                      "equipment":  "Bands",
+                      "pattern":  "Isolation",
+                      "primary":  "Glutes",
+                      "secondary":  [
+                                        "Quads"
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Warm-up staple for hips and knees."
+                  },
+                  {
+                      "id":  167,
+                      "name":  {
+                                   "en":  "Tibialis Raise",
+                                   "sv":  "Tibialislyft"
+                               },
+                      "equipment":  "Bodyweight/Rings",
+                      "pattern":  "Isolation",
+                      "primary":  "Calves",
+                      "secondary":  [
+
+                                    ],
+                      "profile":  "Isolation",
+                      "cue":  "Balances the calves; good for runners."
+                  }
+              ]
+}

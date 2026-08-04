@@ -1,0 +1,697 @@
+{
+    "meta":  {
+                 "source":  "Gym Exercise Compendium.xlsx",
+                 "generated":  "2026-08-02",
+                 "generator":  "tools/extract-workbook.ps1"
+             },
+    "items":  [
+                  {
+                      "id":  1,
+                      "name":  {
+                                   "en":  "Cat-Cow",
+                                   "sv":  "Katt och ko"
+                               },
+                      "type":  "Flow",
+                      "typeOrder":  1,
+                      "target":  "Always",
+                      "priority":  1,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "On all fours. Inhale into extension, exhale into flexion. 10 slow cycles.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  2,
+                      "name":  {
+                                   "en":  "Downward Dog",
+                                   "sv":  "Nedåtgående hund"
+                               },
+                      "type":  "Flow",
+                      "typeOrder":  1,
+                      "target":  "Always",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Press the floor away, pedal the heels. Hold 60 s, twice.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  3,
+                      "name":  {
+                                   "en":  "Cobra to Child\u0027s Pose",
+                                   "sv":  "Kobra till barnets position"
+                               },
+                      "type":  "Flow",
+                      "typeOrder":  1,
+                      "target":  "Always",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Flow between the two on the breath. 8 rounds, 5 s in each end position.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  4,
+                      "name":  {
+                                   "en":  "Child\u0027s Pose",
+                                   "sv":  "Barnets position"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Always",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Knees wide, arms long, forehead down. Breathe into the back ribs for 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  5,
+                      "name":  {
+                                   "en":  "Legs Up the Wall",
+                                   "sv":  "Ben upp mot väggen"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Always",
+                      "priority":  6,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Hips close to the wall, legs vertical. 3 minutes, nothing else to do.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  6,
+                      "name":  {
+                                   "en":  "Box Breathing",
+                                   "sv":  "Boxandning"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Always",
+                      "priority":  7,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Supine, knees bent. In 4, hold 4, out 4, hold 4. 3 minutes.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  7,
+                      "name":  {
+                                   "en":  "90/90 Breathing",
+                                   "sv":  "90/90-andning"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Always",
+                      "priority":  6,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Feet on a wall or a chair, low back flat. 10 slow breaths, ribs down.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  8,
+                      "name":  {
+                                   "en":  "Pigeon Pose",
+                                   "sv":  "Duvan"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Glutes",
+                      "priority":  2,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Front shin angled across the mat, hips square. 90 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  9,
+                      "name":  {
+                                   "en":  "Supine Figure-4",
+                                   "sv":  "Liggande figur-4"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Glutes",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Ankle across the opposite knee, pull the back thigh in. 60 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  10,
+                      "name":  {
+                                   "en":  "Happy Baby",
+                                   "sv":  "Glada barnet"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Glutes",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Grab the outsides of the feet, knees toward the armpits. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  11,
+                      "name":  {
+                                   "en":  "90/90 Hip Switch",
+                                   "sv":  "90/90 höftväxling"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Glutes",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Rotate the knees side to side without using the hands. 10 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  12,
+                      "name":  {
+                                   "en":  "Half-Kneeling Quad Stretch",
+                                   "sv":  "Quadstretch i halvknästående"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Quads",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Rear foot lifted, pelvis tucked hard. 60 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  13,
+                      "name":  {
+                                   "en":  "Couch Stretch",
+                                   "sv":  "Couch stretch"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Quads",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Rear shin up the wall, torso upright. 90 s per side — this one is unpleasant.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  14,
+                      "name":  {
+                                   "en":  "Prone Quad Pull",
+                                   "sv":  "Liggande quaddrag"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Quads",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Face down, heel to glute, hips pressed into the mat. 60 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  15,
+                      "name":  {
+                                   "en":  "Seated Forward Fold",
+                                   "sv":  "Sittande framåtfällning"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Hamstrings",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Hinge from the hips, spine long rather than rounded. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  16,
+                      "name":  {
+                                   "en":  "Supine Hamstring Stretch",
+                                   "sv":  "Liggande hamstringstretch"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Hamstrings",
+                      "priority":  2,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Use a towel or belt around the foot. 60 s per side, then 30 s across the body.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  17,
+                      "name":  {
+                                   "en":  "Standing Forward Fold",
+                                   "sv":  "Stående framåtfällning"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Hamstrings",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Soft knees, let the head hang heavy. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  18,
+                      "name":  {
+                                   "en":  "Butterfly Stretch",
+                                   "sv":  "Fjärilen"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Adductors",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Soles together, hinge forward with a long spine. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  19,
+                      "name":  {
+                                   "en":  "Frog Stretch",
+                                   "sv":  "Grodan"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Adductors",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Knees wide, shins parallel, rock back and forth. 8 slow rocks, then hold 60 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  20,
+                      "name":  {
+                                   "en":  "Wide-Legged Straddle Fold",
+                                   "sv":  "Bred grensittande fällning"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Adductors",
+                      "priority":  4,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Fold forward and to each side. 60 s in each of the three positions.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  21,
+                      "name":  {
+                                   "en":  "Downward Dog Calf Pedal",
+                                   "sv":  "Vadpedalering i nedåtgående hund"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Calves",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Alternate pressing each heel down. 20 per side, then hold both down 30 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  22,
+                      "name":  {
+                                   "en":  "Kneeling Toe Stretch",
+                                   "sv":  "Tåstretch i knästående"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Calves",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Sit back on tucked toes. 60 s — build up slowly if it\u0027s new.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  23,
+                      "name":  {
+                                   "en":  "Ankle Circles and Rocks",
+                                   "sv":  "Fotledscirklar och rockning"
+                               },
+                      "type":  "Lower body",
+                      "typeOrder":  2,
+                      "target":  "Calves",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 circles each way per ankle, then 15 knee-over-toe rocks.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  24,
+                      "name":  {
+                                   "en":  "Thread the Needle",
+                                   "sv":  "Thread the needle"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  2,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "All fours, one arm reaching under the body. 8 per side, 5 s at the end.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  25,
+                      "name":  {
+                                   "en":  "Supine Spinal Twist",
+                                   "sv":  "Liggande ryggvridning"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  2,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Knees to one side, opposite shoulder down. 90 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  26,
+                      "name":  {
+                                   "en":  "Open Book",
+                                   "sv":  "Öppna boken"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Side-lying, knees stacked, rotate the top arm open. 10 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  27,
+                      "name":  {
+                                   "en":  "Sphinx Pose",
+                                   "sv":  "Sfinxen"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Forearms down, chest lifted, glutes relaxed. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  28,
+                      "name":  {
+                                   "en":  "Cobra",
+                                   "sv":  "Kobran"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Press up only as far as the low back stays comfortable. 8 reps, 5 s each.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  29,
+                      "name":  {
+                                   "en":  "Puppy Pose",
+                                   "sv":  "Valpen"
+                               },
+                      "type":  "Spine",
+                      "typeOrder":  4,
+                      "target":  "Back",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Hips over knees, chest sinking toward the mat. 90 s.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  30,
+                      "name":  {
+                                   "en":  "Cross-Body Shoulder Stretch",
+                                   "sv":  "Axelstretch över kroppen"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Shoulders",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Arm across the chest, pull with the opposite forearm. 45 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  31,
+                      "name":  {
+                                   "en":  "Prone Shoulder T",
+                                   "sv":  "Liggande axel-T"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Shoulders",
+                      "priority":  2,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Face down, arm out at 90°, roll onto that shoulder. 60 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  32,
+                      "name":  {
+                                   "en":  "Floor Angels",
+                                   "sv":  "Golvänglar"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Shoulders",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "On your back, arms slide overhead keeping the low back flat. 12 slow reps.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  33,
+                      "name":  {
+                                   "en":  "Thread the Needle Shoulder",
+                                   "sv":  "Thread the needle för axeln"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Shoulders",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Shoulder and ear on the mat, hold the rotation. 60 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  34,
+                      "name":  {
+                                   "en":  "Prone Scorpion",
+                                   "sv":  "Liggande skorpion"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Chest",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Face down, reach one foot across to the opposite side. 8 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  35,
+                      "name":  {
+                                   "en":  "Supine Chest Opener",
+                                   "sv":  "Liggande bröstöppnare"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Chest",
+                      "priority":  2,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Lie along a rolled mat or towel, arms out in a T. 2 minutes, just breathe.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  36,
+                      "name":  {
+                                   "en":  "Overhead Triceps Stretch",
+                                   "sv":  "Tricepsstretch över huvudet"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Triceps",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Elbow up, hand down the spine, gentle pull. 45 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  37,
+                      "name":  {
+                                   "en":  "Kneeling Biceps Stretch",
+                                   "sv":  "Bicepsstretch i knästående"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Biceps",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Hands behind you, fingers pointing back, lean away. 45 s, twice.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  38,
+                      "name":  {
+                                   "en":  "Prayer Stretch",
+                                   "sv":  "Bönstretch"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Forearms",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Palms together, lower the hands. Then reverse with the backs of the hands. 45 s each.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  39,
+                      "name":  {
+                                   "en":  "Wrist Flexor and Extensor Stretch",
+                                   "sv":  "Handledsstretch"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Forearms",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "On all fours, fingers pointing back, rock gently. 45 s each direction.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  40,
+                      "name":  {
+                                   "en":  "Neck Side Stretch",
+                                   "sv":  "Nackstretch åt sidan"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Traps",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Ear toward shoulder, opposite hand reaching down. 45 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  41,
+                      "name":  {
+                                   "en":  "Levator Scapulae Stretch",
+                                   "sv":  "Levatorstretch"
+                               },
+                      "type":  "Upper body",
+                      "typeOrder":  3,
+                      "target":  "Traps",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Look down into the armpit, gentle hand pressure. 45 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  42,
+                      "name":  {
+                                   "en":  "Dead Bug Breathing",
+                                   "sv":  "Dead bug med andning"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Core",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Slow arm and leg extensions, exhaling fully on each rep. 8 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  43,
+                      "name":  {
+                                   "en":  "Prone Press-Up Breathing",
+                                   "sv":  "Liggande pressandning"
+                               },
+                      "type":  "Wind-down",
+                      "typeOrder":  5,
+                      "target":  "Core",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Sphinx position, 10 slow breaths letting the abdomen relax completely.",
+                                  "sv":  null
+                              }
+                  }
+              ]
+}

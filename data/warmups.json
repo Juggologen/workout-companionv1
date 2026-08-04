@@ -1,0 +1,793 @@
+{
+    "meta":  {
+                 "source":  "Gym Exercise Compendium.xlsx",
+                 "generated":  "2026-08-02",
+                 "generator":  "tools/extract-workbook.ps1"
+             },
+    "items":  [
+                  {
+                      "id":  1,
+                      "name":  {
+                                   "en":  "Easy cardio",
+                                   "sv":  "Lätt konditionsarbete"
+                               },
+                      "phase":  "1 Raise",
+                      "phaseOrder":  1,
+                      "trigger":  "Always",
+                      "priority":  1,
+                      "minutes":  4,
+                      "how":  {
+                                  "en":  "Bike, row or ski erg at a conversational pace until you break a light sweat.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  2,
+                      "name":  {
+                                   "en":  "Joint circles",
+                                   "sv":  "Ledcirklar"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Always",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Ankles, hips, thoracic spine, shoulders. 10 slow circles each direction.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  3,
+                      "name":  {
+                                   "en":  "World\u0027s Greatest Stretch",
+                                   "sv":  "World\u0027s greatest stretch"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Always",
+                      "priority":  4,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Lunge, elbow to instep, rotate open. 5 per side, no rush.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  4,
+                      "name":  {
+                                   "en":  "Specific ramp-up sets",
+                                   "sv":  "Uppvärmningsset"
+                               },
+                      "phase":  "4 Specific",
+                      "phaseOrder":  4,
+                      "trigger":  "Always",
+                      "priority":  2,
+                      "minutes":  5,
+                      "how":  {
+                                  "en":  "2–4 progressively heavier sets of your first main lift: roughly 40%, 60%, 80% of the working weight.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  5,
+                      "name":  {
+                                   "en":  "Deep squat hold",
+                                   "sv":  "Djup knäböjshållning"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Squat",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Bodyweight or light goblet. Sit in the bottom for 30 s, 3 rounds, gently pushing the knees out.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  6,
+                      "name":  {
+                                   "en":  "Ankle rock-forward",
+                                   "sv":  "Fotledsrockning"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Squat",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Half-kneeling, drive the knee forward over the toes. 15 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  7,
+                      "name":  {
+                                   "en":  "Bodyweight squat",
+                                   "sv":  "Kroppsviktsböj"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Squat",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 slow reps, pausing 2 s at the bottom of each.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  8,
+                      "name":  {
+                                   "en":  "Banded monster walk",
+                                   "sv":  "Monster walk med band"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Squat",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Band above the knees. 15 steps forward, 15 back, 15 each side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  9,
+                      "name":  {
+                                   "en":  "Cat-camel",
+                                   "sv":  "Katt och kamel"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Hinge",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 slow cycles, moving one segment of the spine at a time.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  10,
+                      "name":  {
+                                   "en":  "Glute bridge",
+                                   "sv":  "Bäckenlyft"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Hinge",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 reps with a 2 s squeeze at the top. Ribs down.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  11,
+                      "name":  {
+                                   "en":  "Light RDL",
+                                   "sv":  "Lätt rumänsk marklyft"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Hinge",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Empty bar or light kettlebell. 12 reps grooving the hinge pattern.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  12,
+                      "name":  {
+                                   "en":  "90/90 hip switch",
+                                   "sv":  "90/90 höftväxling"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Hinge",
+                      "priority":  6,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Seated, rotate both knees side to side. 10 per side, chest tall.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  13,
+                      "name":  {
+                                   "en":  "Half-kneeling hip flexor stretch",
+                                   "sv":  "Höftböjarstretch i halvknästående"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Lunge/Single-leg",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Tuck the pelvis, squeeze the back glute, reach overhead. 30 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  14,
+                      "name":  {
+                                   "en":  "Bodyweight walking lunge",
+                                   "sv":  "Gående utfall utan vikt"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Lunge/Single-leg",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 per side, controlled, knee tracking over the second toe.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  15,
+                      "name":  {
+                                   "en":  "Single-leg balance",
+                                   "sv":  "Enbensbalans"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Lunge/Single-leg",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "30 s per side. Add slow head turns once it feels easy.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  16,
+                      "name":  {
+                                   "en":  "Scapular push-up",
+                                   "sv":  "Skulderbladsarmhävning"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Horizontal push",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Arms straight, protract and retract only. 12 slow reps.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  17,
+                      "name":  {
+                                   "en":  "Band pull-apart",
+                                   "sv":  "Band pull-apart"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Horizontal push",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "20 reps, pause 1 s with the band at the chest.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  18,
+                      "name":  {
+                                   "en":  "Floor pec opener",
+                                   "sv":  "Bröstöppnare på golv"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Horizontal push",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Face down, one arm out at 90°, roll onto that shoulder. 30 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  19,
+                      "name":  {
+                                   "en":  "Push-up",
+                                   "sv":  "Armhävning"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Horizontal push",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 reps at a controlled tempo, body in one line.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  20,
+                      "name":  {
+                                   "en":  "Wall slide",
+                                   "sv":  "Väggglid"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Vertical push",
+                      "priority":  5,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Back to the wall, forearms flat, slide overhead without the ribs flaring. 12 reps.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  21,
+                      "name":  {
+                                   "en":  "Band overhead press",
+                                   "sv":  "Bandpress över huvudet"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Vertical push",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 reps, glutes squeezed, no lean-back.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  22,
+                      "name":  {
+                                   "en":  "Thoracic extension over roller",
+                                   "sv":  "Bröstryggsextension på rulle"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Vertical push",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Roller across the mid-back, extend over it. 8 reps at 3 positions.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  23,
+                      "name":  {
+                                   "en":  "Band row",
+                                   "sv":  "Bandrodd"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Horizontal pull",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 reps. Set the shoulder blade first, then bend the elbow.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  24,
+                      "name":  {
+                                   "en":  "Prone Y-T-W",
+                                   "sv":  "Prone Y-T-W"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Horizontal pull",
+                      "priority":  5,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "Face down on a bench or the floor. 8 reps of each letter, no weight needed.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  25,
+                      "name":  {
+                                   "en":  "Dead hang",
+                                   "sv":  "Hängning i stång"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Vertical pull",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "2 × 20 s. Let the shoulders come up, then actively pull them down.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  26,
+                      "name":  {
+                                   "en":  "Scapular pull-up",
+                                   "sv":  "Skulderbladschins"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Vertical pull",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 reps. Arms stay straight, chest rises toward the bar.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  27,
+                      "name":  {
+                                   "en":  "Lat stretch on rack",
+                                   "sv":  "Latsstretch i ställning"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Vertical pull",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Hinge with hands on the rack, sink the chest. 30 s, twice.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  28,
+                      "name":  {
+                                   "en":  "Empty bar complex",
+                                   "sv":  "Komplex med tom stång"
+                               },
+                      "phase":  "4 Specific",
+                      "phaseOrder":  4,
+                      "trigger":  "Olympic/Explosive",
+                      "priority":  2,
+                      "minutes":  4,
+                      "how":  {
+                                  "en":  "Empty bar: 5 muscle cleans, 5 front squats, 5 push presses, 5 hang pulls. Two rounds.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  29,
+                      "name":  {
+                                   "en":  "Overhead squat with stick",
+                                   "sv":  "Överhuvudböj med käpp"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Olympic/Explosive",
+                      "priority":  4,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "10 slow reps with a broomstick, arms locked and behind the ears.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  30,
+                      "name":  {
+                                   "en":  "Wrist and elbow prep",
+                                   "sv":  "Handleds- och armbågsförberedelse"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Olympic/Explosive",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Front-rack wrist rocks and elbow circles. 15 each, gently.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  31,
+                      "name":  {
+                                   "en":  "Skipping",
+                                   "sv":  "Hopprep"
+                               },
+                      "phase":  "1 Raise",
+                      "phaseOrder":  1,
+                      "trigger":  "Plyometric",
+                      "priority":  3,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "3 × 45 s, staying on the balls of the feet.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  32,
+                      "name":  {
+                                   "en":  "Pogo hops",
+                                   "sv":  "Pogohopp"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Plyometric",
+                      "priority":  3,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "2 × 20 stiff-ankle hops, minimal knee bend.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  33,
+                      "name":  {
+                                   "en":  "Calf pre-load",
+                                   "sv":  "Vadförberedelse"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Plyometric",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "20 bodyweight calf raises plus 10 fast bounces.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  34,
+                      "name":  {
+                                   "en":  "Dead bug",
+                                   "sv":  "Dead bug"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Core/Anti-movement",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 per side, lower back pressed flat throughout.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  35,
+                      "name":  {
+                                   "en":  "Bird dog",
+                                   "sv":  "Bird dog"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Core/Anti-movement",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "10 per side, 2 s hold, hips level.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  36,
+                      "name":  {
+                                   "en":  "Grip prep",
+                                   "sv":  "Greppförberedelse"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Carry",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "20 s hang, 20 hand squeezes, wrist circles.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  37,
+                      "name":  {
+                                   "en":  "Light suitcase carry",
+                                   "sv":  "Lätt resväskebärning"
+                               },
+                      "phase":  "4 Specific",
+                      "phaseOrder":  4,
+                      "trigger":  "Carry",
+                      "priority":  4,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "2 × 15 m per side at about half your working load.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  38,
+                      "name":  {
+                                   "en":  "Leg swings",
+                                   "sv":  "Bensvingar"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Hamstrings",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 front-to-back and 15 side-to-side per leg, building range gradually.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  39,
+                      "name":  {
+                                   "en":  "Banded clamshell",
+                                   "sv":  "Clamshell med band"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Glutes",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 per side, band above the knees, hips stacked.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  40,
+                      "name":  {
+                                   "en":  "Band dislocates",
+                                   "sv":  "Band dislocates"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Shoulders",
+                      "priority":  5,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "12 reps, hands wide enough that the arms stay straight.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  41,
+                      "name":  {
+                                   "en":  "Couch stretch",
+                                   "sv":  "Couch stretch"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Quads",
+                      "priority":  7,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Rear foot on a bench, pelvis tucked. 45 s per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  42,
+                      "name":  {
+                                   "en":  "Ankle rocks and calf raises",
+                                   "sv":  "Fotledsrockning och vadlyft"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Calves",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 ankle rocks plus 20 calf raises per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  43,
+                      "name":  {
+                                   "en":  "Cossack squat",
+                                   "sv":  "Cossack squat"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Adductors",
+                      "priority":  6,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "8 per side, heel down, chest up.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  44,
+                      "name":  {
+                                   "en":  "Thread the needle",
+                                   "sv":  "Thread the needle"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Back",
+                      "priority":  6,
+                      "minutes":  3,
+                      "how":  {
+                                  "en":  "On all fours, reach one arm under the body. 8 per side.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  45,
+                      "name":  {
+                                   "en":  "Arm circles",
+                                   "sv":  "Armcirklar"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Chest",
+                      "priority":  7,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "20 small circles into 20 large ones, both directions.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  46,
+                      "name":  {
+                                   "en":  "Hollow hold",
+                                   "sv":  "Hollow hold"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Core",
+                      "priority":  7,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "2 × 20 s. Lower back stays glued to the floor.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  47,
+                      "name":  {
+                                   "en":  "Light arm pump",
+                                   "sv":  "Lätt armpump"
+                               },
+                      "phase":  "3 Activate",
+                      "phaseOrder":  3,
+                      "trigger":  "Biceps",
+                      "priority":  8,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "20 band curls and 20 band pushdowns to get blood into the elbows.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  48,
+                      "name":  {
+                                   "en":  "Shrugs and neck circles",
+                                   "sv":  "Shrugs och nackcirklar"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Traps",
+                      "priority":  8,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "15 slow shrugs, then 10 gentle neck circles each way.",
+                                  "sv":  null
+                              }
+                  },
+                  {
+                      "id":  49,
+                      "name":  {
+                                   "en":  "Wrist prep",
+                                   "sv":  "Handledsförberedelse"
+                               },
+                      "phase":  "2 Mobilise",
+                      "phaseOrder":  2,
+                      "trigger":  "Forearms",
+                      "priority":  8,
+                      "minutes":  2,
+                      "how":  {
+                                  "en":  "Kneeling wrist rocks, palms down then palms up. 15 each.",
+                                  "sv":  null
+                              }
+                  }
+              ]
+}

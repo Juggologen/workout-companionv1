@@ -114,6 +114,7 @@ export const ICONS = {
   up: 'm18 15-6-6-6 6',
   down: 'm6 9 6 6 6-6',
   chevronLeft: 'm15 5-7 7 7 7',
+  chevronRight: 'm9 5 7 7-7 7',
   chevronDown: 'm6 9 6 6 6-6',
   pencil: 'M15.5 4.5 19.5 8.5 8.5 19.5 4 20.5l1-4.5 10.5-11.5Z',
   // Tab bar

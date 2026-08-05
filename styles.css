@@ -46,12 +46,24 @@
   --t-78: color-mix(in srgb, var(--color-text) 78%, transparent);
 
   /* ---- goal accents ----
-     Validated as a trio against both Nocturne surfaces. Endurance and
+     Validated as a set against both Nocturne surfaces. Endurance and
      Strength sit at ΔE 7.6 under protanopia, inside the warn band, which is
      permitted only alongside a second channel — hence the balance bar always
-     ships its labelled legend with set counts and percentages. */
+     ships its labelled legend with set counts and percentages.
+
+     Hypertrophy is the fourth, and was picked by sweeping hue 285–340 at the
+     chroma and lightness of its siblings, keeping the candidate whose worst
+     CIEDE2000 distance to any colour it can share a screen with was largest.
+     It lands at ΔE 13.0 — against Explosive under protanopia, and against
+     Endurance under deuteranopia — with contrast 5.38 on the ground and 4.65
+     on the surface. That is a wider margin than the existing pair above, so
+     the fourth goal does not make the set harder to read than it already was.
+     Magenta because it is the only hue left: red, amber and yellow are spoken
+     for by the muscle tokens and Home, and violet would collide with
+     Nocturne's own accent. */
   --goal-explosive: #5f93dd;
   --goal-strength: #cd7449;
+  --goal-hypertrophy: #c9739d;
   --goal-endurance: #3f9d79;
 
   /* Home is not a training mode, so it does not take a goal colour. This
@@ -470,6 +482,48 @@ input, select, textarea { font: inherit; color: inherit; }
 .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .panel-title { font-size: 15px; font-weight: 500; }
 
+/* The static twin of .panel-btn, for a panel that holds its own controls and
+   so cannot itself be a button. */
+.panel {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------------------------------------------------------- week summary
+
+   Seven fixed columns, so the shape of the week is the same every week and
+   Wednesday is always in the middle. A day with work is filled with the goal
+   accent; a day without gets a middle dot rather than a 0, because a rest day
+   is not a failed training day. */
+
+.week-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.week-range { font-size: 13px; color: var(--t-65); font-variant-numeric: tabular-nums; }
+.week-nav { display: flex; gap: 4px; flex: none; }
+.week-nav .icon-btn:disabled { opacity: 0.3; cursor: default; }
+
+.week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 0 8px;
+  border-radius: var(--radius-md);
+  background: rgba(233, 233, 237, 0.04);
+}
+.week-day-name { font-size: 10.5px; letter-spacing: 0.04em; color: var(--t-45); }
+.week-day-sets { font-size: 14px; font-weight: 500; color: var(--t-45); font-variant-numeric: tabular-nums; }
+.week-day.is-on { background: color-mix(in srgb, var(--g) 15%, transparent); }
+.week-day.is-on .week-day-sets { color: var(--g); }
+.week-day.is-on .week-day-name { color: color-mix(in srgb, var(--color-text) 62%, transparent); }
+
+.week-meta { font-size: 12.5px; color: var(--t-65); }
+.week-untouched-label { color: var(--t-65); }
+
 /* ------------------------------------------------------------ mix bar */
 
 .mix-bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; gap: 2px; }
@@ -563,6 +617,56 @@ input, select, textarea { font: inherit; color: inherit; }
   border-color: var(--g);
   background: color-mix(in srgb, var(--g) 14%, transparent);
   color: var(--g);
+}
+
+/* Wraps instead of sharing the width, for the fourteen muscle toggles on the
+   custom-exercise form -- fourteen equal columns would be unreadable. */
+.chip-sm { flex: 0 0 auto; height: 30px; padding: 0 11px; font-size: 12px; border-radius: 999px; }
+.muscle-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* A chosen lift and its 1RM control. The row keeps its own borders off so the
+   line owns the divider, or the folded-out stepper would sit below a rule
+   that belongs to the row above it. */
+.lift-line { display: flex; align-items: center; border-bottom: 1px solid var(--color-divider); }
+.lift-line > .pick-row { border-bottom: 0; }
+.lift-line > .icon-btn { flex: none; margin-right: 10px; }
+.lift-line.is-open { border-bottom-color: transparent; }
+.lift-rm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 15px 14px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.form-error {
+  font-size: 13px;
+  color: var(--muscle-primary);
+  border: 1px solid color-mix(in srgb, var(--muscle-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--muscle-primary) 10%, transparent);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.profile-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.badge-own {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 16%, transparent);
+  vertical-align: 1px;
 }
 
 /* ----------------------------------------------------------------- plan */
@@ -1105,6 +1209,105 @@ details > summary::-webkit-details-marker { display: none; }
 .hist-date { width: 78px; flex: none; font-size: 11.5px; color: var(--t-45); font-variant-numeric: tabular-nums; }
 .hist-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hist-num { font-variant-numeric: tabular-nums; color: var(--t-65); white-space: nowrap; }
+
+/* ------------------------------------------------------ perceived exertion
+
+   The chart is inline SVG with `preserveAspectRatio: none`, so it stretches
+   to the column instead of scaling its own text with it: the tick labels and
+   the axis stay at their authored size at every width, which is the whole
+   reason for stretching rather than scaling. Stroke widths are given in the
+   viewBox's units and are therefore distorted horizontally -- which is why
+   the line and the grid are the only strokes, and everything else is a fill.
+   ========================================================================= */
+
+.rpe-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rpe-controls .chips { flex: 1; min-width: 168px; }
+.rpe-average {
+  font-size: 12px;
+  color: var(--g);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rpe-chart-wrap { width: 100%; }
+.rpe-chart { display: block; width: 100%; height: 152px; overflow: visible; }
+.rpe-grid { stroke: var(--color-divider); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.rpe-axis, .rpe-tick {
+  fill: var(--t-45);
+  font: 9px var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.rpe-bar { fill: var(--g); }
+.rpe-line {
+  fill: none;
+  stroke: var(--g);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.rpe-dot-mark { fill: var(--g); }
+.rpe-hit { fill: transparent; }
+
+/* The style slider. The track is the switch; the two words either side are
+   also targets, so the control can be tapped where you are already looking. */
+.switch { display: flex; align-items: center; gap: 8px; flex: none; }
+.switch-label {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: 500 12px var(--font-heading);
+  color: var(--t-45);
+}
+.switch-label.is-on { color: var(--g); }
+.switch-track {
+  width: 40px;
+  height: 22px;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--color-divider);
+  background: rgba(233, 233, 237, 0.06);
+  padding: 0;
+  position: relative;
+}
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--g);
+  transition: transform 0.16s ease;
+}
+.switch-thumb.is-right { transform: translateX(18px); }
+
+/* The 1-10 picker in the finish sheet. Two rows of five on a narrow phone,
+   one row of ten where there is room. */
+.rpe-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+@media (min-width: 520px) {
+  .rpe-scale { grid-template-columns: repeat(10, 1fr); }
+}
+.rpe-dot {
+  height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  color: var(--t-65);
+  font: 500 15px var(--font-heading);
+  font-variant-numeric: tabular-nums;
+}
+.rpe-dot:hover {
+  border-color: var(--g);
+  background: color-mix(in srgb, var(--g) 14%, transparent);
+  color: var(--g);
+}
+.rpe-anchors {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--t-45);
+}
 
 /* ============================================================== printing
    The PDF export is the browser's own "Save as PDF" over this stylesheet.

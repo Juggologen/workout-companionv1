@@ -4,11 +4,33 @@
  * Everything here is read-only reference data that ships with the app. User
  * data (1RMs, sessions, log) lives in store.js and is never mixed in, so
  * re-extracting the workbook can't destroy anyone's history.
+ *
+ * Two things are folded in on top of the generated files:
+ *
+ *   - data/hypertrophy.json, the fourth goal. It is hand-authored, because
+ *     the workbook only prescribes three, and the extractor rewrites
+ *     prescriptions.json and vocabulary.json wholesale every time it runs.
+ *     Merging it here means the goal survives a re-extract.
+ *
+ *   - the user's own exercises, via `withCustomExercises`. That one takes the
+ *     list as an argument rather than reading storage, so this file still has
+ *     no idea store.js exists and the reference/user split holds.
  */
 
 import { indexPrescriptions } from './engine.js';
 
-const FILES = ['exercises', 'warmups', 'mobility', 'prescriptions', 'vocabulary'];
+const FILES = ['exercises', 'warmups', 'mobility', 'prescriptions', 'vocabulary', 'hypertrophy'];
+
+/**
+ * Where the fourth goal sits in the list.
+ *
+ * Appending it would have been less code, but the goals read as an intensity
+ * continuum everywhere they are listed -- Explosive, Strength, Hypertrophy,
+ * Endurance -- and a goal bolted onto the end reads as an afterthought rather
+ * than as a point on that line.
+ */
+const HYPERTROPHY = 'Hypertrophy';
+const HYPERTROPHY_AFTER = 'Strength';
 
 async function loadJson(name) {
   const res = await fetch(`data/${name}.json`, { cache: 'no-cache' });
@@ -25,23 +47,65 @@ function withRowNumbers(items) {
   return items.map((item, i) => ({ ...item, row: i + 1 }));
 }
 
+function goalsWithHypertrophy(goals) {
+  if (goals.includes(HYPERTROPHY)) return goals;
+  const at = goals.indexOf(HYPERTROPHY_AFTER);
+  const out = goals.slice();
+  out.splice(at < 0 ? out.length : at + 1, 0, HYPERTROPHY);
+  return out;
+}
+
 export async function loadCatalog() {
-  const [exercises, warmups, mobility, prescriptions, vocabulary] = await Promise.all(
+  const [exercises, warmups, mobility, prescriptions, vocabulary, hypertrophy] = await Promise.all(
     FILES.map(loadJson)
   );
 
-  const exerciseItems = exercises.items;
-  const byId = new Map(exerciseItems.map((ex) => [ex.id, ex]));
+  const prescriptionItems = [...prescriptions.items, ...hypertrophy.items];
 
-  return {
-    exercises: exerciseItems,
-    byId,
+  return finish({
+    exercises: exercises.items,
     warmups: withRowNumbers(warmups.items),
     mobility: withRowNumbers(mobility.items),
-    prescriptions: prescriptions.items,
-    prescriptionIndex: indexPrescriptions(prescriptions.items),
+    prescriptions: prescriptionItems,
     setupSeconds: prescriptions.setupSecondsPerExercise,
-    vocabulary,
+    vocabulary: { ...vocabulary, goals: goalsWithHypertrophy(vocabulary.goals) },
     generated: exercises.meta?.generated ?? null,
+  });
+}
+
+/**
+ * The parts derived from the exercise list, recomputed whenever that list
+ * changes -- which is every time the user adds, edits or deletes one of their
+ * own exercises.
+ */
+function finish(catalog) {
+  const byId = new Map(catalog.exercises.map((ex) => [ex.id, ex]));
+  return {
+    ...catalog,
+    byId,
+    prescriptionIndex: indexPrescriptions(catalog.prescriptions),
+    /**
+     * Exercise ids are numbers in the shipped catalog and strings ('u3') for
+     * the user's own, so anything that has been through a `value` attribute or
+     * a URL comes back as text and has to be resolved rather than parsed.
+     * Returns null for an id that no longer exists.
+     */
+    resolveId(raw) {
+      if (byId.has(raw)) return raw;
+      const n = Number(raw);
+      return Number.isFinite(n) && byId.has(n) ? n : null;
+    },
   };
+}
+
+/**
+ * The shipped catalog plus the user's own exercises.
+ *
+ * The customs go last so a user exercise can never displace a workbook one in
+ * the library ordering, and so `row`-style tie-breaks -- which the warm-up and
+ * cool-down selection depend on -- are untouched by anything the user adds.
+ */
+export function withCustomExercises(catalog, customs = []) {
+  const base = catalog.baseExercises ?? catalog.exercises;
+  return finish({ ...catalog, baseExercises: base, exercises: [...base, ...customs] });
 }

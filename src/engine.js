@@ -312,6 +312,89 @@ export function musclesetsFromLog(entries, byId) {
   return [...rows.values()].sort((a, b) => b.total - a.total || a.muscle.localeCompare(b.muscle));
 }
 
+/* ------------------------------------------------------------ calendar weeks
+
+   Dates are formatted from local components throughout, never via
+   toISOString: local midnight is the previous day in UTC at any positive
+   offset, which would slide every week boundary back by one day and put
+   Monday's training in the previous week. Same reason as `dailySets`.
+   ------------------------------------------------------------------------- */
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+export function localIso(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/** Local midnight for an ISO date, as a Date. */
+function atMidnight(iso) {
+  return new Date(`${iso}T00:00:00`);
+}
+
+/**
+ * The Monday of the week containing `iso`, shifted by `weeks`.
+ *
+ * Monday-anchored rather than Sunday-anchored because that is what a training
+ * week means to the person doing it, and it is the ISO-8601 week besides.
+ * `getDay()` numbers Sunday 0, so the offset back to Monday is (day + 6) % 7 --
+ * which sends Sunday six days back, into the week it finishes rather than the
+ * one it would otherwise start.
+ */
+export function weekStart(iso, weeks = 0) {
+  const d = atMidnight(iso);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + weeks * 7);
+  return localIso(d);
+}
+
+/** The seven ISO dates of the week beginning `startIso`, Monday first. */
+export function weekDates(startIso) {
+  const out = [];
+  for (let i = 0; i < 7; i += 1) {
+    const d = atMidnight(startIso);
+    d.setDate(d.getDate() + i);
+    out.push(localIso(d));
+  }
+  return out;
+}
+
+/** Entries falling inside an inclusive ISO date range. */
+export function withinRange(entries, fromIso, toIso) {
+  return entries.filter((e) => e.date >= fromIso && e.date <= toIso);
+}
+
+/**
+ * What a training week actually covered.
+ *
+ * The muscle rows are `musclesetsFromLog` over the week's entries -- the same
+ * primary/supporting split the log and the body map use, so the three never
+ * tell different stories. What is added here is the other half of the answer:
+ * which groups were NOT touched, which is the question a weekly summary is
+ * really being asked. That list is the muscle vocabulary minus what was
+ * trained, so it names groups the catalog can actually train rather than
+ * inventing anatomy.
+ */
+export function weekSummary(entries, startIso, byId, allMuscles = []) {
+  const dates = weekDates(startIso);
+  const inWeek = withinRange(entries, dates[0], dates[6]);
+  const rows = musclesetsFromLog(inWeek, byId);
+  const touched = new Set(rows.map((r) => r.muscle));
+
+  const days = dates.map((date) => ({
+    date,
+    sets: inWeek.filter((e) => e.date === date).length,
+  }));
+
+  return {
+    start: dates[0],
+    end: dates[6],
+    days,
+    rows,
+    untouched: allMuscles.filter((m) => m !== 'Full body' && !touched.has(m)),
+    sets: inWeek.length,
+    daysTrained: days.filter((d) => d.sets > 0).length,
+  };
+}
+
 /**
  * Sets logged per day for the last `days` days, oldest first.
  *
@@ -325,12 +408,9 @@ export function dailySets(entries, days, today) {
     if (d >= 0 && d < days) counts.set(entry.date, (counts.get(entry.date) || 0) + 1);
   }
 
-  // Dates are formatted from local components, never via toISOString: local
+  // Dates come from local components via `localIso`, never toISOString: local
   // midnight is the previous day in UTC for any positive offset, which would
   // shift the whole strip back a day and make today's work never line up.
-  const pad = (n) => String(n).padStart(2, '0');
-  const localIso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
   const out = [];
   for (let i = days - 1; i >= 0; i -= 1) {
     const d = new Date(`${today}T00:00:00`);
@@ -365,6 +445,110 @@ export function goalMixFromLog(entries, goals) {
   }));
 
   return { items, unknown, total };
+}
+
+/* -------------------------------------------------------------------- RPE */
+
+/**
+ * One rate of perceived exertion per session, oldest first.
+ *
+ * RPE is stored on the log rows rather than in a table of its own, because a
+ * row is the only thing that survives every route into the log -- finishing a
+ * session, "did it again", and adding a set by hand all write rows and nothing
+ * else. Finishing a session stamps the same session RPE on every set it logs,
+ * so averaging the rows of one session gives that number straight back.
+ *
+ * Sets added by hand carry their own per-set RPE, which is a different
+ * measurement. They are grouped by date under a single pseudo-session, so a
+ * day of hand-entered sets contributes one point rather than one per set --
+ * otherwise a single fastidiously logged afternoon would outweigh a month of
+ * finished sessions.
+ */
+export function sessionRpes(entries) {
+  const groups = new Map();
+
+  for (const entry of entries) {
+    if (entry.rpe == null) continue;
+    const key = `${entry.date}|${entry.sessionId ?? 'by-hand'}`;
+    let g = groups.get(key);
+    if (!g) {
+      g = { date: entry.date, name: entry.sessionName || '', sum: 0, n: 0 };
+      groups.set(key, g);
+    }
+    g.sum += entry.rpe;
+    g.n += 1;
+  }
+
+  return [...groups.values()]
+    .map((g) => ({ date: g.date, name: g.name, rpe: g.sum / g.n, sets: g.n }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export const RPE_RANGES = ['week', 'month', 'year'];
+export const RPE_MIN = 1;
+export const RPE_MAX = 10;
+
+function dayBuckets(todayIso, days) {
+  const out = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const d = atMidnight(todayIso);
+    d.setDate(d.getDate() - i);
+    const iso = localIso(d);
+    out.push({ key: iso, from: iso, to: iso });
+  }
+  return out;
+}
+
+function monthBuckets(todayIso, months) {
+  const out = [];
+  for (let i = months - 1; i >= 0; i -= 1) {
+    const d = atMidnight(todayIso);
+    // Day 1 first: stepping back a month from the 31st lands in the wrong
+    // month whenever the target is shorter, which would drop or duplicate a
+    // bucket depending on where in the year you happen to be looking.
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    const from = localIso(d);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    out.push({ key: from.slice(0, 7), from, to: localIso(last) });
+  }
+  return out;
+}
+
+/**
+ * Session RPE bucketed for a chart, oldest first.
+ *
+ * All three ranges are trailing windows ending today rather than calendar
+ * periods, so the rightmost point is always now and switching range never
+ * makes recent training disappear off the end. Week and month bucket by day;
+ * year buckets by calendar month, because 365 points is not a shape anyone
+ * can read on a phone.
+ *
+ * A bucket with no session gets `rpe: null` rather than 0 -- a day you did not
+ * train is a gap in the record, not an effortless workout, and drawing it as
+ * zero would drag every trend line toward the floor.
+ */
+export function rpeSeries(entries, range, todayIso) {
+  const sessions = sessionRpes(entries);
+  const buckets =
+    range === 'year' ? monthBuckets(todayIso, 12) : dayBuckets(todayIso, range === 'week' ? 7 : 30);
+
+  const points = buckets.map((b) => {
+    const inside = sessions.filter((s) => s.date >= b.from && s.date <= b.to);
+    return {
+      ...b,
+      sessions: inside.length,
+      rpe: inside.length ? inside.reduce((sum, s) => sum + s.rpe, 0) / inside.length : null,
+    };
+  });
+
+  const known = points.filter((p) => p.rpe != null);
+  return {
+    range,
+    points,
+    count: known.reduce((sum, p) => sum + p.sessions, 0),
+    average: known.length ? known.reduce((sum, p) => sum + p.rpe, 0) / known.length : null,
+  };
 }
 
 /* ------------------------------------------------------------- formatting */

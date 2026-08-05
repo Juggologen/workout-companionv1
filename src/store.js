@@ -14,6 +14,7 @@ const KEYS = {
   log: `${PREFIX}log`,
   oneRm: `${PREFIX}one-rm`,
   prefs: `${PREFIX}prefs`,
+  customExercises: `${PREFIX}custom-exercises`,
 };
 
 function read(key, fallback) {
@@ -68,6 +69,15 @@ export const store = {
   getPrefs: () => read(KEYS.prefs, {}),
   setPrefs: (v) => write(KEYS.prefs, v),
 
+  /**
+   * Exercises the user wrote themselves, in the same shape as a catalog row
+   * but with a string id ('u3') so it can never collide with the workbook's
+   * numeric ones. Kept out of the shipped catalog entirely -- re-running the
+   * extractor rewrites data/exercises.json and would take these with it.
+   */
+  getCustomExercises: () => read(KEYS.customExercises, []),
+  setCustomExercises: (v) => write(KEYS.customExercises, v),
+
   /** Everything the user owns, for backup or moving to another device. */
   exportAll() {
     return {
@@ -79,6 +89,7 @@ export const store = {
       log: this.getLog(),
       oneRm: this.getOneRm(),
       prefs: this.getPrefs(),
+      customExercises: this.getCustomExercises(),
     };
   },
 
@@ -92,6 +103,9 @@ export const store = {
     if (payload.log) this.setLog(payload.log);
     if (payload.oneRm) this.setOneRm(payload.oneRm);
     if (payload.prefs) this.setPrefs(payload.prefs);
+    // Absent from any backup taken before custom exercises existed, which is
+    // fine -- those files simply restore a library with none in it.
+    if (payload.customExercises) this.setCustomExercises(payload.customExercises);
   },
 
   clearAll() {

@@ -12,7 +12,7 @@
  * is the exception -- it is not a training mode, so it keeps its own yellow.
  */
 
-import { loadCatalog } from './data.js';
+import { loadCatalog, withCustomExercises } from './data.js';
 import { store, newId, today } from './store.js';
 import { t, tp, localized } from './i18n.js';
 import { h, mount, icon, ICONS, num } from './ui.js';
@@ -29,6 +29,12 @@ import {
   dailySets,
   musclesetsFromLog,
   goalMixFromLog,
+  weekStart,
+  weekSummary,
+  rpeSeries,
+  RPE_RANGES,
+  RPE_MIN,
+  RPE_MAX,
 } from './engine.js';
 import { renderBodyMap, musclesWorked } from './muscles.js';
 
@@ -37,6 +43,7 @@ import { renderBodyMap, musclesWorked } from './muscles.js';
 const GOAL_COLOR = {
   Explosivity: 'var(--goal-explosive)',
   Strength: 'var(--goal-strength)',
+  Hypertrophy: 'var(--goal-hypertrophy)',
   'Muscular endurance': 'var(--goal-endurance)',
 };
 
@@ -58,14 +65,22 @@ const state = {
   log: [],
   oneRm: {},
   prefs: {},
+  customExercises: [],
   live: null,
   libQuery: '',
   libFilters: { equipment: '', pattern: '', primary: '', secondary: '' },
   libFiltersOpen: false,
   libOpen: null,
   libPicking: false,
+  /** The custom exercise being written or edited, or null. See `exerciseForm`. */
+  libDraftExercise: null,
+  libArchiveOpen: false,
   logDetail: false,
   logHistory: false,
+  /** Which lift on Build has its 1RM control unfolded. One at a time. */
+  buildRmOpen: null,
+  /** 0 = the week containing today, -1 = the week before it. Never positive. */
+  weekOffset: 0,
   flash: null,
 };
 
@@ -128,6 +143,8 @@ async function init() {
   state.oneRm = store.getOneRm();
   state.prefs = store.getPrefs();
   state.live = store.getLive();
+  state.customExercises = store.getCustomExercises();
+  refreshCatalog();
 
   const draft = store.getDraft();
   if (draft) state.session = { ...blankSession(), ...draft };
@@ -156,6 +173,23 @@ function saveDraft() {
 
 function saveLive() {
   if (state.live) store.setLive(state.live);
+}
+
+/**
+ * Fold the user's own exercises back into the catalog.
+ *
+ * Called after anything that changes that list. Archived ones are still in
+ * here on purpose: they are hidden from the library and the picker, but a
+ * workout or a log entry that already refers to one has to keep resolving,
+ * or the history would develop holes the moment someone tidied up.
+ */
+function refreshCatalog() {
+  state.catalog = withCustomExercises(state.catalog, state.customExercises);
+}
+
+function saveCustomExercises() {
+  store.setCustomExercises(state.customExercises);
+  refreshCatalog();
 }
 
 /**
@@ -212,6 +246,10 @@ function syncTabbarHeight(app) {
 }
 
 function go(screen) {
+  // Leaving the Library abandons a half-written exercise. Keeping it would
+  // mean coming back to the Library later and landing in a form instead of
+  // the list, with no memory of having opened one.
+  if (screen !== 'library') state.libDraftExercise = null;
   state.screen = screen;
   render();
 }
@@ -381,6 +419,7 @@ function viewHome() {
       screenHead(formatToday(), t('today.title')),
       plannedCard(exercises, built),
       streakCard(),
+      weekCard(),
       balanceCard(mix),
       savedCard()
     )
@@ -492,6 +531,163 @@ function streakCard() {
 function shortDate(iso) {
   const d = new Date(`${iso}T00:00:00`);
   return `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`;
+}
+
+/* ----------------------------------------------------------- week summary */
+
+/**
+ * The training week, Monday to Sunday.
+ *
+ * A calendar week rather than a trailing seven days, because that is the unit
+ * people actually plan and talk about training in ("chest twice this week"),
+ * and because a rolling window silently drops Monday's work as soon as the
+ * next Monday arrives — which is exactly when you want to look back at it.
+ *
+ * The 14-day strip above answers "have I been training". This answers "what
+ * have I been training", which is a different question and the one a weekly
+ * summary is for. What was NOT trained is given equal billing: a list of the
+ * muscle groups you hit says nothing about the ones you keep missing.
+ */
+function weekCard() {
+  const start = weekStart(today(), state.weekOffset);
+  const sum = weekSummary(
+    state.log,
+    start,
+    state.catalog.byId,
+    state.catalog.vocabulary.muscles
+  );
+
+  const nav = (delta, label, disabled) =>
+    h(
+      'button.icon-btn',
+      {
+        disabled,
+        'aria-label': label,
+        title: label,
+        onclick: () => {
+          state.weekOffset += delta;
+          render();
+        },
+      },
+      icon(delta < 0 ? ICONS.chevronLeft : ICONS.chevronRight, { size: 13 })
+    );
+
+  return h(
+    'div.stack',
+    { style: 'gap:12px' },
+    h(
+      'div.week-head',
+      h(
+        'div.stack',
+        { style: 'gap:2px' },
+        h('div.kicker', weekTitle()),
+        h('div.week-range', weekRangeLabel(sum.start, sum.end))
+      ),
+      h(
+        'div.week-nav',
+        nav(-1, t('week.previous'), false),
+        // Never past the current week: there is nothing logged in the future,
+        // and an endlessly advancing empty week is a dead end to walk into.
+        nav(1, t('week.next'), state.weekOffset >= 0)
+      )
+    ),
+    h(
+      'div.week-days',
+      sum.days.map((d) =>
+        h(
+          'div.week-day',
+          { class: d.sets ? 'is-on' : '', title: `${d.date} — ${tp('log.sets', d.sets)}` },
+          h('span.week-day-name', weekdayShort(d.date)),
+          h('span.week-day-sets', d.sets ? String(d.sets) : '·')
+        )
+      )
+    ),
+    sum.sets
+      ? h(
+          'div.stack',
+          { style: 'gap:12px' },
+          h(
+            'div.week-meta',
+            tp('week.summary', sum.daysTrained, { sets: sum.sets, muscles: sum.rows.length })
+          ),
+          muscleRoleKey(),
+          muscleBars(sum.rows),
+          sum.untouched.length > 0 &&
+            h(
+              'p.hint',
+              h('span.week-untouched-label', t('week.untouched')),
+              ' ',
+              sum.untouched.join(' · ')
+            )
+        )
+      : empty(t('week.empty'), state.weekOffset === 0 ? t('week.emptyHint') : null)
+  );
+}
+
+function weekTitle() {
+  if (state.weekOffset === 0) return t('week.this');
+  if (state.weekOffset === -1) return t('week.last');
+  return t('week.agoWeeks', { n: -state.weekOffset });
+}
+
+function weekdayShort(iso) {
+  return new Date(`${iso}T00:00:00`).toLocaleString('en', { weekday: 'short' }).slice(0, 2);
+}
+
+function weekRangeLabel(startIso, endIso) {
+  const a = new Date(`${startIso}T00:00:00`);
+  const b = new Date(`${endIso}T00:00:00`);
+  const month = (d) => d.toLocaleString('en', { month: 'short' });
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${month(b)}`
+    : `${a.getDate()} ${month(a)} – ${b.getDate()} ${month(b)}`;
+}
+
+/**
+ * Sets per muscle group as paired bars.
+ *
+ * Shared by the weekly summary and the 30-day breakdown on Log so the two can
+ * never drift into showing the same numbers two different ways. The bars are
+ * scaled within the rows they are given, so a quiet week still fills the
+ * width — the figure on the right is the one that carries the magnitude.
+ */
+function muscleBars(rows) {
+  const max = rows.reduce((m, r) => Math.max(m, r.primary, r.secondary), 0) || 1;
+
+  return h(
+    'div.stack',
+    { style: 'gap:0' },
+    rows.map((r) =>
+      h(
+        'div.mbar-row',
+        {
+          title: t('log.splitTitle', {
+            muscle: r.muscle,
+            total: r.total,
+            p: r.primary,
+            s: r.secondary,
+          }),
+        },
+        h('span.mbar-name', r.muscle),
+        h(
+          'span.mbar-pair',
+          h('span.mbar.mbar-p', { style: `width:${Math.round((r.primary / max) * 100)}%` }),
+          h('span.mbar.mbar-s', { style: `width:${Math.round((r.secondary / max) * 100)}%` })
+        ),
+        h('span.mbar-value', String(r.total))
+      )
+    )
+  );
+}
+
+/** The red/amber key the body map, the week card and the log all share. */
+function muscleRoleKey() {
+  return h(
+    'div',
+    { style: 'display:flex;align-items:center;gap:16px' },
+    h('span.map-group-label', h('span.swatch.swatch-lg.swatch-primary'), t('log.primary')),
+    h('span.map-group-label', h('span.swatch.swatch-lg.swatch-secondary'), t('log.supporting'))
+  );
 }
 
 function balanceCard(mix) {
@@ -699,15 +895,39 @@ function liftsSection(exercises) {
   );
 }
 
+/**
+ * One chosen lift, with its 1RM to hand.
+ *
+ * The suggested load is a fraction of your 1RM, so a lift without one shows
+ * "Enter your 1RM" right where the weight should be — and until now the only
+ * place to enter it was the Library, three taps and a screen away from the
+ * sentence asking for it. The control is the same stepper the Library uses,
+ * writing to the same store, so a number typed here is the number there.
+ *
+ * Folded away by default, and only offered at all where a 1RM means
+ * something: a lift prescribed by bodyweight has no percentage to take.
+ */
 function liftRow(ex) {
   const load = loadFor(ex);
-  return h(
+  const rm = state.oneRm[ex.id];
+  const usesRm = load.kind !== 'bodyweight';
+  const open = usesRm && state.buildRmOpen === ex.id;
+
+  const setRm = (value) => {
+    if (value <= 0) delete state.oneRm[ex.id];
+    else state.oneRm[ex.id] = value;
+    store.setOneRm(state.oneRm);
+    render();
+  };
+
+  const row = h(
     'button.pick-row',
     {
       'aria-pressed': 'true',
       onclick: () => {
         state.session.exerciseIds = state.session.exerciseIds.filter((id) => id !== ex.id);
         delete state.session.loads[ex.id];
+        if (state.buildRmOpen === ex.id) state.buildRmOpen = null;
         render();
       },
     },
@@ -719,6 +939,36 @@ function liftRow(ex) {
     ),
     h('span.pick-load', { class: load.kind === 'no-1rm' ? 'is-missing' : '' }, loadLabel(load))
   );
+
+  return [
+    h(
+      'div.lift-line',
+      { class: open ? 'is-open' : '' },
+      row,
+      usesRm &&
+        h(
+          'button.icon-btn',
+          {
+            'aria-expanded': String(open),
+            'aria-label': `${t('library.oneRm')} — ${localized(ex.name)}`,
+            title: t('build.setRmFor', { name: localized(ex.name) }),
+            onclick: () => {
+              state.buildRmOpen = open ? null : ex.id;
+              render();
+            },
+          },
+          icon(rm ? ICONS.pencil : ICONS.plus, { size: 14 })
+        )
+    ),
+    open &&
+      h(
+        'div.lift-rm',
+        weightStepper(t('library.oneRm'), rm ?? null, setRm, (delta) =>
+          setRm(steppedWeight(rm || 0, delta))
+        ),
+        h('p.hint', t('build.rmHint'))
+      ),
+  ];
 }
 
 function loadLabel(load) {
@@ -1129,7 +1379,7 @@ function block({ key, title, sub, keys, children }) {
 function attemptFinish(steps, doneCount, loggableCount) {
   const missing = steps.length - doneCount;
   if (missing === 0) {
-    finishSession(loggableCount);
+    askRpeThenFinish(loggableCount);
     return;
   }
 
@@ -1140,8 +1390,107 @@ function attemptFinish(steps, doneCount, loggableCount) {
       : t('live.confirmNothing'),
     confirmLabel: t('live.confirmFinish'),
     cancelLabel: t('live.confirmKeepGoing'),
-    onConfirm: () => finishSession(loggableCount),
+    onConfirm: () => askRpeThenFinish(loggableCount),
   });
+}
+
+/**
+ * Ask how hard that was, then write the log.
+ *
+ * Asked at the end rather than per set: a session RPE is a judgement about the
+ * whole thing, and stopping to rate every set would turn a rest period into
+ * paperwork. Nothing ticked means nothing to attach a rating to, so the
+ * question is skipped rather than asked about a session that will not exist.
+ */
+function askRpeThenFinish(loggableCount) {
+  if (!loggableCount) {
+    finishSession(0, null);
+    return;
+  }
+  rpeSheet({
+    title: t('rpe.title'),
+    body: tp('rpe.body', loggableCount),
+    onPick: (rpe) => finishSession(loggableCount, rpe),
+  });
+}
+
+/**
+ * Borg CR-10 anchors, for the label under each number.
+ *
+ * Only the ends and the middle are named. Handing the reader ten adjectives
+ * invites them to pick the word rather than the effort, and the numbers in
+ * between are exactly the fine grain the scale exists to capture.
+ */
+const RPE_WORD = {
+  1: 'rpe.w1',
+  3: 'rpe.w3',
+  5: 'rpe.w5',
+  7: 'rpe.w7',
+  9: 'rpe.w9',
+  10: 'rpe.w10',
+};
+
+function rpeWord(n) {
+  const key = RPE_WORD[n] || RPE_WORD[n - 1];
+  return key ? t(key) : '';
+}
+
+/**
+ * The 1–10 picker.
+ *
+ * Ten buttons rather than a range input: a slider invites you to drag until
+ * the number looks right, and the whole value of RPE is that it is a snap
+ * judgement. Skipping is a first-class option — a rating nobody meant is
+ * worse than no rating, and the chart draws gaps honestly.
+ */
+function rpeSheet({ title, body, onPick }) {
+  const scale = Array.from({ length: RPE_MAX - RPE_MIN + 1 }, (_, i) => RPE_MIN + i);
+
+  const dialog = h(
+    'dialog.sheet',
+    { style: `--g:${screenAccent()}` },
+    h(
+      'div.sheet-body',
+      h('h2.sheet-title', title),
+      h('p.sheet-text', body),
+      h(
+        'div.rpe-scale',
+        scale.map((n) =>
+          h(
+            'button.rpe-dot',
+            {
+              type: 'button',
+              title: `${n} — ${rpeWord(n)}`,
+              'aria-label': `${n} — ${rpeWord(n)}`,
+              onclick: () => {
+                dialog.close();
+                onPick(n);
+              },
+            },
+            String(n)
+          )
+        )
+      ),
+      h('div.rpe-anchors', h('span', t('rpe.w1')), h('span', t('rpe.w10'))),
+      h(
+        'div.sheet-actions',
+        h(
+          'button.btn.btn-block',
+          {
+            onclick: () => {
+              dialog.close();
+              onPick(null);
+            },
+          },
+          t('rpe.skip')
+        )
+      )
+    )
+  );
+
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
 }
 
 /**
@@ -1151,6 +1500,10 @@ function attemptFinish(steps, doneCount, loggableCount) {
 function confirmSheet({ title, body, confirmLabel, cancelLabel, onConfirm }) {
   const dialog = h(
     'dialog.sheet',
+    // A <dialog> is appended to <body>, outside the app root that carries the
+    // goal accent, so it would otherwise fall back to the :root default and
+    // confirm an Endurance session in Strength orange.
+    { style: `--g:${screenAccent()}` },
     h(
       'div.sheet-body',
       h('h2.sheet-title', title),
@@ -1390,8 +1743,13 @@ function tickRest() {
  * the row -- which is a real improvement on logging the whole prescription
  * blind. Reps stay null: the session screen shows the prescribed range, it
  * never asks how many you managed.
+ *
+ * `rpe` is the session's rating, stamped identically on every row it writes.
+ * That is redundant on the face of it, but the log row is the only record the
+ * app keeps, and one number repeated across a session's rows averages back to
+ * itself — see `sessionRpes`. A skipped rating writes null, not a guess.
  */
-function finishSession(doneCount) {
+function finishSession(doneCount, rpe = null) {
   const live = state.live;
   if (!live || !doneCount) {
     state.live = null;
@@ -1422,7 +1780,7 @@ function finishSession(doneCount) {
         setNo: n,
         weight: weight ?? null,
         reps: null,
-        rpe: null,
+        rpe,
         auto: true,
       });
     }
@@ -1430,7 +1788,7 @@ function finishSession(doneCount) {
 
   state.log = [...entries, ...state.log];
   store.setLog(state.log);
-  recordCompletion(session, live.date, entries.length);
+  recordCompletion(session, live.date, entries.length, rpe);
 
   // Navigate first: flash() renders, and rendering the session screen with no
   // session left is exactly the state that used to resurrect an empty one.
@@ -1459,14 +1817,14 @@ function saveSession() {
 }
 
 /** Append a completion to the saved workout, saving it first if it is new. */
-function recordCompletion(session, date, sets) {
+function recordCompletion(session, date, sets, rpe = null) {
   let saved = state.sessions.find((s) => s.id === session.id);
   if (!saved) {
     saved = JSON.parse(JSON.stringify(session));
     if (!saved.name) saved.name = sessionTitle(session);
     state.sessions.unshift(saved);
   }
-  saved.completions = [...(saved.completions || []), { date, sets }];
+  saved.completions = [...(saved.completions || []), { date, sets, rpe }];
   store.setSessions(state.sessions);
 }
 
@@ -1529,8 +1887,14 @@ function savedRow(s) {
         'button.btn.btn-sm',
         {
           onclick: () => {
-            const sets = logWholeSession(s, today());
-            flash(tp('live.logged', sets));
+            // Same question as finishing a session, for the same reason: this
+            // writes a completed workout to the log, so it should be able to
+            // carry how hard it was.
+            rpeSheet({
+              title: t('rpe.title'),
+              body: t('rpe.bodySaved', { name: s.name }),
+              onPick: (rpe) => flash(tp('live.logged', logWholeSession(s, today(), rpe))),
+            });
           },
         },
         t('saved.again')
@@ -1560,7 +1924,7 @@ function savedRow(s) {
  * Log a saved workout as done again without stepping through it. Uses the
  * prescribed set count and the mid-range weight, since nothing was ticked.
  */
-function logWholeSession(session, date) {
+function logWholeSession(session, date, rpe = null) {
   const entries = [];
   for (const ex of sessionExercises(session)) {
     for (let n = 1; n <= setsFor(ex, session); n += 1) {
@@ -1574,14 +1938,14 @@ function logWholeSession(session, date) {
         setNo: n,
         weight: defaultWeight(ex, session),
         reps: null,
-        rpe: null,
+        rpe,
         auto: true,
       });
     }
   }
   state.log = [...entries, ...state.log];
   store.setLog(state.log);
-  recordCompletion(session, date, entries.length);
+  recordCompletion(session, date, entries.length, rpe);
   return entries.length;
 }
 
@@ -1598,6 +1962,7 @@ function viewLog() {
       'div.screen-inner',
       screenHead(t('log.kicker', { n: window30.length }), t('log.title')),
       mix.total ? balancePanel(mix) : empty(t('log.empty'), t('log.emptyHint')),
+      rpePanel(),
       mix.total > 0 && muscleDisclosure(muscles),
       historyDisclosure(),
       dataPanel()
@@ -1634,9 +1999,258 @@ function balancePanel(mix) {
   );
 }
 
+/* ---------------------------------------------------------- exertion chart */
+
+function setPref(key, value) {
+  state.prefs = { ...state.prefs, [key]: value };
+  store.setPrefs(state.prefs);
+  render();
+}
+
+/**
+ * Rate of perceived exertion over time.
+ *
+ * Two controls, and they do different kinds of thing, so they are different
+ * kinds of control: the range is a choice among three (chips, like every
+ * other budget and filter in the app) and the style is one thing or the other
+ * (a switch). Both are remembered in prefs, because a chart you have to
+ * re-configure on every visit is a chart you stop visiting.
+ */
+function rpePanel() {
+  const range = RPE_RANGES.includes(state.prefs.rpeRange) ? state.prefs.rpeRange : 'week';
+  const style = state.prefs.rpeStyle === 'bar' ? 'bar' : 'line';
+  const series = rpeSeries(state.log, range, today());
+
+  return h(
+    'div.panel',
+    h(
+      'div.panel-head',
+      h('div.panel-title', t('rpe.panelTitle')),
+      series.average != null &&
+        h(
+          'span.rpe-average',
+          t('rpe.average', { n: series.average.toFixed(1) })
+        )
+    ),
+    h(
+      'div.rpe-controls',
+      h(
+        'div.chips',
+        RPE_RANGES.map((r) =>
+          h(
+            'button.chip',
+            {
+              class: range === r ? 'is-on' : '',
+              'aria-pressed': String(range === r),
+              onclick: () => setPref('rpeRange', r),
+            },
+            t(`rpe.range.${r}`)
+          )
+        )
+      ),
+      styleSwitch(style)
+    ),
+    series.count
+      ? h(
+          'div.stack',
+          { style: 'gap:8px' },
+          rpeChart(series, style, range),
+          h('p.hint', tp('rpe.note', series.count))
+        )
+      : empty(t('rpe.empty'), t('rpe.emptyHint'))
+  );
+}
+
+/**
+ * Line or bar, as a two-position slider.
+ *
+ * Both labels stay on screen and both are hit targets, so the control says
+ * what it will become rather than only what it currently is — a lone
+ * "Bar" toggle reads as either the current state or the next one, and there
+ * is no way to tell which from looking.
+ */
+function styleSwitch(style) {
+  const pick = (value) => () => {
+    if (value !== style) setPref('rpeStyle', value);
+  };
+
+  return h(
+    'div.switch',
+    { role: 'group', 'aria-label': t('rpe.style') },
+    h(
+      'button.switch-label',
+      { class: style === 'line' ? 'is-on' : '', 'aria-pressed': String(style === 'line'), onclick: pick('line') },
+      t('rpe.line')
+    ),
+    h(
+      'button.switch-track',
+      {
+        role: 'switch',
+        'aria-checked': String(style === 'bar'),
+        'aria-label': t('rpe.style'),
+        onclick: pick(style === 'bar' ? 'line' : 'bar'),
+      },
+      h('span.switch-thumb', { class: style === 'bar' ? 'is-right' : '' })
+    ),
+    h(
+      'button.switch-label',
+      { class: style === 'bar' ? 'is-on' : '', 'aria-pressed': String(style === 'bar'), onclick: pick('bar') },
+      t('rpe.bar')
+    )
+  );
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svg(name, attrs = {}, ...children) {
+  const node = document.createElementNS(SVG_NS, name);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) node.setAttribute(k, v);
+  for (const c of children) if (c) node.appendChild(c);
+  return node;
+}
+
+const CHART = { w: 320, h: 152, left: 22, right: 6, top: 10, bottom: 22 };
+
+/**
+ * The chart itself.
+ *
+ * The scale runs 0–10, not 5–10. Real ratings cluster in the top half, so a
+ * cropped axis would spread them out beautifully and overstate every
+ * difference between one session and the next; the whole point of plotting a
+ * subjective 1–10 is to see how it moves, and an axis that exaggerates the
+ * movement answers a question nobody asked.
+ *
+ * Points are placed at band centres in both styles, so flipping the switch
+ * moves the ink without moving the data — the third bar and the third dot are
+ * the same session in the same place.
+ */
+function rpeChart(series, style, range) {
+  const { points } = series;
+  const plotW = CHART.w - CHART.left - CHART.right;
+  const plotH = CHART.h - CHART.top - CHART.bottom;
+  const band = plotW / points.length;
+  const x = (i) => CHART.left + band * (i + 0.5);
+  const y = (v) => CHART.top + plotH - (v / RPE_MAX) * plotH;
+  const baseline = CHART.top + plotH;
+
+  const node = svg('svg', {
+    class: 'rpe-chart',
+    viewBox: `0 0 ${CHART.w} ${CHART.h}`,
+    preserveAspectRatio: 'none',
+    role: 'img',
+    'aria-label': tp('rpe.chartLabel', series.count, {
+      range: t(`rpe.range.${range}`).toLowerCase(),
+      avg: series.average != null ? series.average.toFixed(1) : '—',
+    }),
+  });
+
+  for (const v of [0, 5, RPE_MAX]) {
+    node.appendChild(
+      svg('line', { class: 'rpe-grid', x1: CHART.left, x2: CHART.w - CHART.right, y1: y(v), y2: y(v) })
+    );
+    const label = svg('text', { class: 'rpe-axis', x: CHART.left - 5, y: y(v) + 3, 'text-anchor': 'end' });
+    label.textContent = String(v);
+    node.appendChild(label);
+  }
+
+  if (style === 'bar') {
+    const width = Math.min(band * 0.62, 16);
+    points.forEach((p, i) => {
+      if (p.rpe == null) return;
+      node.appendChild(
+        svg('rect', {
+          class: 'rpe-bar',
+          x: x(i) - width / 2,
+          y: y(p.rpe),
+          width,
+          height: Math.max(1, baseline - y(p.rpe)),
+          rx: 2,
+        })
+      );
+    });
+  } else {
+    // The line joins the sessions, skipping straight over the days between
+    // them. Breaking it at every empty bucket was the first instinct and it
+    // is wrong here: nobody trains seven days a week, so on a daily axis the
+    // line would almost never have two adjacent points to join and the style
+    // would draw nothing at all. The dots are the measurements; the segments
+    // between them are the interpolation, and a long empty stretch shows up
+    // as exactly that — a long segment with nothing on it.
+    const known = points
+      .map((p, i) => (p.rpe == null ? null : `${x(i)},${y(p.rpe)}`))
+      .filter(Boolean);
+
+    if (known.length > 1) {
+      node.appendChild(svg('polyline', { class: 'rpe-line', points: known.join(' ') }));
+    }
+
+    points.forEach((p, i) => {
+      if (p.rpe == null) return;
+      node.appendChild(svg('circle', { class: 'rpe-dot-mark', cx: x(i), cy: y(p.rpe), r: 2.8 }));
+    });
+  }
+
+  points.forEach((p, i) => {
+    const text = rpeTickLabel(p, i, range, points.length);
+    if (!text) return;
+    const tick = svg('text', {
+      class: 'rpe-tick',
+      x: x(i),
+      y: CHART.h - 6,
+      'text-anchor': 'middle',
+    });
+    tick.textContent = text;
+    node.appendChild(tick);
+  });
+
+  // The bars and dots carry no numbers, so every bucket gets a native tooltip
+  // with its date and value -- including the empty ones, which is how you tell
+  // "no session" apart from "a gap in the chart for some other reason".
+  points.forEach((p, i) => {
+    const hit = svg('rect', {
+      class: 'rpe-hit',
+      x: CHART.left + band * i,
+      y: CHART.top,
+      width: band,
+      height: plotH,
+    });
+    const title = svg('title');
+    title.textContent =
+      p.rpe == null
+        ? `${rpeBucketLabel(p, range)} — ${t('rpe.noSession')}`
+        : `${rpeBucketLabel(p, range)} — ${t('rpe.tooltip', {
+            n: p.rpe.toFixed(1),
+            sessions: p.sessions,
+          })}`;
+    hit.appendChild(title);
+    node.appendChild(hit);
+  });
+
+  return h('div.rpe-chart-wrap', node);
+}
+
+function rpeBucketLabel(point, range) {
+  const d = new Date(`${point.from}T00:00:00`);
+  return range === 'year'
+    ? `${d.toLocaleString('en', { month: 'long' })} ${d.getFullYear()}`
+    : shortDate(point.from);
+}
+
+/**
+ * Which buckets get a label under them.
+ *
+ * Seven and twelve both fit; thirty do not, so the month view labels every
+ * fifth day and lets the tooltip carry the rest.
+ */
+function rpeTickLabel(point, i, range, total) {
+  if (range === 'week') return weekdayShort(point.from);
+  const d = new Date(`${point.from}T00:00:00`);
+  if (range === 'year') return d.toLocaleString('en', { month: 'narrow' });
+  return i % 5 === 0 || i === total - 1 ? String(d.getDate()) : null;
+}
+
 function muscleDisclosure(rows) {
   if (!rows.length) return null;
-  const max = rows.reduce((m, r) => Math.max(m, r.primary, r.secondary), 0) || 1;
 
   return h(
     'details',
@@ -1649,12 +2263,7 @@ function muscleDisclosure(rows) {
     h(
       'div.stack',
       { style: 'gap:14px;padding-top:14px' },
-      h(
-        'div',
-        { style: 'display:flex;align-items:center;gap:16px' },
-        h('span.map-group-label', h('span.swatch.swatch-lg.swatch-primary'), t('log.primary')),
-        h('span.map-group-label', h('span.swatch.swatch-lg.swatch-secondary'), t('log.supporting'))
-      ),
+      muscleRoleKey(),
       h(
         'div.mbar-head',
         h('span.mbar-head-name', t('log.muscleCol')),
@@ -1664,26 +2273,7 @@ function muscleDisclosure(rows) {
       // The number is the total. The split between the two roles is what the
       // pair of bars and the legend above them show -- a bare "12/6" beside
       // them said neither which number was which nor what of.
-      rows.map((r) =>
-        h(
-          'div.mbar-row',
-          {
-            title: t('log.splitTitle', {
-              muscle: r.muscle,
-              total: r.total,
-              p: r.primary,
-              s: r.secondary,
-            }),
-          },
-          h('span.mbar-name', r.muscle),
-          h(
-            'span.mbar-pair',
-            h('span.mbar.mbar-p', { style: `width:${Math.round((r.primary / max) * 100)}%` }),
-            h('span.mbar.mbar-s', { style: `width:${Math.round((r.secondary / max) * 100)}%` })
-          ),
-          h('span.mbar-value', String(r.total))
-        )
-      ),
+      muscleBars(rows),
       h('p.hint', t('log.setsNote'))
     )
   );
@@ -1754,7 +2344,7 @@ function manualLogForm() {
   };
 
   const options = state.catalog.exercises
-    .slice()
+    .filter((ex) => !ex.archived)
     .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
 
   return h(
@@ -1763,11 +2353,16 @@ function manualLogForm() {
       onsubmit: (e) => {
         e.preventDefault();
         if (!draft.weight || !draft.reps) return;
+        // A <select> hands back text, and ids are numbers for the workbook's
+        // exercises and strings for the user's own, so the catalog resolves it
+        // rather than this parsing it.
+        const exerciseId = state.catalog.resolveId(draft.exerciseId);
+        if (exerciseId == null) return;
         state.log.unshift({
           id: newId(),
           date: draft.date,
           sessionName: '',
-          exerciseId: Number(draft.exerciseId),
+          exerciseId,
           goal: draft.goal,
           setNo: 1,
           weight: Number(draft.weight),
@@ -1872,6 +2467,9 @@ function dataPanel() {
                 state.sessions = store.getSessions();
                 state.log = store.getLog();
                 state.oneRm = store.getOneRm();
+                state.prefs = store.getPrefs();
+                state.customExercises = store.getCustomExercises();
+                refreshCatalog();
                 render();
               } catch (err) {
                 alert(err.message);
@@ -1888,8 +2486,11 @@ function dataPanel() {
               state.sessions = [];
               state.log = [];
               state.oneRm = {};
+              state.prefs = {};
+              state.customExercises = [];
               state.live = null;
               state.session = blankSession();
+              refreshCatalog();
               go('home');
             },
           },
@@ -1943,8 +2544,10 @@ function viewLibrary() {
 
   const refresh = () => {
     const q = state.libQuery.trim().toLowerCase();
+    // Archived exercises are still in the catalog so old workouts and log
+    // entries keep resolving, but they are not on offer here or in the picker.
     const results = state.catalog.exercises.filter(
-      (ex) => matchesFilters(ex, state.libFilters) && matchesQuery(ex, q)
+      (ex) => !ex.archived && matchesFilters(ex, state.libFilters) && matchesQuery(ex, q)
     );
 
     const n = activeFilters();
@@ -2054,6 +2657,24 @@ function viewLibrary() {
 
   refresh();
 
+  // The form takes over the screen rather than sitting above the list: it has
+  // eight fields, and leaving 167 exercises scrolling underneath it made the
+  // page read as a list that had sprouted a form rather than as a form.
+  if (state.libDraftExercise) {
+    return h(
+      'div.screen',
+      h(
+        'div.screen-inner',
+        { style: 'gap:18px' },
+        backLink(t('tab.library'), () => {
+          state.libDraftExercise = null;
+          render();
+        }),
+        exerciseForm(state.libDraftExercise)
+      )
+    );
+  }
+
   return h(
     'div.screen',
     h(
@@ -2062,13 +2683,360 @@ function viewLibrary() {
       state.libPicking && backLink(t('tab.build'), stopPicking),
       h('div.stack', { style: 'gap:2px' }, count, h('h1.screen-title', t('library.title'))),
       h('div.stack', { style: 'gap:10px' }, h('div.filter-bar', search, toggle), panel),
-      list
+      list,
+      h(
+        'button.btn.btn-block',
+        { onclick: () => startExercise(null) },
+        icon(ICONS.plus, { size: 15 }),
+        t('custom.add')
+      ),
+      archivedDisclosure()
     ),
     state.libPicking &&
       h(
         'div.sticky-actions',
         h('button.btn.btn-goal.btn-lg.btn-block', { onclick: stopPicking }, t('library.donePicking'))
       )
+  );
+}
+
+/* ------------------------------------------------- the user's own exercises
+
+   The compendium is 167 exercises and it is not going to cover everyone's
+   gym. A user exercise is the same shape as a workbook one -- id, name,
+   equipment, pattern, primary and supporting muscles, profile, cue -- so
+   every downstream feature works on it without knowing it is different: the
+   warm-up triggers off its pattern and muscles, the prescription comes from
+   its profile, the body map paints it, the log counts it, and it has a 1RM
+   like anything else.
+
+   The one field with no obvious answer is the prescription profile, because
+   it is the workbook's own vocabulary rather than a property of the movement.
+   The form asks for it plainly and says what it decides, which is better than
+   guessing it from the pattern and quietly prescribing the wrong thing.
+   ------------------------------------------------------------------------ */
+
+function blankExercise() {
+  return {
+    id: null,
+    name: '',
+    equipment: '',
+    pattern: '',
+    profile: '',
+    primary: '',
+    secondary: [],
+    cue: '',
+    error: null,
+  };
+}
+
+function startExercise(ex) {
+  state.libDraftExercise = ex
+    ? {
+        id: ex.id,
+        name: localized(ex.name),
+        equipment: ex.equipment,
+        pattern: ex.pattern,
+        profile: ex.profile,
+        primary: ex.primary,
+        secondary: [...(ex.secondary || [])],
+        cue: ex.cue || '',
+        error: null,
+      }
+    : blankExercise();
+  render();
+}
+
+function exerciseForm(draft) {
+  const v = state.catalog.vocabulary;
+  const editing = draft.id != null;
+
+  const text = (key, label, placeholder) =>
+    field(
+      label,
+      h('input.input', {
+        type: 'text',
+        value: draft[key],
+        placeholder,
+        // No render on keystroke -- rebuilding the form would take the caret
+        // with it, exactly as the session name field avoids.
+        oninput: (e) => {
+          draft[key] = e.target.value;
+        },
+      })
+    );
+
+  // Selects do re-render, unlike the text fields: picking a profile has to
+  // bring up its prescription preview, and picking a primary muscle has to
+  // drop that muscle out of the supporting chips below. There is no caret to
+  // lose in a <select>, so the cost the text fields are avoiding isn't paid.
+  const choose = (key, label, options, placeholder) =>
+    field(
+      label,
+      h(
+        'select.input',
+        {
+          onchange: (e) => {
+            draft[key] = e.target.value;
+            if (key === 'primary') {
+              draft.secondary = draft.secondary.filter((m) => m !== e.target.value);
+            }
+            render();
+          },
+        },
+        h('option', { value: '' }, placeholder),
+        options.map((o) => h('option', { value: o, selected: draft[key] === o }, o))
+      )
+    );
+
+  return h(
+    'form.stack',
+    {
+      style: 'gap:18px',
+      onsubmit: (e) => {
+        e.preventDefault();
+        submitExercise(draft);
+      },
+    },
+    screenHead(t(editing ? 'custom.editKicker' : 'custom.addKicker'), t('custom.title')),
+    draft.error && h('p.form-error', { role: 'alert' }, draft.error),
+
+    text('name', t('custom.name'), t('custom.namePlaceholder')),
+    choose('equipment', t('library.equipment'), v.equipment, t('custom.choose')),
+    choose('pattern', t('library.pattern'), v.patterns, t('custom.choose')),
+    choose('primary', t('library.primary'), v.primaryMuscles, t('custom.choose')),
+
+    h(
+      'div.field',
+      h('span.field-label', t('library.secondary')),
+      h(
+        'div.muscle-chips',
+        v.muscles
+          .filter((m) => m !== 'Full body' && m !== draft.primary)
+          .map((m) => {
+            const on = draft.secondary.includes(m);
+            return h(
+              'button.chip.chip-sm',
+              {
+                type: 'button',
+                class: on ? 'is-on' : '',
+                'aria-pressed': String(on),
+                onclick: () => {
+                  draft.secondary = on
+                    ? draft.secondary.filter((x) => x !== m)
+                    : [...draft.secondary, m];
+                  render();
+                },
+              },
+              m
+            );
+          })
+      ),
+      h('p.hint', t('custom.secondaryHint'))
+    ),
+
+    h(
+      'div.stack',
+      { style: 'gap:6px' },
+      choose('profile', t('custom.profile'), v.profiles, t('custom.choose')),
+      h('p.hint', t('custom.profileHint')),
+      draft.profile && profilePreview(draft.profile)
+    ),
+
+    text('cue', t('custom.cue'), t('custom.cuePlaceholder')),
+
+    h(
+      'div.row-actions',
+      h('button.btn.btn-goal', { type: 'submit' }, t(editing ? 'custom.save' : 'custom.create')),
+      h(
+        'button.btn',
+        {
+          type: 'button',
+          onclick: () => {
+            state.libDraftExercise = null;
+            render();
+          },
+        },
+        t('custom.cancel')
+      )
+    )
+  );
+}
+
+/**
+ * What the chosen profile will actually prescribe, for the current goal.
+ *
+ * The profile names mean nothing on their own -- "Heavy compound" is a row in
+ * a lookup table, not a description of your exercise -- so the form shows the
+ * sets, reps, load and rest it resolves to before you commit to it.
+ */
+function profilePreview(profile) {
+  const p = getPrescription(state.catalog.prescriptionIndex, profile, state.session.goal);
+  if (!p) return null;
+
+  return h(
+    'div.profile-preview',
+    h('div.kicker', t('custom.previewFor', { goal: goalLabel(state.session.goal) })),
+    h(
+      'span.figures',
+      figure(p.sets, t('figures.sets')),
+      figure(p.reps, t('figures.reps')),
+      figure(p.load.replace(/ of 1RM$/, ''), t('figures.load')),
+      figure(p.rest, t('figures.rest'))
+    )
+  );
+}
+
+function submitExercise(draft) {
+  const name = draft.name.trim();
+  const required = [
+    [name, t('custom.name')],
+    [draft.equipment, t('library.equipment')],
+    [draft.pattern, t('library.pattern')],
+    [draft.primary, t('library.primary')],
+    [draft.profile, t('custom.profile')],
+  ];
+  const missing = required.filter(([value]) => !value).map(([, label]) => label);
+
+  if (missing.length) {
+    draft.error = t('custom.missing', { fields: missing.join(', ') });
+    render();
+    return;
+  }
+
+  const record = {
+    // A string id, so it can never collide with the workbook's numeric ones
+    // however many times the workbook is re-extracted.
+    id: draft.id ?? `u${newId()}`,
+    name: { en: name, sv: '' },
+    equipment: draft.equipment,
+    pattern: draft.pattern,
+    primary: draft.primary,
+    secondary: draft.secondary.filter((m) => m !== draft.primary),
+    profile: draft.profile,
+    cue: draft.cue.trim(),
+    custom: true,
+    archived: false,
+  };
+
+  const at = state.customExercises.findIndex((x) => x.id === record.id);
+  if (at >= 0) state.customExercises[at] = { ...state.customExercises[at], ...record };
+  else state.customExercises.push(record);
+
+  saveCustomExercises();
+  state.libDraftExercise = null;
+  state.libOpen = record.id;
+  flash(t(at >= 0 ? 'custom.saved' : 'custom.created'));
+}
+
+/** Everywhere an exercise id can still be referred to. */
+function referencesTo(id) {
+  const inSessions = state.sessions.filter((s) => (s.exerciseIds || []).includes(id));
+  return {
+    sets: state.log.filter((e) => e.exerciseId === id).length,
+    sessions: inSessions.length,
+    inDraft: (state.session.exerciseIds || []).includes(id),
+    inLive: !!state.live && (state.live.session.exerciseIds || []).includes(id),
+  };
+}
+
+/**
+ * Remove a user exercise — by deleting it, or by archiving it when something
+ * still points at it.
+ *
+ * Deleting one that a log entry refers to would not free anything; it would
+ * quietly turn that entry into a row the app cannot name, and drop its sets
+ * out of every muscle and goal total as though the training had not happened.
+ * So an exercise in use is archived instead: gone from the library and the
+ * picker, still resolvable everywhere it is mentioned, and restorable. Only a
+ * genuinely unreferenced one is deleted outright.
+ */
+function removeExercise(ex) {
+  const refs = referencesTo(ex.id);
+  const orphan = !refs.sets && !refs.sessions && !refs.inDraft && !refs.inLive;
+
+  // Already archived and asked again: the user has seen what it is attached to
+  // and wants it gone anyway. Say what that costs, then do it.
+  if (orphan || ex.archived) {
+    confirmSheet({
+      title: t('custom.deleteTitle', { name: localized(ex.name) }),
+      body: orphan ? t('custom.deleteBody') : tp('custom.deleteUsedBody', refs.sets),
+      confirmLabel: t('custom.delete'),
+      cancelLabel: t('custom.cancel'),
+      onConfirm: () => {
+        state.customExercises = state.customExercises.filter((x) => x.id !== ex.id);
+        saveCustomExercises();
+        state.libOpen = null;
+        flash(t('custom.deleted'));
+      },
+    });
+    return;
+  }
+
+  const workouts = refs.sessions + (refs.inDraft ? 1 : 0) + (refs.inLive ? 1 : 0);
+  // Only the counts that are actually non-zero, so the sentence never opens
+  // with "0 logged sets and".
+  const clauses = [
+    refs.sets > 0 && tp('custom.refSets', refs.sets),
+    workouts > 0 && tp('custom.refWorkouts', workouts),
+  ].filter(Boolean);
+
+  confirmSheet({
+    title: t('custom.archiveTitle', { name: localized(ex.name) }),
+    body: tp('custom.archiveBody', refs.sets + workouts, {
+      refs: clauses.join(t('custom.refJoin')),
+    }),
+    confirmLabel: t('custom.archive'),
+    cancelLabel: t('custom.cancel'),
+    onConfirm: () => setArchived(ex.id, true),
+  });
+}
+
+function setArchived(id, archived) {
+  const at = state.customExercises.findIndex((x) => x.id === id);
+  if (at < 0) return;
+  state.customExercises[at] = { ...state.customExercises[at], archived };
+  saveCustomExercises();
+  state.libOpen = null;
+  flash(t(archived ? 'custom.archived' : 'custom.restored'));
+}
+
+function archivedDisclosure() {
+  const rows = state.customExercises.filter((x) => x.archived);
+  if (!rows.length) return null;
+
+  return h(
+    'details',
+    { open: state.libArchiveOpen, ontoggle: (e) => (state.libArchiveOpen = e.target.open) },
+    h(
+      'summary.btn-link',
+      t('custom.archivedList', { n: rows.length }),
+      icon(ICONS.chevronDown, { size: 12 })
+    ),
+    h(
+      'div.stack',
+      { style: 'gap:10px;padding-top:14px' },
+      h('p.hint', t('custom.archivedHint')),
+      rows.map((ex) =>
+        h(
+          'div.saved-row',
+          h(
+            'div',
+            h('div.saved-name', localized(ex.name)),
+            h('div.saved-meta', `${ex.equipment} · ${ex.pattern} · ${ex.primary}`)
+          ),
+          h(
+            'div.row-actions',
+            h('button.btn.btn-sm', { onclick: () => setArchived(ex.id, false) }, t('custom.restore')),
+            h(
+              'button.btn.btn-sm.btn-danger',
+              { onclick: () => removeExercise(ex), 'aria-label': t('custom.delete') },
+              icon(ICONS.trash, { size: 15 })
+            )
+          )
+        )
+      )
+    )
   );
 }
 
@@ -2123,7 +3091,11 @@ function libraryItem(ex, refresh) {
         ),
       h(
         'span.lib-main',
-        h('span.lib-name', localized(ex.name)),
+        h(
+          'span.lib-name',
+          localized(ex.name),
+          ex.custom && h('span.badge-own', t('custom.badge'))
+        ),
         h('span.lib-meta', `${ex.equipment} · ${ex.pattern}`),
         muscleLine(ex)
       ),
@@ -2143,7 +3115,17 @@ function libraryItem(ex, refresh) {
           rm ?? null,
           setRm,
           (delta) => setRm(steppedWeight(rm || 0, delta))
-        )
+        ),
+        ex.custom &&
+          h(
+            'div.row-actions',
+            h('button.btn.btn-sm', { onclick: () => startExercise(ex) }, t('custom.edit')),
+            h(
+              'button.btn.btn-sm.btn-danger',
+              { onclick: () => removeExercise(ex), 'aria-label': t('custom.remove') },
+              icon(ICONS.trash, { size: 15 })
+            )
+          )
       )
   );
 }

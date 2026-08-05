@@ -14,7 +14,7 @@
  * purges the old cache. Bump it when the file list below changes.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `workout-companion-${VERSION}`;
 
 const PRECACHE = [
@@ -34,6 +34,7 @@ const PRECACHE = [
   './data/mobility.json',
   './data/prescriptions.json',
   './data/vocabulary.json',
+  './data/hypertrophy.json',
   './icons/icon.svg',
   './icons/icon-maskable.svg',
 ];

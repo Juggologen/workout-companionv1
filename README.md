@@ -16,10 +16,19 @@ The interface is built on the **Nocturne** design system — a dark ground
 are the source of truth; the app defines no palette of its own for chrome.
 
 The one idea on top is the **goal accent**. The training goal you pick —
-Explosive, Strength, Endurance — becomes `--g`, and every interactive surface
-reads from it, so the whole app re-tints. Nocturne's own accent is deliberately
-unused for interactive text: it measures ΔE 6.9 from the Explosive blue, so the
-two would be indistinguishable while meaning different things.
+Explosive, Strength, Hypertrophy, Endurance — becomes `--g`, and every
+interactive surface reads from it, so the whole app re-tints. Nocturne's own
+accent is deliberately unused for interactive text: it measures ΔE 6.9 from the
+Explosive blue, so the two would be indistinguishable while meaning different
+things.
+
+The Hypertrophy magenta (`#c9739d`) was picked by sweeping hue 285–340 at its
+siblings' chroma and lightness and keeping the candidate whose worst CIEDE2000
+distance to anything it can share a screen with was largest — ΔE 13.0, against
+Explosive under protanopia and Endurance under deuteranopia, at contrast 5.38 on
+the ground and 4.65 on the surface. Magenta because nothing else was free: red,
+amber and yellow belong to the muscle tokens and Home, and violet collides with
+Nocturne's accent.
 
 **Home is the exception.** It is not a training mode, so it keeps its own
 yellow (`#f3dd53`) and drops the corner glow — validated at ΔE ≥ 23.4 from
@@ -62,7 +71,13 @@ src/
   store.js            user data (localStorage today, swappable)
   i18n.js             translation plumbing; English registered
   ui.js               ~120-line DOM helper, not a framework
-data/*.json           generated from the workbook -- do not hand-edit
+data/
+  exercises.json      generated from the workbook -- do not hand-edit
+  warmups.json          "
+  mobility.json         "
+  prescriptions.json    "
+  vocabulary.json       "
+  hypertrophy.json    hand-authored: the fourth goal, with its sources
 tools/
   extract-workbook.ps1  xlsx -> data/*.json
   serve.ps1             static file server
@@ -75,12 +90,12 @@ Four tabs, with Plan and Session pushed from Build and Saved pushed from Today.
 
 | Screen | What it does |
 |---|---|
-| **Home** | The planned session at a glance, a 14-day training strip, and the goal balance. Start or resume from here. |
-| **Build** | Goal (each one expands to its prescription), lifts, warm-up and mobility budgets. |
+| **Home** | The planned session at a glance, a 14-day training strip, the Monday-to-Sunday muscle summary, and the goal balance. Start or resume from here. |
+| **Build** | Goal (each one expands to its prescription), lifts — each with its 1RM to hand — warm-up and mobility budgets. |
 | **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |
-| **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing logs exactly what you ticked. |
-| **Log** | Goal balance over 30 days, sets per muscle group, history, per-exercise bests, and your data. |
-| **Library** | All 167 exercises. Search by name, filter by equipment, movement pattern, primary muscle and supporting muscle, read the cue, set your 1RMs — and pick lifts from here when building. |
+| **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing asks how hard it was and logs exactly what you ticked. |
+| **Log** | Goal balance over 30 days, perceived exertion over a week, month or year, sets per muscle group, history, per-exercise bests, and your data. |
+| **Library** | All 167 exercises plus any you write yourself. Search by name, filter by equipment, movement pattern, primary muscle and supporting muscle, read the cue, set your 1RMs — and pick lifts from here when building. |
 | **Saved** | Your workouts. Load one back, print it, or record that you did it again. |
 
 While a session is running, a **bubble** floats above the tab bar on every
@@ -98,7 +113,64 @@ confirmation if you finish with steps still unmarked.
 
 Weights are steppable in 2.5 kg or typable outright. Typing accepts any number;
 only the +/- buttons enforce the grid, snapping an off-grid weight onto it in
-the direction pressed (183 → + → 185).
+the direction pressed (183 → + → 185). The same control sets a 1RM, and it is
+on the Build screen next to each chosen lift as well as in the Library — the
+suggested load is a percentage of your 1RM, so the number is asked for where
+the sentence asking for it appears.
+
+## The four goals
+
+Three come from the workbook. **Hypertrophy** is the app's own, because the
+compendium does not prescribe it, and it lives in `data/hypertrophy.json`
+rather than in the generated files — the extractor rewrites those wholesale,
+and anything merged into them would not survive the next run. `src/data.js`
+folds it into the same prescription index at load, so nothing downstream can
+tell the two apart.
+
+Its seven rows (one per prescription profile) are hand-authored from the
+current literature, and that file cites what each number rests on: load and rep
+ranges wide because proximity to failure matters more than the exact number,
+2–3 min rest on multi-joint work rather than the 60 s that used to be standard
+advice, and 0–3 reps in reserve rather than training to failure. Those are
+population-level starting points, not advice for any individual.
+
+## Perceived exertion
+
+Finishing a session asks for a 1–10 rating before it writes the log, and
+"Did it again" asks the same. Skipping is a first-class answer.
+
+The rating is stored on the log rows themselves rather than in a table of its
+own, because a row is the only record that survives every route into the log.
+One session's rating is stamped on every set it writes, so averaging a
+session's rows gives that number straight back.
+
+**Log → Perceived exertion** charts it. The chips choose the window — week and
+month bucket by day, year by calendar month — and the slider switches between a
+line and bars. Both are remembered. The scale is 0–10 and not cropped to where
+the data lives: the whole point of plotting a subjective number is to watch it
+move, and an axis that exaggerates the movement answers a question nobody
+asked. A bucket with no rated session is a gap, never a zero.
+
+## Your own exercises
+
+**Library → Add your own exercise.** Name, equipment, movement pattern, primary
+and supporting muscles, prescription profile and a cue — the same shape as a
+workbook row, so everything downstream works on it unchanged: the warm-up
+triggers off its pattern and muscles, the prescription comes from its profile,
+the body map paints it, the log counts it, and it has a 1RM.
+
+The profile is the one field with no obvious answer, since it is the workbook's
+vocabulary rather than a property of the movement. The form shows what the
+chosen profile will actually prescribe, for your current goal, before you
+commit to it.
+
+They live in `store.js`, never in `data/`, so re-extracting the workbook cannot
+touch them, and they carry string ids (`u…`) so they can never collide with the
+workbook's numeric ones. Removing one deletes it if nothing refers to it and
+archives it if something does — archived means gone from the library and the
+picker but still named everywhere it is already used, because deleting an
+exercise a log entry points at would quietly drop that training out of every
+muscle and goal total.
 
 ## Export to PDF
 
@@ -110,16 +182,18 @@ column is left as ruled boxes to write into at the rack.
 
 ## Changing the exercise data
 
-The workbook stays the authoring surface. Edit it in Excel, then:
+The workbook stays the authoring surface for the 167 exercises and the three
+goals it prescribes. Edit it in Excel, then:
 
 ```bash
 powershell -ExecutionPolicy Bypass -File tools/extract-workbook.ps1
 ```
 
-It rewrites `data/*.json` and reports anything suspect — an exercise whose
-prescription profile has no matching row, a missing Swedish name, and any 1RM
-left in the sheet (those are deliberately *not* shipped; 1RMs belong to the
-user, not the catalog).
+It rewrites the five generated files and reports anything suspect — an exercise
+whose prescription profile has no matching row, a missing Swedish name, and any
+1RM left in the sheet (those are deliberately *not* shipped; 1RMs belong to the
+user, not the catalog). It does not touch `data/hypertrophy.json`, and it has
+no idea the user's own exercises exist.
 
 ## Verified against the workbook
 

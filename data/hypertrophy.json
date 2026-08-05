@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "source": "Hand-authored. NOT generated from the workbook.",
+    "why": "The compendium prescribes three goals. Hypertrophy is a fourth, added by the app, so it lives in its own file: tools/extract-workbook.ps1 overwrites prescriptions.json and vocabulary.json every time it runs, and anything merged into those would be lost. data.js folds these rows into the same prescription index at load, so nothing downstream can tell the difference.",
+    "authored": "2026-08-05",
+    "basis": [
+      "Schoenfeld, Grgic, Ogborn & Krieger (2017), J Strength Cond Res 31(12) — heavy vs moderate load: similar hypertrophy when sets are taken close to failure, so the load range is wide and the proximity to failure is what the notes insist on.",
+      "Schoenfeld, Pope et al. (2016), J Strength Cond Res 30(7) — 3 min rest beat 1 min for hypertrophy in trained men. Multi-joint work therefore rests 2-3 min, not 60 s.",
+      "Schoenfeld, Ogborn & Krieger (2017), J Sports Sci 35(11) — dose-response: more weekly sets, more growth. Set counts here are per exercise; the weekly target of roughly 10-20 hard sets per muscle is the user's to assemble.",
+      "Baz-Valle et al. (2022), PLoS ONE 17(4) — 0-3 reps in reserve is enough; training to failure on every set is not required and costs recovery.",
+      "Refalo et al. (2023), J Sports Sci 41(6) — proximity to failure matters more than the exact rep number."
+    ],
+    "caveat": "These are population-level starting points, not a prescription for any individual. Nothing here is medical advice."
+  },
+  "items": [
+    {
+      "profile": "Heavy compound",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "6–10",
+      "load": "70–80% of 1RM",
+      "loadMin": 0.7,
+      "loadMax": 0.8,
+      "rest": "2–3 min",
+      "note": "Stop 1–3 reps short of failure. Take the full rest — cutting it short costs you reps, and reps are what grows the muscle.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 30,
+      "restAvgSec": 150
+    },
+    {
+      "profile": "Compound",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "8–12",
+      "load": "65–75% of 1RM",
+      "loadMin": 0.65,
+      "loadMax": 0.75,
+      "rest": "90–150 s",
+      "note": "Full range, controlled on the way down. 1–2 reps in reserve on the working sets; the last one can go to failure.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 35,
+      "restAvgSec": 120
+    },
+    {
+      "profile": "Isolation",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "10–15",
+      "load": "55–70% of 1RM",
+      "loadMin": 0.55,
+      "loadMax": 0.7,
+      "rest": "60–90 s",
+      "note": "One joint, so there is less to go wrong — take the last set to 0–1 reps in reserve and load the stretched position.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 40,
+      "restAvgSec": 75
+    },
+    {
+      "profile": "Core",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "10–15 reps / 30–45 s",
+      "load": "Moderate",
+      "loadMin": 0,
+      "loadMax": 0,
+      "rest": "60–90 s",
+      "note": "Abs grow like anything else: add load once the top of the range gets easy, rather than holding bodyweight for longer.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 40,
+      "restAvgSec": 75
+    },
+    {
+      "profile": "Olympic lift",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "4–6",
+      "load": "65–75% of 1RM",
+      "loadMin": 0.65,
+      "loadMax": 0.75,
+      "rest": "2–3 min",
+      "note": "A weak growth driver — technique fails before the muscle does. Kept here so the lift still prescribes something; put the volume in the squats and pulls.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 18,
+      "restAvgSec": 150
+    },
+    {
+      "profile": "Plyometric",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "8–12",
+      "load": "Bodyweight",
+      "loadMin": 0,
+      "loadMax": 0,
+      "rest": "60–90 s",
+      "note": "Barely a growth stimulus on its own. Treat it as a primer before the loaded work rather than as the loaded work.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 25,
+      "restAvgSec": 75
+    },
+    {
+      "profile": "Carry",
+      "goal": "Hypertrophy",
+      "sets": "3–4",
+      "reps": "30–50 m",
+      "load": "55–70% of max carry",
+      "loadMin": 0.55,
+      "loadMax": 0.7,
+      "rest": "90–120 s",
+      "note": "Grows traps, forearms and not much else. Short and heavy-ish beats long and light here.",
+      "setsAvg": 3.5,
+      "workPerSetSec": 40,
+      "restAvgSec": 105
+    }
+  ]
+}

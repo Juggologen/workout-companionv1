@@ -30,9 +30,11 @@ const LOCALES = {
     // --- goals ---
     'goal.Explosivity': 'Explosive',
     'goal.Strength': 'Strength',
+    'goal.Hypertrophy': 'Hypertrophy',
     'goal.Muscular endurance': 'Endurance',
     'goal.blurb.Explosivity': 'Speed and intent. Few reps, long rest.',
     'goal.blurb.Strength': 'Heavy and near-maximal. Quality over volume.',
+    'goal.blurb.Hypertrophy': 'Moderate load, full range, a few reps from failure.',
     'goal.blurb.Muscular endurance': 'Long sets, short rest, clean technique.',
 
     // --- home ---
@@ -56,6 +58,49 @@ const LOCALES = {
     'today.saved': 'Saved workouts',
     'today.savedMeta': '{n} kept',
 
+    // --- weekly summary ---
+    'week.this': 'This week',
+    'week.last': 'Last week',
+    'week.agoWeeks': '{n} weeks ago',
+    'week.previous': 'Previous week',
+    'week.next': 'Next week',
+    'week.summary.one': '{sets} sets over {n} day, across {muscles} muscle groups',
+    'week.summary.other': '{sets} sets over {n} days, across {muscles} muscle groups',
+    'week.untouched': 'Not trained this week:',
+    'week.empty': 'Nothing logged this week',
+    'week.emptyHint': 'Finish a session and the week fills in, Monday to Sunday.',
+
+    // --- perceived exertion ---
+    'rpe.title': 'How hard was that?',
+    'rpe.body.one': 'Rate the whole session 1–10. It goes on the {n} set being logged.',
+    'rpe.body.other': 'Rate the whole session 1–10. It goes on all {n} sets being logged.',
+    'rpe.bodySaved': 'Rate {name} 1–10 before it goes into the log.',
+    'rpe.skip': 'Skip the rating',
+    'rpe.w1': 'Nothing at all',
+    'rpe.w3': 'Light',
+    'rpe.w5': 'Moderate',
+    'rpe.w7': 'Hard',
+    'rpe.w9': 'Very hard',
+    'rpe.w10': 'Maximal',
+    'rpe.panelTitle': 'Perceived exertion',
+    'rpe.average': 'avg {n}',
+    'rpe.range.week': 'Week',
+    'rpe.range.month': 'Month',
+    'rpe.range.year': 'Year',
+    'rpe.style': 'Chart style',
+    'rpe.line': 'Line',
+    'rpe.bar': 'Bar',
+    'rpe.empty': 'Nothing rated yet',
+    'rpe.emptyHint': 'Finish a session and give it a 1–10; it plots itself from there.',
+    'rpe.note.one': '{n} rated session in this range. A day with none is a gap, not a zero.',
+    'rpe.note.other': '{n} rated sessions in this range. A day with none is a gap, not a zero.',
+    'rpe.tooltip': 'RPE {n} · {sessions} rated',
+    'rpe.noSession': 'nothing rated',
+    'rpe.chartLabel.one':
+      'Perceived exertion over the last {range}. {n} rated session, at {avg} out of 10.',
+    'rpe.chartLabel.other':
+      'Perceived exertion over the last {range}. {n} rated sessions, averaging {avg} out of 10.',
+
     // --- build ---
     'build.kicker': 'New session',
     'build.title': 'Build',
@@ -73,6 +118,9 @@ const LOCALES = {
     'build.generate': 'Generate plan',
     'build.name': 'Session name',
     'build.namePlaceholder': 'Lower body',
+    'build.setRmFor': 'Set your 1RM for {name}',
+    'build.rmHint':
+      'Your one-rep max. The suggested load is a percentage of it, and this is the same number the Library holds.',
 
     'figures.sets': 'sets',
     'figures.reps': 'reps',
@@ -193,6 +241,59 @@ const LOCALES = {
     'library.matching.other': '{n} matches',
     'library.picking': '{n} chosen for this session',
     'library.donePicking': 'Done',
+
+    // --- the user's own exercises ---
+    'custom.add': 'Add your own exercise',
+    'custom.addKicker': 'New exercise',
+    'custom.editKicker': 'Edit exercise',
+    'custom.title': 'Your own exercise',
+    'custom.name': 'Name',
+    'custom.namePlaceholder': 'Reverse Nordic curl',
+    'custom.choose': 'Choose…',
+    'custom.profile': 'Prescription profile',
+    'custom.profileHint':
+      'This is what decides the sets, reps, load and rest — pick the row that matches how the lift is actually trained, not what it is called.',
+    'custom.previewFor': 'Prescribes, for {goal}',
+    'custom.secondaryHint':
+      'Supporting muscles pick your cool-down and paint the body map. Optional.',
+    'custom.cue': 'Cue',
+    'custom.cuePlaceholder': 'One line on how it should feel',
+    'custom.create': 'Add to library',
+    'custom.save': 'Save changes',
+    'custom.cancel': 'Cancel',
+    'custom.missing': 'Still needed: {fields}.',
+    'custom.created': 'Added to your library',
+    'custom.saved': 'Saved',
+    'custom.badge': 'Yours',
+    'custom.edit': 'Edit',
+    'custom.remove': 'Remove',
+    'custom.delete': 'Delete it',
+    'custom.deleteTitle': 'Delete {name}?',
+    'custom.deleteBody': 'Nothing refers to it, so it goes cleanly. This cannot be undone.',
+    'custom.deleteUsedBody.one':
+      '{n} logged set still refers to it. Deleting it drops that set out of every muscle and goal total, and it will no longer show a name. This cannot be undone.',
+    'custom.deleteUsedBody.other':
+      '{n} logged sets still refer to it. Deleting it drops them out of every muscle and goal total, and they will no longer show a name. This cannot be undone.',
+    'custom.refSets.one': '{n} logged set',
+    'custom.refSets.other': '{n} logged sets',
+    'custom.refWorkouts.one': '{n} workout',
+    'custom.refWorkouts.other': '{n} workouts',
+    'custom.refJoin': ' and ',
+    'custom.deleted': 'Deleted',
+    'custom.archive': 'Archive it',
+    'custom.archiveTitle': 'Still in use — archive {name}?',
+    // Agreement follows the total, not the number of clauses: "1 workout still
+    // refers to it", but "2 logged sets and 1 workout still refer to it".
+    'custom.archiveBody.one':
+      '{refs} still refers to it. Archiving takes it out of the library and the picker but leaves that intact, and you can restore it later.',
+    'custom.archiveBody.other':
+      '{refs} still refer to it. Archiving takes it out of the library and the picker but leaves all of that intact, and you can restore it later.',
+    'custom.archived': 'Archived',
+    'custom.restore': 'Restore',
+    'custom.restored': 'Back in your library',
+    'custom.archivedList': 'Archived ({n})',
+    'custom.archivedHint':
+      'Hidden from the library, but still named everywhere they are already used.',
 
     // --- saved ---
     'saved.title': 'Saved workouts',

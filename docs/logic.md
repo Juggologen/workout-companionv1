@@ -13,8 +13,7 @@ sheets and the visible formulas in columns `C:P`.
 ## 1. Data model
 
 Five JSON files under `data/`, regenerated from the workbook by
-`tools/extract-workbook.ps1`. All of it is **reference data** and ships read-only
-with the app.
+`tools/extract-workbook.ps1`, plus one that is not.
 
 | File | Rows | From |
 |---|---|---|
@@ -23,16 +22,43 @@ with the app.
 | `mobility.json` | 43 | Mobility Library |
 | `prescriptions.json` | 21 (7 profiles × 3 goals) | Prescriptions |
 | `vocabulary.json` | — | derived: distinct equipment / patterns / muscles / profiles / goals |
+| `hypertrophy.json` | 7 (7 profiles × 1 goal) | **hand-authored** — see §16 |
 
 ### Reference vs. user data
 
 The workbook mixes the two: column J of the Exercise Library, *Your 1RM*, is
 your data sitting inside the reference table. The app splits them:
 
-- **Catalog** — the JSON above. Replaced wholesale whenever the workbook is
-  re-extracted.
-- **User data** — 1RMs, sessions, training log. Lives in browser storage under
-  its own keys and is never touched by a catalog update.
+- **Catalog** — the JSON above. The five generated files are replaced wholesale
+  whenever the workbook is re-extracted; `hypertrophy.json` is not, which is the
+  entire reason it is a separate file.
+- **User data** — 1RMs, sessions, training log, prefs, and the user's own
+  exercises. Lives in browser storage under its own keys and is never touched by
+  a catalog update.
+
+### Three catalogs, one interface
+
+`src/data.js` assembles what the rest of the app sees:
+
+```
+loadCatalog()                     five generated files + hypertrophy.json,
+                                  goals reordered to put Hypertrophy third
+withCustomExercises(cat, customs) the above, plus the user's own exercises
+```
+
+`withCustomExercises` takes the list as an argument rather than reading storage,
+so `data.js` still has no idea `store.js` exists. It is re-run after every change
+to that list, and it rebuilds `byId` and the prescription index from scratch —
+those are derived, never patched.
+
+The user's exercises are appended **after** the workbook's, so library row
+numbers — which the warm-up and cool-down tie-breaks depend on (§5.2, §6.2) —
+are untouched by anything the user adds.
+
+Exercise ids are numbers for the workbook's and strings (`u…`) for the user's,
+so they cannot collide however many times the workbook is re-extracted. Anything
+that has been through an HTML `value` attribute comes back as text and goes
+through `catalog.resolveId()` rather than `Number()`.
 
 The single 1RM in the workbook (Back Squat = 100 kg) is the example value the
 Read Me tells you to replace, so it is deliberately **not** shipped.
@@ -51,10 +77,13 @@ muscles    Adductors · Back · Biceps · Calves · Chest · Core · Forearms ·
            Triceps
 profiles   Carry · Compound · Core · Heavy compound · Isolation ·
            Olympic lift · Plyometric
-goals      Explosivity · Strength · Muscular endurance   (workbook order — a
-                                                          progression, not
-                                                          alphabetical)
+goals      Explosivity · Strength · Hypertrophy · Muscular endurance
+                                        ^ not the workbook's; see §16
 ```
+
+The workbook's own order — Explosivity, Strength, Muscular endurance — is a
+progression rather than an alphabetical list, so Hypertrophy is inserted at the
+point on that line where it belongs rather than appended to the end.
 
 Every warm-up `trigger` and every mobility `target` resolves to `Always`, a
 pattern, or a muscle. Verified: 0 unmatched out of 92.
@@ -73,7 +102,9 @@ prescription(profile, goal) -> { sets, reps, load, loadMin, loadMax,
 ```
 
 `profile` comes from the exercise, `goal` is chosen once for the whole session.
-Every profile has a row for all three goals, so the lookup never misses.
+Every profile has a row for all four goals — the workbook's 21 plus the seven in
+`hypertrophy.json`, merged into one index before anything looks at it — so the
+lookup never misses.
 
 > `Isolation | Explosivity` is a deliberate dead end: sets/reps/rest are all `—`
 > and the note redirects you to compound lifts. `setsAvg` is `0`, which drives
@@ -434,8 +465,90 @@ Windows are 30 and 180 days back from today, inclusive of today.
 
 Share of logged sets by goal, over the same two windows. Entries written before
 goals were recorded have no `goal` and are counted under **Not recorded**
-rather than folded into one of the three — the proportions never overstate what
+rather than folded into one of the four — the proportions never overstate what
 is actually known.
+
+## 12a. The training week
+
+Monday to Sunday, not a trailing seven days.
+
+```
+weekStart(iso, weeks) = iso - ((weekday(iso) + 6) mod 7) days + weeks * 7
+```
+
+`getDay()` numbers Sunday as 0, so `(day + 6) mod 7` sends Sunday six days back
+— into the week it finishes rather than the one it would otherwise start. This
+is the ISO-8601 week, and it is also the unit people plan training in.
+
+Every date here is formatted from **local** components, never `toISOString()`.
+Local midnight is the previous day in UTC at any positive offset, which would
+slide every week boundary back by a day and file Monday's training under the
+week before. Same rule as the 14-day strip.
+
+The summary reports, for the selected week:
+
+| | |
+|---|---|
+| days | seven `{ date, sets }`, Monday first, including the empty ones |
+| rows | §11 over the week's entries — the same primary/supporting split |
+| untouched | the muscle vocabulary minus what was trained, less `Full body` |
+| sets, daysTrained | totals |
+
+`untouched` is derived from the vocabulary rather than an anatomy list, so it
+can only ever name groups the catalog can actually train. It is given equal
+billing with the trained rows on purpose: which groups you keep missing is the
+question a weekly summary is really being asked, and a list of what you hit
+does not answer it.
+
+Navigation is clamped at the current week. There is nothing logged in the
+future, and an endlessly advancing empty week is a dead end to walk into.
+
+## 12b. Perceived exertion
+
+A 1–10 session rating, asked when a session is finished and when a saved
+workout is logged again. Skipping is a first-class answer and writes `null`.
+
+**Where it is stored.** On the log rows, not in a table of its own. A row is the
+only record that survives every route into the log — finishing a session, "did
+it again", and adding a set by hand all write rows and nothing else. One
+session's rating is stamped identically on every set it writes, so averaging a
+session's rows returns that number.
+
+**Grouping.** One point per `(date, sessionId)`. Sets added by hand carry their
+own per-set RPE, which is a different measurement; they are grouped by date
+under a single pseudo-session, so a day of hand-entered sets contributes one
+point rather than one per set.
+
+**Bucketing.** All three ranges are trailing windows ending today, so the
+rightmost point is always now and changing range never pushes recent training
+off the end.
+
+| Range | Buckets |
+|---|---|
+| Week | 7, one per day |
+| Month | 30, one per day |
+| Year | 12, one per calendar month |
+
+A bucket's value is the mean of the session ratings inside it. A bucket with no
+rated session is `null`, never `0` — a day you did not train is a gap in the
+record, not an effortless workout, and drawing it as zero would drag every
+trend toward the floor.
+
+**Drawing.** The axis is 0–10 and is not cropped to where the data lives.
+Ratings cluster in the top half, so a cropped axis would spread them out and
+overstate every difference; the point of plotting a subjective number is to
+watch it move, and an axis that exaggerates the movement answers a question
+nobody asked.
+
+Bars are drawn only for buckets with a value. The line joins the sessions,
+skipping over the empty buckets between them — breaking it at each gap was the
+first instinct and it is wrong on a daily axis, where nobody has two adjacent
+points and the style would draw nothing at all. The dots are the measurements;
+the segments between them are interpolation, and a long absence reads as
+exactly that: a long segment with nothing on it.
+
+Points sit at band centres in both styles, so the switch moves the ink without
+moving the data.
 
 ## 13. Colour
 
@@ -449,6 +562,7 @@ Two things do carry meaning and so are chosen for separation, not brand fit:
 |---|---|
 | Explosivity | `#5f93dd` |
 | Strength | `#cd7449` |
+| Hypertrophy | `#c9739d` |
 | Muscular endurance | `#3f9d79` |
 | Primary muscle | `#ca5556` |
 | Supporting muscle | `#b28d15` |
@@ -475,6 +589,30 @@ Two consequences worth knowing:
   Everything interactive wears the goal accent instead, which is also what the
   design does almost everywhere.
 
+### The fourth goal accent
+
+`#c9739d` was not eyeballed. Candidates were swept across hue 285–340 at the
+chroma and lightness band of the three existing goals, rejected below contrast
+4.5 on either surface, and scored on the **smallest** CIEDE2000 distance to any
+colour they can share a screen with — the three goals, both muscle tokens, Home
+yellow and the body text — in normal vision and under Viénot protanopia and
+deuteranopia simulation. The winner is the candidate whose worst case is
+largest.
+
+| | |
+|---|---|
+| Contrast | 5.38 on `#161826`, 4.65 on `#232532` |
+| Binding neighbour | Explosive `#5f93dd`, ΔE 13.0 under protanopia |
+| Second binding | Endurance `#3f9d79`, ΔE 13.0 under deuteranopia |
+| Nearest in normal vision | Muscle red `#ca5556`, ΔE 18.1 |
+
+Measured the same way, the existing Endurance/Strength pair — the warn above —
+is the tightest thing on screen. Adding a fourth goal therefore does not make
+the set harder to read than it already was, which was the constraint.
+
+Magenta because it is the only hue left. Red, amber and yellow belong to the
+muscle tokens and Home; violet is where Nocturne's own accent sits.
+
 The muscle pair is re-stepped rather than inherited from the documented dark
 ramp: the obvious dark red and amber measure ΔE 13.0 apart, which would be a
 defect exactly where the stripe needs the two to read as different.
@@ -494,6 +632,10 @@ dark-UI reader does not get dark-surface steps burned onto white paper.
 | No record of *doing* a workout | A live session screen that logs what you ticked (§9) | The workbook had you retype every set by hand |
 | No muscle diagram | Front/back map (§10) | The data was already there in the primary/secondary columns |
 | No rest guidance beyond a printed range | A rest timer started by ticking a set (§9) | The prescription already carries the number in seconds |
+| Three goals | Four — Hypertrophy added (§16) | The most common reason to lift is the one the workbook does not prescribe |
+| No record of how hard it was | A 1–10 session rating (§12b) | Load and sets do not tell you what a session cost |
+| A fixed library of 167 | The 167 plus your own (§17) | No compendium covers everyone's gym |
+| 1RM only in the Exercise Library | Also on Build, beside each chosen lift | The suggested load is a percentage of it, so the number is asked for where it is needed |
 
 ## 15. Not yet translated
 
@@ -502,9 +644,94 @@ exercises — it came with the workbook. Still English-only:
 
 - `how.sv` for warm-up drills (49) and mobility (43)
 - `cue` on exercises (167)
-- prescription `sets` / `reps` / `load` / `rest` / `note` (21 × 5)
+- prescription `sets` / `reps` / `load` / `rest` / `note` (28 × 5, including the
+  seven hypertrophy rows)
 - equipment, pattern, muscle, profile and goal labels (~40)
 - all UI chrome
 
 The UI reads every user-visible string through `t()` already, so adding Swedish
-is a data task, not a refactor.
+is a data task, not a refactor. Exercises the user writes themselves are stored
+as `{ en, sv: '' }` and fall back to `en`, so a Swedish build shows them under
+the name they were given rather than blank.
+
+---
+
+## 16. Hypertrophy — the fourth goal
+
+The workbook prescribes three goals. Hypertrophy is the app's, and it lives in
+`data/hypertrophy.json` because `tools/extract-workbook.ps1` rewrites
+`prescriptions.json` and `vocabulary.json` wholesale — anything merged into
+those would be gone after the next run. `src/data.js` folds the seven rows into
+the same prescription index at load, so §2 onwards is unchanged and nothing
+downstream can tell the two sources apart.
+
+Seven rows, one per profile, in the same shape as a workbook row. The numbers:
+
+| Profile | Sets | Reps | Load | Rest |
+|---|---|---|---|---|
+| Heavy compound | 3–4 | 6–10 | 70–80% | 2–3 min |
+| Compound | 3–4 | 8–12 | 65–75% | 90–150 s |
+| Isolation | 3–4 | 10–15 | 55–70% | 60–90 s |
+| Core | 3–4 | 10–15 / 30–45 s | moderate | 60–90 s |
+| Olympic lift | 3–4 | 4–6 | 65–75% | 2–3 min |
+| Plyometric | 3–4 | 8–12 | bodyweight | 60–90 s |
+| Carry | 3–4 | 30–50 m | 55–70% of max carry | 90–120 s |
+
+What the ranges rest on, cited in full in the file's own `meta.basis`:
+
+- **Load and reps are wide** because heavy and moderate loads produce similar
+  hypertrophy when sets are taken close to failure (Schoenfeld et al. 2017,
+  *JSCR* 31(12)). The proximity is what the notes insist on, not the percentage.
+- **Rest is 2–3 min on multi-joint work**, not the 60 s that used to be standard
+  advice: 3 min beat 1 min for hypertrophy in trained men (Schoenfeld, Pope et
+  al. 2016, *JSCR* 30(7)). Cutting rest costs reps, and reps are the stimulus.
+- **Sets are per exercise.** The weekly target of roughly 10–20 hard sets per
+  muscle is dose-responsive (Schoenfeld, Ogborn & Krieger 2017, *J Sports Sci*
+  35(11)) but is the user's to assemble across sessions — the app prescribes an
+  exercise, not a mesocycle. §11 and §12a are the tools for checking it.
+- **0–3 reps in reserve**, not failure on every set (Baz-Valle et al. 2022,
+  *PLoS ONE* 17(4); Refalo et al. 2023, *J Sports Sci* 41(6)).
+
+Two rows are honest about being poor fits. Olympic lifts and plyometrics are not
+hypertrophy tools — technique fails before the muscle does — and their notes say
+so and point the volume elsewhere. They still carry real numbers rather than the
+workbook's `Isolation | Explosivity` dead end (§2), because a session containing
+a power clean should still estimate and prescribe something.
+
+These are population-level starting points. Nothing in that file is advice for a
+particular person.
+
+---
+
+## 17. Exercises the user writes
+
+Same shape as a workbook row, so everything downstream works on one unchanged:
+the warm-up triggers off its `pattern` and muscles (§5.1), the prescription
+comes from its `profile` (§2), the map paints it (§10), the log counts it (§11),
+and it takes a 1RM (§3).
+
+`profile` is the one field with no natural answer, because it is the workbook's
+vocabulary rather than a property of the movement. The form asks for it plainly
+and shows what it will prescribe for the current goal, which beats inferring it
+from the pattern and quietly prescribing the wrong thing.
+
+### Removing one
+
+| Referred to by | What happens |
+|---|---|
+| nothing | deleted |
+| a log entry, a saved workout, the draft, or the live session | archived |
+
+Archived means out of the library and the picker, still resolving everywhere it
+is already mentioned, restorable. Deleting an exercise a log entry points at
+would not free anything — it would turn that entry into a row the app cannot
+name and drop its sets out of every muscle and goal total, as though the
+training had not happened. The confirmation names the counts either way, and a
+second deletion attempt on something already archived is allowed and says what
+it costs.
+
+### Backup
+
+`store.exportAll()` includes them. A backup file written before this existed has
+no `customExercises` key, and restores a library with none in it rather than
+failing.

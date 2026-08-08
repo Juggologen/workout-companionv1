@@ -58,6 +58,61 @@ const LOCALES = {
     'today.saved': 'Saved workouts',
     'today.savedMeta': '{n} kept',
 
+    // --- guide ---
+    'guide.open': 'How this works',
+    'guide.kicker': 'New here?',
+    'guide.title': 'How this works',
+    'guide.lede':
+      'You pick a goal and the lifts you want to do. Everything else — the warm-up, the sets and reps, the weight on the bar, how long it will take — is worked out from those two answers. Here is the whole loop, in the order you will actually do it.',
+
+    'guide.step.goal.title': 'Start with a goal',
+    'guide.step.goal.text':
+      'Explosive, Strength, Hypertrophy or Endurance. This is the big one: the same lift is prescribed completely differently depending on which you pick — five heavy triples for strength, three sets of ten for hypertrophy. The whole app re-tints to the goal you are in, so you can tell at a glance.',
+
+    'guide.step.lifts.title': 'Choose your lifts',
+    'guide.step.lifts.text':
+      'Add from library opens all 167 exercises, plus any you have written yourself. Search by name, or filter by the equipment you have, the movement pattern, or the muscle you want to work. Pick as many as you want — three to five is a normal session.',
+
+    'guide.step.oneRm.title': 'Tell it what you can lift',
+    'guide.step.oneRm.text':
+      'Suggested weights are a percentage of your one-rep max, so any lift without one just says “Enter your 1RM”. Tap the + beside it on Build to fill it in — you only ever do this once per exercise. Bodyweight lifts do not need one.',
+
+    'guide.step.budgets.title': 'Give it a warm-up budget',
+    'guide.step.budgets.text':
+      'In minutes, not exercises. It fills that time with drills that match what you are about to do, in priority order, and stops at the first one that would not fit. The mobility budget at the end works the same way.',
+
+    'guide.step.plan.title': 'Generate the plan',
+    'guide.step.plan.text':
+      'Now it builds: a warm-up chosen from the lifts you picked, every exercise with its sets, reps, suggested weight and rest, a cool-down, a time estimate, and a body map of what you are about to train. Save it to reuse, or export a PDF to write on at the rack.',
+
+    'guide.step.run.title': 'Run the session',
+    'guide.step.run.text':
+      'Tick each set as you finish it and the rest timer starts itself, counting the rest that lift was prescribed. If the weight was different from the suggestion, type it or step it in 2.5 kg. What you tick is exactly what gets logged — nothing is assumed.',
+
+    'guide.step.rpe.title': 'Say how hard it was',
+    'guide.step.rpe.text':
+      'Finishing asks for a rating from 1 to 10. It is a snap judgement about the session as a whole, not a score for each set, and it takes one tap. Skip it if you would rather — a rating you did not mean is worse than none.',
+
+    'guide.step.review.title': 'Look back',
+    'guide.step.review.text':
+      'Home shows your week, Monday to Sunday, including which muscle groups you have not touched. Log has the balance across the four goals, how hard your sessions have felt over a week, month or year, and your sets per muscle group.',
+
+    'guide.goto.build': 'Open Build',
+    'guide.goto.library': 'Open the Library',
+    'guide.goto.log': 'Open the Log',
+
+    'guide.moreLabel': 'Worth knowing',
+    'guide.own.title': 'Your gym, your exercises',
+    'guide.own.text':
+      'If the library is missing something you do, add it. Give it a name, the equipment, the muscles it works and how it should be prescribed, and it behaves like any other exercise from then on — warm-ups, body map, log and all.',
+    'guide.saved.title': 'Workouts you keep',
+    'guide.saved.text':
+      'Save a plan and it is on Home under Saved workouts. Load it back to run it again, or press “Did it again” to log it without stepping through it set by set.',
+    'guide.data.title': 'It all stays on this device',
+    'guide.data.text':
+      'No account, no server, nothing uploaded. That also means nothing is backed up for you — if you care about the history, take a copy now and then from Log → Your data.',
+    'guide.start': 'Build your first session',
+
     // --- weekly summary ---
     'week.this': 'This week',
     'week.last': 'Last week',

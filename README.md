@@ -86,7 +86,8 @@ docs/logic.md         every rule, traced to its cell formula
 
 ## Screens
 
-Four tabs, with Plan and Session pushed from Build and Saved pushed from Today.
+Four tabs, with Plan and Session pushed from Build, and Saved and the guide
+pushed from Home.
 
 | Screen | What it does |
 |---|---|
@@ -97,6 +98,7 @@ Four tabs, with Plan and Session pushed from Build and Saved pushed from Today.
 | **Log** | Goal balance over 30 days, perceived exertion over a week, month or year, sets per muscle group, history, per-exercise bests, and your data. |
 | **Library** | All 167 exercises plus any you write yourself. Search by name, filter by equipment, movement pattern, primary muscle and supporting muscle, read the cue, set your 1RMs — and pick lifts from here when building. |
 | **Saved** | Your workouts. Load one back, print it, or record that you did it again. |
+| **How this works** | A walk through one session start to finish, for someone who has just arrived. Reached from a question mark in the corner of Home. |
 
 While a session is running, a **bubble** floats above the tab bar on every
 other screen, carrying the session's name, goal colour and progress. It
@@ -117,6 +119,26 @@ the direction pressed (183 → + → 185). The same control sets a 1RM, and it i
 on the Build screen next to each chosen lift as well as in the Library — the
 suggested load is a percentage of your 1RM, so the number is asked for where
 the sentence asking for it appears.
+
+## Finding your way in
+
+**Home → the question mark, top right.** It opens a walkthrough of one whole
+session in the order you actually do it: pick a goal, pick lifts, give it your
+1RM, set a warm-up budget, generate, run it, rate it, look back. Eight steps,
+each a sentence or two, with buttons into the screen being described.
+
+It is a *page*, not a first-run modal, and nothing triggers it automatically. A
+tutorial nobody asked for is an obstacle between someone and the thing they
+opened the app to do, and the button does not go away — it is as useful on the
+day you wonder what the warm-up budget actually does as it is on day one.
+
+Home is the only place it appears, and the button is deliberately quiet: a
+38px outlined circle drawn at `--t-55`, which measures 5.1:1 on the ground —
+dimmer than anything else on the screen, but well clear of the 3:1 floor for a
+control someone is meant to find. `--t-45`, the kicker tint, was the first
+choice and came in at 3.9:1, which is legal and too faint for the only door
+into the thing. The guide keeps Home's yellow rather than a goal accent, because it
+describes all four goals and wearing one would be picking a side.
 
 ## The four goals
 

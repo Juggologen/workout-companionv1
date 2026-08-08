@@ -636,6 +636,7 @@ dark-UI reader does not get dark-surface steps burned onto white paper.
 | No record of how hard it was | A 1–10 session rating (§12b) | Load and sets do not tell you what a session cost |
 | A fixed library of 167 | The 167 plus your own (§17) | No compendium covers everyone's gym |
 | 1RM only in the Exercise Library | Also on Build, beside each chosen lift | The suggested load is a percentage of it, so the number is asked for where it is needed |
+| A Read Me sheet you have to know to open | A guide screen behind a question mark on Home (§18) | The sequence is the thing that needs explaining, and a spreadsheet tab is not where anyone looks for it |
 
 ## 15. Not yet translated
 
@@ -735,3 +736,45 @@ it costs.
 `store.exportAll()` includes them. A backup file written before this existed has
 no `customExercises` key, and restores a library with none in it rather than
 failing.
+
+---
+
+## 18. The guide screen
+
+Eight steps in the order the app is actually used — goal, lifts, 1RM, budgets,
+generate, run, rate, review — plus three notes (your own exercises, saved
+workouts, where the data lives). Each step is a title and a sentence or two;
+three of them carry a button into the screen being described.
+
+It teaches the **sequence**, not the feature set. Every screen already displays
+what it can do; what an arrival is missing is that the goal rewrites every
+prescription, that the warm-up is derived from the lifts you chose, and that
+ticking a set is what writes the log. None of those are visible from any one
+screen.
+
+**Not shown on first run.** It is reached from a question mark on Home and
+nowhere else, and nothing opens it automatically. A tutorial nobody asked for
+is a modal between the user and the thing they opened the app for, and the
+button does not expire — "what does the warm-up budget do" is a question that
+arrives on day thirty, not day one.
+
+**It is not a training mode**, so it joins Home in `NEUTRAL_SCREENS`: Home's
+yellow, and no corner glow. Wearing a goal accent would mean picking one of the
+four the page is there to describe. The Home tab stays lit while it is open,
+the same as Saved.
+
+The step list is data (`GUIDE_STEPS`) and the prose is i18n keys
+(`guide.step.<key>.title` / `.text`), so translating it is the same data task as
+everything else in §15, and reordering the walkthrough does not mean touching
+markup.
+
+Contrast, measured by compositing each token over `#161826`:
+
+| | |
+|---|---|
+| Step title, note title | 14.5 |
+| Jump links | 12.8 |
+| Step number badge, on its tinted disc | 15.3 |
+| Lede | 9.2 |
+| Body text, goal key labels | 6.8 |
+| The question-mark button | 5.1 |

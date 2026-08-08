@@ -199,8 +199,18 @@ function saveCustomExercises() {
  * repainted by whichever goal the draft session happens to hold.
  */
 function screenAccent() {
-  return state.screen === 'home' ? 'var(--home-accent)' : GOAL_COLOR[state.session.goal];
+  return NEUTRAL_SCREENS.has(state.screen)
+    ? 'var(--home-accent)'
+    : GOAL_COLOR[state.session.goal];
 }
+
+/**
+ * Screens that are not a training mode, and so keep Home's yellow rather than
+ * being repainted by whichever goal the draft session happens to hold. The
+ * guide belongs here for the same reason Home does: it describes all four
+ * goals, so wearing one of them would be picking a side.
+ */
+const NEUTRAL_SCREENS = new Set(['home', 'guide']);
 
 function render() {
   const root = document.getElementById('app');
@@ -213,7 +223,9 @@ function render() {
   const app = h(
     'div.app',
     {
-      class: [state.screen === 'home' && 'is-home', resume && 'has-resume'].filter(Boolean).join(' '),
+      class: [NEUTRAL_SCREENS.has(state.screen) && 'is-home', resume && 'has-resume']
+        .filter(Boolean)
+        .join(' '),
       style: `--g:${screenAccent()}`,
     },
     screen(),
@@ -314,6 +326,8 @@ function screen() {
       return viewLibrary();
     case 'saved':
       return viewSaved();
+    case 'guide':
+      return viewGuide();
     default:
       return viewHome();
   }
@@ -327,12 +341,12 @@ function tabbar() {
     ['library', t('tab.library'), ICONS.list],
   ];
 
-  // Plan and Session are pushed from Build; Saved from Home. Keep the parent
-  // tab lit so the bar never looks like nothing is selected.
+  // Plan and Session are pushed from Build; Saved and the guide from Home.
+  // Keep the parent tab lit so the bar never looks like nothing is selected.
   const parent =
     state.screen === 'plan' || state.screen === 'live'
       ? 'build'
-      : state.screen === 'saved'
+      : state.screen === 'saved' || state.screen === 'guide'
         ? 'home'
         : state.screen;
 
@@ -416,7 +430,22 @@ function viewHome() {
     'div.screen',
     h(
       'div.screen-inner',
-      screenHead(formatToday(), t('today.title')),
+      h(
+        'div.home-head',
+        screenHead(formatToday(), t('today.title')),
+        // Deliberately quiet: a question mark in the corner, not a banner. It
+        // is the only thing on Home that isn't your training, and someone on
+        // their fortieth session should be able to stop seeing it.
+        h(
+          'button.help-btn',
+          {
+            onclick: () => go('guide'),
+            'aria-label': t('guide.open'),
+            title: t('guide.open'),
+          },
+          icon(ICONS.help, { size: 18 })
+        )
+      ),
       plannedCard(exercises, built),
       streakCard(),
       weekCard(),
@@ -766,6 +795,117 @@ function savedCard() {
       h('div.panel-title', t('today.saved')),
       h('span.muted', { style: 'font-size:11px' }, t('today.savedMeta', { n: state.sessions.length }))
     )
+  );
+}
+
+/* ---------------------------------------------------------------- guide
+
+   A walk through one session, start to finish, in the order you would
+   actually do it. Not a feature list: the app's own screens already show what
+   it can do, and what a new arrival is missing is the sequence — that a goal
+   changes every prescription, that the warm-up builds itself from the lifts
+   you picked, that ticking a set is what writes the log.
+
+   Reached from a small question mark on Home and nowhere else. It is not
+   forced on first run: a tutorial nobody asked for is a modal in the way of
+   the thing they opened the app to do, and the button is always there.
+   ------------------------------------------------------------------------ */
+
+/**
+ * `go` marks a step you can act on now, and adds a button that takes you
+ * there. The steps without one are things that happen on a screen you are
+ * already being sent to, so a second button would be noise.
+ */
+const GUIDE_STEPS = [
+  { key: 'goal', go: 'build' },
+  { key: 'lifts', go: 'library' },
+  { key: 'oneRm' },
+  { key: 'budgets' },
+  { key: 'plan' },
+  { key: 'run' },
+  { key: 'rpe' },
+  { key: 'review', go: 'log' },
+];
+
+function viewGuide() {
+  return h(
+    'div.screen',
+    h(
+      'div.screen-inner',
+      { style: 'gap:26px' },
+      backLink(t('tab.home'), () => go('home')),
+      h(
+        'div.stack',
+        { style: 'gap:10px' },
+        screenHead(t('guide.kicker'), t('guide.title')),
+        h('p.guide-lede', t('guide.lede'))
+      ),
+
+      h(
+        'ol.guide-steps',
+        GUIDE_STEPS.map((step, i) => guideStep(step, i + 1))
+      ),
+
+      h(
+        'div.stack',
+        { style: 'gap:12px' },
+        h('div.section-label', t('guide.moreLabel')),
+        guideNote(t('guide.own.title'), t('guide.own.text'), 'library', t('guide.goto.library')),
+        guideNote(t('guide.saved.title'), t('guide.saved.text')),
+        guideNote(t('guide.data.title'), t('guide.data.text'))
+      ),
+
+      h(
+        'button.btn.btn-goal.btn-lg.btn-block',
+        { onclick: () => go('build') },
+        t('guide.start')
+      )
+    )
+  );
+}
+
+function guideStep(step, n) {
+  return h(
+    'li.guide-step',
+    h('span.guide-num', String(n)),
+    h(
+      'div.guide-step-body',
+      h('h2.guide-step-title', t(`guide.step.${step.key}.title`)),
+      h('p.guide-text', t(`guide.step.${step.key}.text`)),
+      // The goals are the one thing here that is easier shown than described:
+      // the app re-tints around whichever you pick, so the swatches teach the
+      // colour language before you meet it.
+      step.key === 'goal' && guideGoalKey(),
+      step.go &&
+        h(
+          'button.btn-link',
+          { onclick: () => go(step.go) },
+          t(`guide.goto.${step.go}`),
+          icon(ICONS.chevronRight, { size: 12 })
+        )
+    )
+  );
+}
+
+function guideGoalKey() {
+  return h(
+    'div.guide-goals',
+    state.catalog.vocabulary.goals.map((goal) =>
+      h(
+        'span.guide-goal',
+        h('span.swatch.swatch-lg', { style: `background:${GOAL_COLOR[goal]}` }),
+        goalLabel(goal)
+      )
+    )
+  );
+}
+
+function guideNote(title, text, target, label) {
+  return h(
+    'div.guide-note',
+    h('div.guide-note-title', title),
+    h('p.guide-text', text),
+    target && h('button.btn-link', { onclick: () => go(target) }, label, icon(ICONS.chevronRight, { size: 12 }))
   );
 }
 

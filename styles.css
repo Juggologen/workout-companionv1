@@ -493,6 +493,89 @@ input, select, textarea { font: inherit; color: inherit; }
   gap: 14px;
 }
 
+/* ---------------------------------------------------------------- guide
+
+   The entry point is a question mark in the top-right of Home, sized to the
+   title beside it rather than to a toolbar, so it reads as part of the
+   heading and not as a control bar Home does not otherwise have.
+   ========================================================================= */
+
+.home-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+.help-btn {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  /* --t-55, not the --t-45 the kickers use. This is the only way into the
+     guide, and at 45% it measured 3.9:1 — over the 3:1 floor for a graphic,
+     but dim for the one control a first-time user is meant to find. 55% is
+     5.2:1 and still quieter than anything else on the screen. */
+  color: var(--t-55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.help-btn:hover { color: var(--g); border-color: var(--g); }
+
+.guide-lede { font-size: 14.5px; line-height: 1.6; color: var(--t-78); text-wrap: pretty; }
+
+/* The rail is drawn on the list, not per step, so it runs unbroken behind the
+   numbers and reads as one sequence rather than eight separate cards. */
+.guide-steps { position: relative; display: flex; flex-direction: column; gap: 26px; }
+.guide-steps::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--color-divider);
+}
+
+.guide-step { position: relative; display: flex; gap: 14px; align-items: flex-start; }
+.guide-num {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 12.5px var(--font-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 15%, var(--color-bg));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--g) 45%, transparent);
+}
+
+.guide-step-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 2px; }
+.guide-step-title { font-size: 15.5px; font-weight: 500; letter-spacing: -0.01em; }
+.guide-text { font-size: 13px; line-height: 1.62; color: var(--t-65); text-wrap: pretty; }
+
+/* Both link buttons are inline-flex inside a flex column, so without this they
+   stretch to the column width and the hover underline runs off to the right. */
+.guide-step-body .btn-link { align-self: flex-start; margin-top: 3px; }
+
+.guide-goals { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 3px; }
+.guide-goal { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--t-65); }
+
+.guide-note {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  padding: 15px 16px;
+}
+.guide-note-title { font-size: 14px; font-weight: 500; }
+.guide-note .btn-link { align-self: flex-start; margin-top: 3px; }
+
 /* ---------------------------------------------------------- week summary
 
    Seven fixed columns, so the shape of the week is the same every week and

@@ -225,11 +225,11 @@ it will actually prescribe — "3–4 × 8–12 · 70–80%" says more than
 
 Choosing one sends a **pulse** of the new colour out from wherever you pressed.
 It sits behind the content, above the flat ground and below the screen, so it
-washes through the cards rather than over them; every accent-bearing property
-cross-fades over roughly the same time, so the new colour looks like it was
-left behind by the wave rather than beating it there. The Build screen's goal
-cards do the same thing, because picking a goal repaints the app wherever you
-do it. Skipped under `prefers-reduced-motion`.
+washes through the cards rather than over them — and each element changes
+colour as the front reaches it, not when the wave starts, so the colour really
+is carried outward rather than merely announced. The Build screen's goal cards
+do the same thing, because picking a goal repaints the app wherever you do it.
+Skipped under `prefers-reduced-motion`.
 
 Selection rotates across the muscle groups you picked rather than ranking one
 list, because a single ranked list spends the whole budget on whichever group

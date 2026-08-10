@@ -83,6 +83,8 @@ const state = {
   weekOffset: 0,
   /** Quick workout's inputs. Seeded from prefs so it remembers your usual. */
   quick: null,
+  /** Where the focus row is scrolled to, held across re-renders. */
+  focusScroll: 0,
   flash: null,
 };
 
@@ -1213,7 +1215,7 @@ function quickSection(label, body, hint) {
  * complexity control off the bottom.
  */
 function focusScroller(current) {
-  return h(
+  const scroller = h(
     'div.focus-scroller',
     { role: 'radiogroup', 'aria-label': t('quick.focus') },
     state.catalog.vocabulary.goals.map((goal) => {
@@ -1229,11 +1231,10 @@ function focusScroller(current) {
           'aria-checked': String(on),
           onclick: (e) => pickGoal(e, goal, () => setQuick({ goal })),
         },
-        h(
-          'span.focus-top',
-          h('span.focus-dot'),
-          h('span.focus-name', goalLabel(goal))
-        ),
+        // No swatch beside the name: the card is already tinted its own colour
+        // when chosen and the name carries it, so a dot was a legend for
+        // something the card was saying twice over.
+        h('span.focus-name', goalLabel(goal)),
         h('span.focus-blurb', t(`goal.blurb.${goal}`)),
         // The prescription for a heavy compound, which is what makes the
         // difference between the goals concrete: "3–4 × 8–12 at 70–80%" says
@@ -1248,6 +1249,20 @@ function focusScroller(current) {
       );
     })
   );
+
+  // Choosing a card re-renders, which builds a fresh scroller parked at the
+  // start -- so tapping Endurance sent the row snapping back to Explosive and
+  // the card you just picked out of sight. The position is held in state and
+  // put back on the frame after the new element is in the document, since
+  // scrollLeft does nothing on a node that is not laid out yet.
+  scroller.addEventListener('scroll', () => {
+    state.focusScroll = scroller.scrollLeft;
+  });
+  requestAnimationFrame(() => {
+    scroller.scrollLeft = state.focusScroll || 0;
+  });
+
+  return scroller;
 }
 
 /* ------------------------------------------------------------ accent pulse
@@ -1264,16 +1279,35 @@ function focusScroller(current) {
                   and below `.screen`, so it washes through the cards rather
                   than over them
 
-     the repaint  every accent-bearing property cross-fades over roughly the
-                  same time, so the new colour appears to be left behind by
-                  the wave rather than to beat it there
+     the repaint  each element changes colour as the wave front reaches it,
+                  not when the wave starts
+
+   The second half is the whole point and the first attempt got it wrong: it
+   cross-faded everything at once, so the colour was already changing across
+   the entire screen while the circle was still small. The wave has to arrive
+   somewhere before that place changes.
+
+   Each element is given a `transition-delay` of its own distance from the
+   press, divided by the wave's speed. That means the pulse expands *linearly*
+   -- a constant speed makes delay directly proportional to distance, and an
+   eased radius would need the inverse of the easing curve to stay in step.
+   The opacity is eased separately inside the keyframes, so the wave still
+   softens as it goes without the radius lying about where the front is.
+
+   The new accent is applied a frame *after* the delays are in place, because a
+   transition only runs if the property was already being watched when the
+   value changed. Rendering with the new colour and then adding transitions
+   would repaint instantly and leave the wave chasing something that had
+   already happened.
 
    The repaint transition is switched on for the duration and then switched
-   off again. Leaving it on permanently would put a 600ms fade on every hover
-   in the app, which is the opposite of responsive.
+   off again. Leaving it on permanently would put a fade on every hover in the
+   app, which is the opposite of responsive.
    ------------------------------------------------------------------------ */
 
-const PULSE_MS = 700;
+const PULSE_MS = 760;
+/** How long any one element takes to change once the wave gets to it. */
+const REPAINT_MS = 320;
 
 /** Where the press happened, falling back to the control's centre for keys. */
 function pressPoint(event) {
@@ -1302,13 +1336,18 @@ function pressPoint(event) {
 function pickGoal(event, goal, apply) {
   const from = pressPoint(event);
   const colour = GOAL_COLOR[goal];
+  const before = document.querySelector('.app')?.style.getPropertyValue('--g');
 
   apply();
 
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-
   const app = document.querySelector('.app');
-  if (!app) return;
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (!app || reduced || !before) return;
+
+  // Hold the old accent for a beat. `apply` has already re-rendered with the
+  // new one, and letting that stand would repaint the screen before the wave
+  // had gone anywhere.
+  app.style.setProperty('--g', before);
 
   // Reach the furthest corner, or the wave stops short of the screen edge.
   const radius = Math.hypot(
@@ -1316,19 +1355,60 @@ function pickGoal(event, goal, apply) {
     Math.max(from.y, window.innerHeight - from.y)
   );
 
-  const pulse = h('span.accent-pulse', {
-    style: `--px:${from.x}px;--py:${from.y}px;--pr:${radius}px;--pc:${colour}`,
-  });
-
   app.classList.add('is-repainting');
-  app.appendChild(pulse);
+  staggerRepaint(app, from, radius);
+
+  app.appendChild(
+    h('span.accent-pulse', {
+      style: `--px:${from.x}px;--py:${from.y}px;--pr:${radius}px;--pc:${colour};--pulse-ms:${PULSE_MS}ms`,
+    })
+  );
+
+  // Two frames: one for the old accent and the delays to be committed, the
+  // next to change the value. Setting both in the same frame is a single
+  // style change with nothing to transition from.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => app.style.setProperty('--g', colour));
+  });
 
   // Timers rather than animationend: a suppressed animation must still leave
   // the app repaint-free and the element removed.
-  setTimeout(() => {
-    pulse.remove();
-    document.querySelector('.app')?.classList.remove('is-repainting');
-  }, PULSE_MS + 120);
+  setTimeout(() => clearRepaint(), PULSE_MS + REPAINT_MS + 120);
+}
+
+/**
+ * Delay every element's colour change by when the wave reaches it.
+ *
+ * Distance from the press point over the wave's speed. Elements beyond the
+ * furthest corner cannot exist, but the clamp is there anyway so a stray
+ * measurement can never park an element past the end of the animation and
+ * leave it stuck on the old colour.
+ *
+ * All the reads happen before any of the writes, so this costs one layout
+ * rather than one per element.
+ */
+function staggerRepaint(app, from, radius) {
+  const nodes = [...app.querySelectorAll('*')];
+  const delays = nodes.map((node) => {
+    const r = node.getBoundingClientRect();
+    if (!r.width && !r.height) return null;
+    const d = Math.hypot(r.left + r.width / 2 - from.x, r.top + r.height / 2 - from.y);
+    return Math.round((Math.min(d, radius) / radius) * PULSE_MS);
+  });
+
+  nodes.forEach((node, i) => {
+    if (delays[i] != null) node.style.transitionDelay = `${delays[i]}ms`;
+  });
+}
+
+function clearRepaint() {
+  const app = document.querySelector('.app');
+  if (!app) return;
+  app.querySelector('.accent-pulse')?.remove();
+  app.classList.remove('is-repainting');
+  for (const node of app.querySelectorAll('[style*="transition-delay"]')) {
+    node.style.transitionDelay = '';
+  }
 }
 
 function quickBudget(key, options, q) {

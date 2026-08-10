@@ -1011,6 +1011,16 @@ pads itself back, and without matching scroll padding the snap aligns a card to
 the scrollport edge and scrolls straight past that padding on load, leaving the
 first card flush against the screen instead of lined up with its label.
 
+The scroll position is held in `state.focusScroll` and restored on the frame
+after each render. Choosing a card re-renders, which builds a fresh scroller
+parked at the start — so picking Endurance snapped the row back to Explosive
+and put the card you had just chosen out of sight. Restoring has to wait a
+frame: `scrollLeft` does nothing on a node that is not laid out yet.
+
+The cards carry no swatch. The chosen one is already tinted its own colour in
+the border, the background and the name, so a dot beside the title was a legend
+for something the card was saying three times over.
+
 Choosing a goal repaints every interactive surface, since `--g` drives all of
 them. Rather than snapping between two saturated colours, the new one arrives
 as a wave:
@@ -1018,12 +1028,33 @@ as a wave:
 | | |
 |---|---|
 | the pulse | a circle in the new colour expanding from the press point, `z-index: 0` — above `.app`'s flat background and below `.screen`, so it washes *through* the transparent cards rather than over them |
-| the repaint | `.app.is-repainting *` cross-fades colour, background, border, fill, stroke and shadow over 620ms, so the new colour appears to be left behind by the wave |
+| the repaint | each element changes colour **as the front reaches it** — `staggerRepaint` gives every node a `transition-delay` of its own distance from the press over the wave's speed |
 
-The repaint transition is added for the pulse and removed after. Left on
-permanently it would put a 600ms fade on every hover in the app. It has to be
-`*` with `!important` — the accent reaches dozens of unrelated selectors and an
-enumerated list would rot the first time another was added.
+The first version cross-faded everything at once, so the colour was already
+changing across the whole screen while the circle was still small. The wave has
+to arrive somewhere before that place changes.
+
+That is why the pulse expands **linearly**. A constant speed makes delay
+directly proportional to distance; an eased radius would need the inverse of
+the easing curve to stay in step. The softening comes from opacity stops inside
+the keyframes instead, which costs nothing in accuracy.
+
+Ordering matters and is easy to get wrong. `apply()` re-renders with the new
+accent already applied, so `pickGoal` puts the old one straight back, installs
+the delays, and only then sets the new value — two frames later, because a
+transition needs the property to have been watched when the value changed.
+Setting both in one frame is a single style change with nothing to transition
+from.
+
+The repaint rule uses **longhands, and declares no `transition-delay`**. The
+`transition` shorthand resets delay to zero, and carrying `!important` it beat
+the inline per-element delay and collapsed the wave back into everything
+changing at once. It still has to be `*` with `!important` on the other
+longhands — the accent reaches dozens of unrelated selectors and an enumerated
+list would rot the first time another was added.
+
+The transition is added for the pulse and removed after; left on permanently it
+would put a fade on every hover in the app.
 
 The pulse is appended *after* the re-render, because `render()` replaces the
 whole app subtree and would take the element with it. It scales a fixed-size

@@ -197,32 +197,39 @@ input, select, textarea { font: inherit; color: inherit; }
     transparent 72%
   );
   /* Scale, not width/height: the size is fixed and only the transform moves,
-     so the wave runs on the compositor instead of relaying out every frame. */
+     so the wave runs on the compositor instead of relaying out every frame.
+
+     LINEAR, deliberately. Each element's colour change is delayed by its own
+     distance from the press divided by the wave's speed, and that arithmetic
+     is only right if the speed is constant — an eased radius would need the
+     inverse of the easing curve to stay in step with it. The softening comes
+     from the opacity stops below instead, which costs nothing in accuracy. */
   transform: scale(0);
-  animation: accent-pulse 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: accent-pulse var(--pulse-ms, 760ms) linear both;
 }
 
 @keyframes accent-pulse {
-  from { transform: scale(0); opacity: 1; }
-  62%  { opacity: 0.5; }
+  from { transform: scale(0); opacity: 0.95; }
+  55%  { opacity: 0.62; }
   to   { transform: scale(1); opacity: 0; }
 }
 
 /* The repaint, for the duration of the wave only. Left on permanently this
-   would put a 600ms fade on every hover in the app, which is the opposite of
+   would put a fade on every hover in the app, which is the opposite of
    responsive — so `pickGoal` adds the class and takes it away again.
 
    It has to be `*` and `!important`: the accent reaches borders, fills,
    strokes and shadows on dozens of unrelated selectors, and enumerating them
-   would be a list that silently rots the next time one is added. */
+   would be a list that silently rots the next time one is added.
+
+   Longhands, and no `transition-delay` among them. The `transition` shorthand
+   resets delay to zero, and carrying `!important` it would beat the
+   per-element delay `staggerRepaint` writes inline — collapsing the wave back
+   into everything changing at once, which is the bug this replaced. */
 .app.is-repainting * {
-  transition:
-    color 620ms ease,
-    background-color 620ms ease,
-    border-color 620ms ease,
-    fill 620ms ease,
-    stroke 620ms ease,
-    box-shadow 620ms ease !important;
+  transition-property: color, background-color, border-color, fill, stroke, box-shadow !important;
+  transition-duration: 320ms !important;
+  transition-timing-function: ease !important;
 }
 
 .screen {
@@ -724,15 +731,9 @@ input, select, textarea { font: inherit; color: inherit; }
   background: color-mix(in srgb, var(--gc) 12%, transparent);
 }
 
-.focus-top { display: flex; align-items: center; gap: 8px; }
-.focus-dot {
-  width: 9px;
-  height: 9px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--gc);
-}
-.focus-name { font-size: 14.5px; font-weight: 500; }
+/* No swatch beside it: the card already carries its colour in the border, the
+   tint and the name, so a dot was a legend for something said three times. */
+.focus-name { font-size: 17.5px; font-weight: 600; letter-spacing: -0.015em; }
 .focus-card.is-on .focus-name { color: var(--gc); }
 
 .focus-blurb {

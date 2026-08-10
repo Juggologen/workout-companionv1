@@ -17,9 +17,17 @@
  *     no idea store.js exists and the reference/user split holds.
  */
 
-import { indexPrescriptions } from './engine.js';
+import { indexPrescriptions, indexComplexity } from './engine.js';
 
-const FILES = ['exercises', 'warmups', 'mobility', 'prescriptions', 'vocabulary', 'hypertrophy'];
+const FILES = [
+  'exercises',
+  'warmups',
+  'mobility',
+  'prescriptions',
+  'vocabulary',
+  'hypertrophy',
+  'complexity',
+];
 
 /**
  * Where the fourth goal sits in the list.
@@ -56,13 +64,13 @@ function goalsWithHypertrophy(goals) {
 }
 
 export async function loadCatalog() {
-  const [exercises, warmups, mobility, prescriptions, vocabulary, hypertrophy] = await Promise.all(
-    FILES.map(loadJson)
-  );
+  const [exercises, warmups, mobility, prescriptions, vocabulary, hypertrophy, complexity] =
+    await Promise.all(FILES.map(loadJson));
 
   const prescriptionItems = [...prescriptions.items, ...hypertrophy.items];
 
   return finish({
+    complexity,
     exercises: exercises.items,
     warmups: withRowNumbers(warmups.items),
     mobility: withRowNumbers(mobility.items),
@@ -84,6 +92,8 @@ function finish(catalog) {
     ...catalog,
     byId,
     prescriptionIndex: indexPrescriptions(catalog.prescriptions),
+    /** Skill tier for any exercise, the user's own included. See §18. */
+    tierOf: indexComplexity(catalog.complexity),
     /**
      * Exercise ids are numbers in the shipped catalog and strings ('u3') for
      * the user's own, so anything that has been through a `value` attribute or

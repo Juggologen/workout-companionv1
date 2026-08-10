@@ -209,6 +209,268 @@ export function buildSession(session, catalog, oneRmById = {}) {
   };
 }
 
+/* ------------------------------------------------------------- complexity */
+
+export const COMPLEXITY_LEVELS = ['basic', 'medium', 'advanced'];
+
+/**
+ * A lookup from exercise to skill tier, built from data/complexity.json.
+ *
+ * Rule first, override second. The rule exists so the user's own exercises get
+ * a tier without anyone rating them; the override list exists because the rule
+ * cannot possibly be right -- a Bodyweight Squat and a Pistol Squat are the
+ * same four fields all the way down.
+ */
+export function indexComplexity(complexity) {
+  const byName = new Map();
+  for (const tier of COMPLEXITY_LEVELS) {
+    for (const name of complexity?.overrides?.[tier] || []) byName.set(name, tier);
+  }
+
+  const byProfile = complexity?.rules?.byProfile || {};
+  const fallback = complexity?.rules?.default || 'basic';
+
+  return (exercise) => {
+    if (!exercise) return fallback;
+    const override = byName.get(exercise.name?.en ?? exercise.name);
+    return override || byProfile[exercise.profile] || fallback;
+  };
+}
+
+/**
+ * Tiers are cumulative: picking `advanced` excludes nothing, `medium` admits
+ * basic too. Anyone choosing the harder setting is saying what they are
+ * willing to see, not what they want exclusively.
+ */
+export function tierAllows(setting, tier) {
+  const ceiling = COMPLEXITY_LEVELS.indexOf(setting);
+  const level = COMPLEXITY_LEVELS.indexOf(tier);
+  if (ceiling < 0) return true;
+  return level >= 0 && level <= ceiling;
+}
+
+/* ---------------------------------------------------------- quick workout */
+
+/**
+ * Deterministic PRNG (mulberry32), so a workout is reproducible from its seed.
+ *
+ * Math.random would do the job once, but then the workout could never be shown
+ * again -- reopening the plan would silently give you a different session, and
+ * "shuffle" could not be told apart from "re-render". Storing one integer with
+ * the session buys back the whole thing.
+ */
+function mulberry32(seed) {
+  let a = seed | 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffled(items, rand) {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/** Roulette-wheel pick. This is where the variability comes from. */
+function weightedPick(candidates, rand) {
+  const total = candidates.reduce((sum, c) => sum + c.weight, 0);
+  if (total <= 0) return null;
+  let r = rand() * total;
+  for (const c of candidates) {
+    r -= c.weight;
+    if (r <= 0) return c;
+  }
+  return candidates[candidates.length - 1];
+}
+
+/** Heaviest and most technical first, while you are fresh; isolation last. */
+const PROFILE_ORDER = [
+  'Olympic lift',
+  'Plyometric',
+  'Heavy compound',
+  'Compound',
+  'Carry',
+  'Core',
+  'Isolation',
+];
+
+const MATCH_WEIGHT = { primary: 4, fullBody: 2, secondary: 1 };
+
+/**
+ * Patterns that are a bucket rather than a movement.
+ *
+ * "Isolation" covers curls, lateral raises and calf raises; "Core/Anti-movement"
+ * covers planks and Pallof presses. Allowing only one of either would make an
+ * arm or core session impossible, so within these the duplicate rule falls back
+ * to one per target muscle.
+ */
+const BUCKET_PATTERNS = new Set(['Isolation', 'Core/Anti-movement']);
+
+/** The profiles that make an exercise accessory work rather than a main lift. */
+const ACCESSORY_PROFILES = new Set(['Isolation', 'Core']);
+
+/**
+ * What counts as "the same exercise again" for selection purposes.
+ *
+ * Two axes, and both are needed:
+ *
+ *   Pattern, not pattern-and-primary. Barbell Bench Press is Chest and
+ *   Close-Grip Bench Press is Triceps, so keying on the pair let a chest
+ *   session return two bench presses and call them different movements.
+ *
+ *   Profile, because pattern alone is far too coarse. Every chest exercise in
+ *   the catalog is Horizontal push -- the flies and the Pec Deck included --
+ *   so one-per-pattern blocked the whole chest pool after the first press and
+ *   left only a Vertical push that happens to list Chest as a secondary. A
+ *   press and a fly are not the same movement twice, and the profile is the
+ *   field that already knows it.
+ */
+function shapeKey(ex) {
+  const role = ACCESSORY_PROFILES.has(ex.profile) ? 'accessory' : 'main';
+  // Inside a bucket pattern the pattern says nothing, so the target does.
+  const target = BUCKET_PATTERNS.has(ex.pattern) ? ex.primary : '';
+  return `${ex.pattern}|${role}|${target}`;
+}
+
+/**
+ * Build a session from what you have rather than from what you chose.
+ *
+ * Four inputs: which muscle groups, how long you have, which goal, and how
+ * much technique you are willing to be handed. Everything else falls out.
+ *
+ * The time is the *whole* session, so the warm-up and mobility budgets are
+ * subtracted before anything is chosen -- "I have an hour" means an hour in
+ * the building, and a plan that estimates 85 minutes would be a lie about the
+ * only number the user actually knew for certain.
+ *
+ * Selection is round-robin across the chosen muscle groups rather than a
+ * single ranked list. A ranked list with three groups selected reliably spends
+ * the whole budget on whichever group has the most catalog entries; taking one
+ * exercise per group in rotation spreads the session over what was asked for,
+ * and running out of time simply truncates the last lap.
+ *
+ * Within a group the pick is weighted-random, not best-first. That is the
+ * "noise": the same inputs on a different seed give a genuinely different
+ * session, so the feature can be used twice in a week without prescribing the
+ * same five lifts. Weights keep it sane -- an exercise that targets the group
+ * is three times likelier than one that merely assists.
+ */
+export function generateQuickWorkout(options, catalog, oneRmById = {}) {
+  const {
+    muscles = [],
+    minutes = 60,
+    goal = 'Strength',
+    warmupBudget = 15,
+    cooldownBudget = 10,
+    complexity = 'medium',
+    seed = 1,
+    maxExercises = 8,
+  } = options;
+
+  const rand = mulberry32(seed);
+  const tierOf = catalog.tierOf;
+  const mainBudget = minutes - warmupBudget - cooldownBudget;
+
+  // No targets means no preference, which is a full-body session rather than
+  // an empty one.
+  const targets = muscles.length
+    ? muscles
+    : catalog.vocabulary.muscles.filter((m) => m !== 'Full body');
+
+  const eligible = catalog.exercises
+    .filter((ex) => !ex.archived && tierAllows(complexity, tierOf(ex)))
+    .map((ex) => {
+      const prescription = getPrescription(catalog.prescriptionIndex, ex.profile, goal);
+      return { ex, prescription, minutes: exerciseMinutes(prescription, catalog.setupSeconds) };
+    })
+    // A zero-minute row is the workbook's dead end (Isolation | Explosivity,
+    // setsAvg 0). It costs nothing, so it would be picked forever.
+    .filter((row) => row.prescription && row.minutes > 0);
+
+  if (mainBudget <= 0 || !eligible.length) {
+    return { exerciseIds: [], chosen: [], mainMinutes: 0, mainBudget, seed, shortfall: true };
+  }
+
+  const poolFor = (muscle) =>
+    eligible
+      .map((row) => {
+        let weight = 0;
+        if (row.ex.primary === muscle) weight = MATCH_WEIGHT.primary;
+        else if (row.ex.primary === 'Full body') weight = MATCH_WEIGHT.fullBody;
+        else if ((row.ex.secondary || []).includes(muscle)) weight = MATCH_WEIGHT.secondary;
+        return { ...row, weight };
+      })
+      .filter((row) => row.weight > 0);
+
+  const pools = new Map(targets.map((m) => [m, poolFor(m)]));
+
+  const chosen = [];
+  const takenIds = new Set();
+  // One exercise per movement. Without it a Quads session can legitimately
+  // return Back Squat, Front Squat and Pause Squat, which is a correct reading
+  // of the data and a useless workout.
+  const takenShapes = new Set();
+  let used = 0;
+
+  // The rotation order is shuffled so the first group picked is not always the
+  // first one tapped -- otherwise the group at the top of the list gets the
+  // heaviest exercise every single time.
+  const rotation = shuffled(targets, rand);
+
+  let progressed = true;
+  while (progressed && chosen.length < maxExercises) {
+    progressed = false;
+
+    for (const muscle of rotation) {
+      if (chosen.length >= maxExercises) break;
+
+      const candidates = (pools.get(muscle) || []).filter(
+        (row) =>
+          !takenIds.has(row.ex.id) &&
+          !takenShapes.has(shapeKey(row.ex)) &&
+          used + row.minutes <= mainBudget
+      );
+
+      // Exercises that actually target the group beat ones that merely assist,
+      // and they beat them absolutely rather than by weight. Weighting alone
+      // let a Barbell Row into an arms session and a Back Squat into a core
+      // one -- both defensible readings of the secondary column, neither what
+      // anyone tapping "Biceps" is asking for. Assistance is a fallback for
+      // when the group has nothing of its own left, not a rival.
+      const targeted = candidates.filter((row) => row.weight > MATCH_WEIGHT.secondary);
+      const pick = weightedPick(targeted.length ? targeted : candidates, rand);
+      if (!pick) continue;
+
+      chosen.push(pick);
+      takenIds.add(pick.ex.id);
+      takenShapes.add(shapeKey(pick.ex));
+      used += pick.minutes;
+      progressed = true;
+    }
+  }
+
+  chosen.sort((a, b) => {
+    const rank = PROFILE_ORDER.indexOf(a.ex.profile) - PROFILE_ORDER.indexOf(b.ex.profile);
+    return rank || a.ex.id.toString().localeCompare(b.ex.id.toString());
+  });
+
+  return {
+    exerciseIds: chosen.map((row) => row.ex.id),
+    chosen,
+    mainMinutes: used,
+    mainBudget,
+    seed,
+    shortfall: chosen.length === 0,
+  };
+}
+
 /* -------------------------------------------------------------------- log */
 
 /** Epley. Reliable to about 10 reps, optimistic beyond that. */

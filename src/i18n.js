@@ -58,6 +58,52 @@ const LOCALES = {
     'today.saved': 'Saved workouts',
     'today.savedMeta': '{n} kept',
 
+    // --- quick workout ---
+    'quick.title': 'Quick workout',
+    'quick.kicker': 'Built for you',
+    'quick.entryHint': 'Say what you want to work and how long you have. It picks the rest.',
+    'quick.muscles': 'What are you training?',
+    'quick.preset.upper': 'Upper',
+    'quick.preset.lower': 'Lower',
+    'quick.preset.full': 'Full body',
+    'quick.musclesAny': 'Nothing picked, so it will spread across the whole body.',
+    'quick.musclesN': '{n} selected. It rotates between them so none gets all the time.',
+    'quick.time': 'How long have you got?',
+    'quick.focus': 'Focus',
+    'quick.complexity': 'Complexity',
+    'quick.level.basic': 'Basic',
+    'quick.level.medium': 'Medium',
+    'quick.level.advanced': 'Advanced',
+    'quick.levelHint.basic':
+      'The lifts every gym programme is built from — barbell, dumbbell and machine work that is widely taught. No Olympic lifts, no rings, nothing that needs a coach watching.',
+    'quick.levelHint.medium':
+      'Adds variations and single-leg work: front squats, Bulgarian split squats, dips, sled work. Assumes you have been shown the basics.',
+    'quick.levelHint.advanced':
+      'Everything in the library, Olympic lifts and ring work included. Nothing is held back.',
+    'quick.splitTotal': '{n} min total',
+    'quick.splitWarm': '{n} warm-up & mobility',
+    'quick.splitMain': '{n} min lifting',
+    'quick.generate': 'Generate workout',
+    'quick.generated.one': 'Built a session with {n} lift',
+    'quick.generated.other': 'Built a session with {n} lifts',
+    'quick.nothingFits':
+      'No lifts fit that. Try more time, a shorter warm-up, or a wider complexity.',
+    'quick.replaceTitle': 'Replace what you were building?',
+    'quick.replaceBody.one':
+      '“{name}” has {n} lift in it. Generating a workout will replace it — a saved copy is not affected.',
+    'quick.replaceBody.other':
+      '“{name}” has {n} lifts in it. Generating a workout will replace them — a saved copy is not affected.',
+    'quick.replaceConfirm': 'Replace it',
+    'quick.shuffle': 'Shuffle the lifts',
+    'quick.shuffled.one': '{n} lift swapped',
+    'quick.shuffled.other': '{n} lifts swapped',
+    'quick.shuffledSame': 'Nothing else fits — same lifts',
+    'quick.nameFull': 'Full body',
+    'quick.name.upper': 'Upper body',
+    'quick.name.lower': 'Lower body',
+    'quick.name.full': 'Full body',
+    'quick.nameGroups': '{n} muscle groups',
+
     // --- guide ---
     'guide.open': 'How this works',
     'guide.kicker': 'New here?',
@@ -101,7 +147,12 @@ const LOCALES = {
     'guide.goto.library': 'Open the Library',
     'guide.goto.log': 'Open the Log',
 
+    'guide.goto.quick': 'Try Quick workout',
+
     'guide.moreLabel': 'Worth knowing',
+    'guide.quick.title': 'Or skip all of that',
+    'guide.quick.text':
+      'Quick workout does the eight steps above for you. Tell it which muscle groups, how long you have and how much technique you want handed to you, and it builds the session. It picks differently every time, so you can use it twice in a week without repeating yourself.',
     'guide.own.title': 'Your gym, your exercises',
     'guide.own.text':
       'If the library is missing something you do, add it. Give it a name, the equipment, the muscles it works and how it should be prescribed, and it behaves like any other exercise from then on — warm-ups, body map, log and all.',

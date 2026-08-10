@@ -23,6 +23,7 @@ Five JSON files under `data/`, regenerated from the workbook by
 | `prescriptions.json` | 21 (7 profiles × 3 goals) | Prescriptions |
 | `vocabulary.json` | — | derived: distinct equipment / patterns / muscles / profiles / goals |
 | `hypertrophy.json` | 7 (7 profiles × 1 goal) | **hand-authored** — see §16 |
+| `complexity.json` | 1 rule set + 62 overrides | **hand-authored** — see §18 |
 
 ### Reference vs. user data
 
@@ -636,6 +637,8 @@ dark-UI reader does not get dark-surface steps burned onto white paper.
 | No record of how hard it was | A 1–10 session rating (§12b) | Load and sets do not tell you what a session cost |
 | A fixed library of 167 | The 167 plus your own (§17) | No compendium covers everyone's gym |
 | 1RM only in the Exercise Library | Also on Build, beside each chosen lift | The suggested load is a percentage of it, so the number is asked for where it is needed |
+| You choose every lift | Quick workout generates one from four answers (§19) | The workbook assumes you already know what you came to do |
+| No notion of difficulty | Three skill tiers (§18) | A beginner and a competitor cannot be handed the same 167 exercises |
 | A Read Me sheet you have to know to open | A guide screen behind a question mark on Home (§18) | The sequence is the thing that needs explaining, and a spreadsheet tab is not where anyone looks for it |
 
 ## 15. Not yet translated
@@ -736,6 +739,144 @@ it costs.
 `store.exportAll()` includes them. A backup file written before this existed has
 no `customExercises` key, and restores a library with none in it rather than
 failing.
+
+---
+
+## 18. Complexity tiers
+
+The compendium records what an exercise trains and never how hard it is to do
+well, so Quick workout needs a third axis the workbook does not have.
+
+Three tiers, **cumulative**: `basic ⊂ medium ⊂ advanced`. Choosing advanced
+excludes nothing.
+
+They measure the skill and coaching a movement needs before it is worth
+loading, **not** how hard the set feels. A leg press to failure is agony and
+still basic. Familiarity counts as skill you probably already have: the barbell
+squat, bench, deadlift, press, row and pull-up are basic despite being
+technical, because they are the lifts every beginner programme is built from.
+
+`data/complexity.json` is a rule plus a correction list:
+
+```
+rule      Olympic lift -> advanced, Plyometric -> medium, everything -> basic
+override  62 exercises named individually
+```
+
+The rule cannot be right on its own — a Bodyweight Squat and a Pistol Squat are
+Compound / Bodyweight / Squat / Quads all the way down — so the overrides carry
+the judgement and the rule only has to cover the bulk. The rule is also what
+tiers the user's own exercises, since nobody is going to hand-rate those.
+
+Resulting split: **91 basic, 40 medium, 36 advanced** of 167.
+
+Overrides are keyed on the English name. A renamed exercise falls back to its
+rule tier rather than breaking.
+
+Two demotions worth knowing: the Kettlebell Swing and Push Press come down off
+the Olympic-lift rule. The swing is a hinge taught in every commercial gym, and
+the push press is an overhead press with legs where the bar is never caught.
+Four plyometrics come down to basic — Box Jump, Jump Squat, Pogo Hop, Medicine
+Ball Slam — because they are how the rest are taught.
+
+---
+
+## 19. Quick workout
+
+Inputs: target muscle groups, total minutes, goal, warm-up and mobility budgets,
+complexity, and a seed.
+
+### Time
+
+```
+mainBudget = minutes - warmupBudget - cooldownBudget
+```
+
+The number the user gave is the **whole** session. Treating it as lifting time
+would produce a plan whose own estimate exceeded the only figure they knew for
+certain. `mainBudget <= 0` is reported rather than generated around, and the
+generate button is disabled while it holds.
+
+### Selection
+
+Round-robin across the chosen groups, not one ranked list. With three groups
+selected a ranked list reliably spends the whole budget on whichever has the
+most catalog entries; one exercise per group in rotation spreads the session
+over what was asked for, and running out of time truncates the last lap.
+
+The rotation order is shuffled from the seed, or the group listed first would
+get the heaviest exercise every time.
+
+Within a group, candidates are weighted:
+
+| Match | Weight |
+|---|---|
+| exercise's primary is the group | 4 |
+| exercise's primary is `Full body` | 2 |
+| group appears in the exercise's secondary | 1 |
+
+The pick is **weighted-random**, not best-first. That is the noise: the same
+request on a different seed is a genuinely different session.
+
+Assistance is a fallback, not a rival. Candidates that actually target the group
+are taken first and absolutely; the weight-1 rows are only reached when the
+group has nothing of its own left. Weighting alone let a Barbell Row into an
+arms session and a Back Squat into a core one — both correct readings of the
+secondary column, neither what anyone tapping "Biceps" is asking for.
+
+### One exercise per movement
+
+The duplicate key is `pattern | role | target`:
+
+- **pattern**, not pattern-and-primary. Barbell Bench Press is Chest and
+  Close-Grip Bench Press is Triceps, so the pair let a chest session return two
+  bench presses and call them different movements.
+- **role** — accessory (`Isolation` and `Core` profiles) or main — because
+  pattern alone is far too coarse. Every chest exercise in the catalog is
+  Horizontal push, the flies and the Pec Deck included, so one-per-pattern
+  blocked the entire chest pool after the first press and left only a Vertical
+  push that happens to list Chest as a secondary. A press and a fly are not the
+  same movement twice.
+- **target**, only inside the bucket patterns `Isolation` and
+  `Core/Anti-movement`, where the pattern says nothing about the movement. One
+  biceps isolation, one core brace.
+
+### Other constraints
+
+Zero-minute prescriptions are excluded. `Isolation | Explosivity` has
+`setsAvg: 0` (§2), so it costs nothing and would be selected forever.
+
+Capped at 8 exercises, which the time budget usually reaches first.
+
+Ordered for the session, not for selection: Olympic lift, Plyometric, Heavy
+compound, Compound, Carry, Core, Isolation. Technical and heavy work while you
+are fresh.
+
+### The seed
+
+`mulberry32`, and the integer is stored on the session as `session.quick.seed`
+alongside the inputs. Two consequences: **Shuffle** on the plan re-rolls the
+same request with a new seed, and re-opening a generated plan shows the workout
+it showed before rather than quietly producing another one.
+
+Shuffle reads its inputs off the session rather than off the Quick screen, so it
+still works on a generated workout loaded back from Saved.
+
+> The generate button reads `quickState()` when clicked rather than closing over
+> the value from render. The time picker updates state without re-rendering —
+> see below — so anything captured at render time is one scroll out of date.
+> That bug shipped a 5-minute budget an 8-exercise workout.
+
+### The time picker
+
+The one scroll-driven control in the app: a scroll-snap strip, 15 to 120 in
+fives, with a fixed marker at the centre. Whichever tick is nearest the middle
+is the value; gutters of half the strip width let 15 and 120 reach it.
+
+It updates its own readout, its selection and the total/warm-up/lifting line in
+place and never calls `render()`. Re-rendering mid-scroll would replace the
+element being scrolled and kill the momentum under the user's thumb — the same
+reason the rest timer edits two values instead of re-rendering (§9).
 
 ---
 

@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "source": "Hand-authored. NOT generated from the workbook.",
+    "why": "The compendium records what an exercise trains, never how hard it is to do well. Quick workout needs that third axis to keep a beginner away from snatches without hiding them from everyone. Kept out of the generated files for the same reason as hypertrophy.json: tools/extract-workbook.ps1 rewrites those wholesale.",
+    "authored": "2026-08-08",
+    "model": "A rule per profile, plus a list of the exercises the rule gets wrong. The rule alone cannot tell a Bodyweight Squat from a Pistol Squat -- both are Compound / Bodyweight / Squat / Quads -- so the overrides carry the real judgement and the rule only has to be right about the bulk.",
+    "meaning": "Tiers are about how much skill and coaching a movement needs before it is worth loading, NOT how hard the set feels. A Leg Press to failure is agony and still basic. Familiarity counts: the barbell squat, bench, deadlift, press, row and pull-up are basic despite being technical, because they are the lifts every beginner programme is built from and every gym has someone who can spot a bad one.",
+    "cumulative": "basic is a subset of medium is a subset of advanced. Choosing advanced excludes nothing."
+  },
+  "tiers": ["basic", "medium", "advanced"],
+  "rules": {
+    "comment": "Applied when an exercise is in no override list. Also how the user's own exercises are tiered, since nobody is going to hand-rate those.",
+    "byProfile": {
+      "Olympic lift": "advanced",
+      "Plyometric": "medium"
+    },
+    "default": "basic"
+  },
+  "overrides": {
+    "comment": "Keyed on the English name. A renamed exercise silently falls back to its rule tier rather than breaking -- worth knowing if you edit the workbook.",
+
+    "basic": [
+      "Box Jump",
+      "Jump Squat",
+      "Pogo Hop",
+      "Medicine Ball Slam"
+    ],
+
+    "medium": [
+      "Front Squat",
+      "Pause Squat",
+      "Box Squat",
+      "Safety Bar Squat",
+      "Belt Squat",
+      "Sumo Deadlift",
+      "Stiff-Leg Deadlift",
+      "Rack Pull",
+      "Single-Leg RDL",
+      "Kettlebell Swing",
+      "Cable Pull-Through",
+      "Bulgarian Split Squat",
+      "Barbell Split Squat",
+      "Lateral Lunge",
+      "Curtsy Lunge",
+      "Decline Bench Press",
+      "Floor Press",
+      "Deficit Push-Up",
+      "Dip",
+      "Push Press",
+      "Arnold Press",
+      "Single-Arm Kettlebell Press",
+      "Landmine Press",
+      "Pendlay Row",
+      "Ring Row",
+      "Weighted Pull-Up",
+      "Hanging Leg Raise",
+      "Hollow Body Hold",
+      "Landmine Rotation",
+      "Bear Crawl",
+      "Front Rack Carry",
+      "Overhead Carry",
+      "Sled Push",
+      "Sled Drag",
+      "Skull Crusher",
+      "Upright Row"
+    ],
+
+    "advanced": [
+      "Overhead Squat",
+      "Zercher Squat",
+      "Pistol Squat",
+      "Deficit Deadlift",
+      "Good Morning",
+      "Nordic Hamstring Curl",
+      "Sissy Squat",
+      "Spoto Press",
+      "Ring Push-Up",
+      "Ring Dip",
+      "Handstand Push-Up",
+      "Z-Press",
+      "Meadows Row",
+      "Depth Jump",
+      "Clap Push-Up",
+      "Broad Jump to Box",
+      "Toes to Bar",
+      "Ab Wheel Rollout",
+      "Copenhagen Plank",
+      "L-Sit",
+      "Ring Support Hold",
+      "Zercher Carry"
+    ]
+  },
+  "notes": {
+    "Kettlebell Swing": "Demoted from the Olympic-lift rule. It is the one lift in that profile taught in every commercial gym, and it is a hinge, not a pull under a bar.",
+    "Push Press": "Same demotion, less strongly: it is an overhead press with legs, and the bar never has to be caught.",
+    "Good Morning": "Advanced despite being a plain barbell hinge. Loaded spinal flexion is the thing it punishes, and it is the least self-correcting lift here.",
+    "plyometrics": "The rule puts them at medium because landing mechanics matter. Box Jump, Jump Squat, Pogo Hop and Medicine Ball Slam come back down: they are how you teach the rest.",
+    "rings": "Anything on rings goes up a tier over its fixed-bar equivalent. The instability is the whole point and it is what makes them unforgiving."
+  }
+}

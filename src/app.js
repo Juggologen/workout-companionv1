@@ -35,6 +35,8 @@ import {
   RPE_RANGES,
   RPE_MIN,
   RPE_MAX,
+  generateQuickWorkout,
+  COMPLEXITY_LEVELS,
 } from './engine.js';
 import { renderBodyMap, musclesWorked } from './muscles.js';
 
@@ -81,7 +83,26 @@ const state = {
   buildRmOpen: null,
   /** 0 = the week containing today, -1 = the week before it. Never positive. */
   weekOffset: 0,
+  /** Quick workout's inputs. Seeded from prefs so it remembers your usual. */
+  quick: null,
   flash: null,
+};
+
+const QUICK_DEFAULTS = {
+  muscles: [],
+  minutes: 60,
+  complexity: 'medium',
+  warmupBudget: 15,
+  cooldownBudget: 10,
+};
+
+/** 15 minutes to two hours, in five-minute steps. */
+const QUICK_TIMES = Array.from({ length: 22 }, (_, i) => 15 + i * 5);
+
+const QUICK_PRESETS = {
+  upper: ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'],
+  lower: ['Quads', 'Hamstrings', 'Glutes', 'Calves'],
+  full: ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Glutes', 'Core'],
 };
 
 function blankSession() {
@@ -328,6 +349,8 @@ function screen() {
       return viewSaved();
     case 'guide':
       return viewGuide();
+    case 'quick':
+      return viewQuick();
     default:
       return viewHome();
   }
@@ -344,7 +367,7 @@ function tabbar() {
   // Plan and Session are pushed from Build; Saved and the guide from Home.
   // Keep the parent tab lit so the bar never looks like nothing is selected.
   const parent =
-    state.screen === 'plan' || state.screen === 'live'
+    state.screen === 'plan' || state.screen === 'live' || state.screen === 'quick'
       ? 'build'
       : state.screen === 'saved' || state.screen === 'guide'
         ? 'home'
@@ -447,6 +470,7 @@ function viewHome() {
         )
       ),
       plannedCard(exercises, built),
+      quickCard(),
       streakCard(),
       weekCard(),
       balanceCard(mix),
@@ -515,6 +539,30 @@ function plannedCard(exercises, built) {
         h('button.btn', { style: 'flex:1', onclick: () => go('plan') }, t('today.seePlan'))
       )
     )
+  );
+}
+
+/**
+ * The way into Quick workout.
+ *
+ * Sits directly under the planned session because it is the alternative to
+ * having one: the answer to "I am at the gym and have not thought about this".
+ */
+function quickCard() {
+  return h(
+    'button.panel-btn.quick-entry',
+    { onclick: () => go('quick') },
+    h(
+      'div.panel-head',
+      h(
+        'div',
+        { style: 'display:flex;align-items:center;gap:9px' },
+        h('span.quick-spark', icon(ICONS.spark, { size: 15 })),
+        h('div.panel-title', t('quick.title'))
+      ),
+      icon(ICONS.chevronRight, { size: 14 })
+    ),
+    h('p.hint', { style: 'text-align:left' }, t('quick.entryHint'))
   );
 }
 
@@ -850,6 +898,7 @@ function viewGuide() {
         'div.stack',
         { style: 'gap:12px' },
         h('div.section-label', t('guide.moreLabel')),
+        guideNote(t('guide.quick.title'), t('guide.quick.text'), 'quick', t('guide.goto.quick')),
         guideNote(t('guide.own.title'), t('guide.own.text'), 'library', t('guide.goto.library')),
         guideNote(t('guide.saved.title'), t('guide.saved.text')),
         guideNote(t('guide.data.title'), t('guide.data.text'))
@@ -907,6 +956,368 @@ function guideNote(title, text, target, label) {
     h('p.guide-text', text),
     target && h('button.btn-link', { onclick: () => go(target) }, label, icon(ICONS.chevronRight, { size: 12 }))
   );
+}
+
+/* --------------------------------------------------------- quick workout
+
+   Four questions and a button. Build asks you to know which lifts you want;
+   this asks what you want to work, how long you have, and how much technique
+   you are willing to be handed, and answers the rest itself.
+
+   Every control writes straight to prefs, so the screen you come back to is
+   the one you left. The generated session carries its own inputs and seed
+   (`session.quick`), which is what lets Plan offer a shuffle without this
+   screen having to still be open.
+   ------------------------------------------------------------------------ */
+
+function quickState() {
+  if (!state.quick) {
+    state.quick = { ...QUICK_DEFAULTS, ...(state.prefs.quick || {}) };
+    // The goal is not stored with the rest: falling back to whatever the draft
+    // is set to means Quick workout opens on the goal you have been training.
+    if (!state.quick.goal) state.quick.goal = state.session.goal;
+  }
+  return state.quick;
+}
+
+function setQuick(patch, { rerender = true } = {}) {
+  state.quick = { ...quickState(), ...patch };
+  state.prefs = { ...state.prefs, quick: state.quick };
+  store.setPrefs(state.prefs);
+  if (rerender) render();
+}
+
+function viewQuick() {
+  const q = quickState();
+  const v = state.catalog.vocabulary;
+  const mainBudget = q.minutes - q.warmupBudget - q.cooldownBudget;
+
+  return h(
+    'div.screen',
+    h(
+      'div.screen-inner',
+      { style: 'gap:24px' },
+      backLink(t('tab.home'), () => go('home')),
+      screenHead(t('quick.kicker'), t('quick.title')),
+
+      quickSection(
+        t('quick.muscles'),
+        h(
+          'div.stack',
+          { style: 'gap:9px' },
+          h(
+            'div.chips',
+            Object.keys(QUICK_PRESETS).map((key) =>
+              h(
+                'button.chip',
+                {
+                  class: samePreset(q.muscles, QUICK_PRESETS[key]) ? 'is-on' : '',
+                  onclick: () => setQuick({ muscles: [...QUICK_PRESETS[key]] }),
+                },
+                t(`quick.preset.${key}`)
+              )
+            )
+          ),
+          h(
+            'div.muscle-chips',
+            v.muscles
+              .filter((m) => m !== 'Full body')
+              .map((m) => {
+                const on = q.muscles.includes(m);
+                return h(
+                  'button.chip.chip-sm',
+                  {
+                    class: on ? 'is-on' : '',
+                    'aria-pressed': String(on),
+                    onclick: () =>
+                      setQuick({
+                        muscles: on ? q.muscles.filter((x) => x !== m) : [...q.muscles, m],
+                      }),
+                  },
+                  m
+                );
+              })
+          ),
+          h('p.hint', q.muscles.length ? t('quick.musclesN', { n: q.muscles.length }) : t('quick.musclesAny'))
+        )
+      ),
+
+      quickSection(t('quick.time'), timeScroller(q.minutes)),
+
+      quickSection(
+        t('quick.focus'),
+        h(
+          'div.goal-chips',
+          v.goals.map((goal) =>
+            h(
+              'button.goal-chip',
+              {
+                class: q.goal === goal ? 'is-on' : '',
+                style: `--gc:${GOAL_COLOR[goal]}`,
+                'aria-pressed': String(q.goal === goal),
+                onclick: () => setQuick({ goal }),
+              },
+              h('span.swatch.swatch-lg', { style: `background:${GOAL_COLOR[goal]}` }),
+              goalLabel(goal)
+            )
+          )
+        )
+      ),
+
+      quickSection(
+        t('quick.complexity'),
+        h(
+          'div.stack',
+          { style: 'gap:9px' },
+          h(
+            'div.chips',
+            COMPLEXITY_LEVELS.map((level) =>
+              h(
+                'button.chip',
+                {
+                  class: q.complexity === level ? 'is-on' : '',
+                  'aria-pressed': String(q.complexity === level),
+                  onclick: () => setQuick({ complexity: level }),
+                },
+                t(`quick.level.${level}`)
+              )
+            )
+          ),
+          h('p.hint', t(`quick.levelHint.${q.complexity}`))
+        )
+      ),
+
+      quickSection(t('build.warmBudget'), quickBudget('warmupBudget', WARM_BUDGETS, q)),
+      quickSection(t('build.coolBudget'), quickBudget('cooldownBudget', COOL_BUDGETS, q)),
+
+      // The split is the one thing about this screen that surprises people:
+      // the time you picked is the whole session, so a long warm-up eats the
+      // lifting. Saying so up front beats explaining a short plan afterwards.
+      h(
+        'div.quick-split',
+        h('span', t('quick.splitTotal', { n: q.minutes })),
+        h('span.quick-split-sep', '='),
+        h('span', t('quick.splitWarm', { n: q.warmupBudget + q.cooldownBudget })),
+        h('span.quick-split-sep', '+'),
+        h(
+          'span',
+          { class: mainBudget <= 0 ? 'is-short' : '' },
+          t('quick.splitMain', { n: Math.max(0, mainBudget) })
+        )
+      )
+    ),
+    h(
+      'div.sticky-actions',
+      h(
+        'button.btn.btn-goal.btn-lg.btn-block',
+        // No captured `q`: the time strip updates state without re-rendering,
+        // so anything closed over at render time is one scroll out of date.
+        { disabled: mainBudget <= 0, onclick: () => runQuick() },
+        icon(ICONS.spark, { size: 16 }),
+        t('quick.generate')
+      )
+    )
+  );
+}
+
+function quickSection(label, body) {
+  return h('div.stack', { style: 'gap:10px' }, h('div.kicker', label), body);
+}
+
+function quickBudget(key, options, q) {
+  return h(
+    'div.chips',
+    options.map((value) =>
+      h(
+        'button.chip',
+        {
+          class: q[key] === value ? 'is-on' : '',
+          'aria-pressed': String(q[key] === value),
+          onclick: () => setQuick({ [key]: value }),
+        },
+        value === 0 ? t('build.skip') : `${value} ${t('units.min')}`
+      )
+    )
+  );
+}
+
+const samePreset = (a, b) => a.length === b.length && b.every((m) => a.includes(m));
+
+/**
+ * The time picker.
+ *
+ * A horizontal scroll-snap strip rather than a row of chips, because the range
+ * is 15 to 120 in fives and twenty-two chips is not a control, it is a wall.
+ * Scrolling picks; tapping also picks and scrolls the choice to the middle.
+ *
+ * It updates its own readout and selection in place and never calls render():
+ * re-rendering mid-scroll would replace the element being scrolled and the
+ * momentum would die under the user's thumb.
+ */
+function timeScroller(current) {
+  const readout = h('div.time-readout', h('span.time-value', String(current)), h('span.time-unit', t('units.min')));
+  const strip = h('div.time-strip', { role: 'group', 'aria-label': t('quick.time') });
+
+  const items = QUICK_TIMES.map((value) =>
+    h(
+      'button.time-tick',
+      {
+        class: value === current ? 'is-on' : '',
+        dataset: { value: String(value) },
+        'aria-pressed': String(value === current),
+        onclick: () => select(value, true),
+      },
+      String(value)
+    )
+  );
+
+  mount(strip, items);
+
+  let settled = current;
+
+  function paint(value) {
+    if (value === settled) return;
+    settled = value;
+    readout.querySelector('.time-value').textContent = String(value);
+    for (const item of items) {
+      const on = Number(item.dataset.value) === value;
+      item.classList.toggle('is-on', on);
+      item.setAttribute('aria-pressed', String(on));
+    }
+    // Written straight through without a re-render, for the reason above.
+    setQuick({ minutes: value }, { rerender: false });
+    updateSplit(value);
+  }
+
+  function select(value, scroll) {
+    paint(value);
+    if (!scroll) return;
+    const item = items.find((i) => Number(i.dataset.value) === value);
+    item?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
+
+  // Whichever tick is nearest the middle of the strip is the selection.
+  let timer = null;
+  strip.addEventListener('scroll', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const box = strip.getBoundingClientRect();
+      const mid = box.left + box.width / 2;
+      let best = null;
+      let bestDist = Infinity;
+      for (const item of items) {
+        const r = item.getBoundingClientRect();
+        const d = Math.abs(r.left + r.width / 2 - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          best = item;
+        }
+      }
+      if (best) paint(Number(best.dataset.value));
+    }, 110);
+  });
+
+  // Centre the current value on entry. Instant, not smooth: an animated scroll
+  // on arrival reads as the screen still loading.
+  requestAnimationFrame(() => {
+    const item = items.find((i) => Number(i.dataset.value) === current);
+    if (item) strip.scrollLeft = item.offsetLeft - strip.clientWidth / 2 + item.offsetWidth / 2;
+  });
+
+  return h('div.time-picker', readout, h('div.time-strip-wrap', strip, h('span.time-marker')));
+}
+
+/** Keep the total/warm-up/lifting line honest while the strip is scrolling. */
+function updateSplit(minutes) {
+  const q = quickState();
+  const row = document.querySelector('.quick-split');
+  if (!row) return;
+  const main = minutes - q.warmupBudget - q.cooldownBudget;
+  const spans = row.querySelectorAll('span:not(.quick-split-sep)');
+  if (spans[0]) spans[0].textContent = t('quick.splitTotal', { n: minutes });
+  if (spans[2]) {
+    spans[2].textContent = t('quick.splitMain', { n: Math.max(0, main) });
+    spans[2].classList.toggle('is-short', main <= 0);
+  }
+  const button = document.querySelector('.sticky-actions .btn-goal');
+  if (button) button.disabled = main <= 0;
+}
+
+/**
+ * Generate, then hand the result to Plan.
+ *
+ * Plan already renders a session properly -- warm-up, loads, body map, the
+ * lot -- so there is nothing for this feature to invent. It writes the draft
+ * and navigates, and Plan cannot tell the session was not built by hand except
+ * for the `quick` block that lets it offer a shuffle.
+ */
+function runQuick() {
+  // Read the inputs now rather than trusting a closure. `setQuick` replaces
+  // the object rather than mutating it, so a reference taken during render
+  // still points at the values as they were then.
+  const q = quickState();
+
+  const apply = () => {
+    const result = buildQuickSession(q, Math.floor(Math.random() * 2 ** 31));
+    if (result.shortfall) {
+      flash(t('quick.nothingFits'));
+      return;
+    }
+    go('plan');
+    flash(tp('quick.generated', result.exerciseIds.length));
+  };
+
+  const draftHasLifts = (state.session.exerciseIds || []).length > 0;
+  if (!draftHasLifts) {
+    apply();
+    return;
+  }
+
+  confirmSheet({
+    title: t('quick.replaceTitle'),
+    body: tp('quick.replaceBody', state.session.exerciseIds.length, {
+      name: sessionTitle(state.session),
+    }),
+    confirmLabel: t('quick.replaceConfirm'),
+    cancelLabel: t('custom.cancel'),
+    onConfirm: apply,
+  });
+}
+
+/** Run the generator and install the result as the draft session. */
+function buildQuickSession(q, seed) {
+  const result = generateQuickWorkout(
+    { ...q, seed },
+    state.catalog,
+    state.oneRm
+  );
+  if (result.shortfall) return result;
+
+  state.session = {
+    ...blankSession(),
+    name: quickName(q),
+    goal: q.goal,
+    warmupBudget: q.warmupBudget,
+    cooldownBudget: q.cooldownBudget,
+    exerciseIds: result.exerciseIds,
+    // Kept on the session so Plan can shuffle without this screen's state.
+    quick: { ...q, seed },
+  };
+  saveDraft();
+  return result;
+}
+
+/**
+ * A name you would recognise in the saved list a fortnight later. Two groups
+ * get named; more than that and it is easier to say how many.
+ */
+function quickName(q) {
+  if (!q.muscles.length) return t('quick.nameFull');
+  if (q.muscles.length <= 2) return q.muscles.join(' & ');
+  for (const [key, preset] of Object.entries(QUICK_PRESETS)) {
+    if (samePreset(q.muscles, preset)) return t(`quick.name.${key}`);
+  }
+  return t('quick.nameGroups', { n: q.muscles.length });
 }
 
 /* ---------------------------------------------------------------- build */
@@ -1237,6 +1648,19 @@ function viewPlan() {
     ),
     h(
       'div.sticky-actions',
+      // Only for a generated session: shuffling a workout someone assembled by
+      // hand would throw away the choosing they came here to do.
+      state.session.quick &&
+        h(
+          'button.btn.btn-lg',
+          {
+            style: 'flex:none;width:56px',
+            onclick: shuffleQuick,
+            'aria-label': t('quick.shuffle'),
+            title: t('quick.shuffle'),
+          },
+          icon(ICONS.shuffle, { size: 17 })
+        ),
       h('button.btn.btn-lg', { style: 'flex:none;width:96px', onclick: saveSession }, t('plan.save')),
       h(
         'button.btn.btn-lg',
@@ -1246,6 +1670,30 @@ function viewPlan() {
       h('button.btn.btn-goal.btn-lg', { style: 'flex:1', onclick: startSession }, t('plan.start'))
     )
   );
+}
+
+/**
+ * Re-roll the same request with a new seed.
+ *
+ * Same muscles, same time, same goal, different lifts. The inputs are read off
+ * the session rather than the Quick screen's state, so this still works after
+ * loading a generated workout back from Saved.
+ */
+function shuffleQuick() {
+  const q = state.session.quick;
+  if (!q) return;
+
+  const previous = state.session.exerciseIds;
+  const result = buildQuickSession(q, Math.floor(Math.random() * 2 ** 31));
+
+  if (result.shortfall) {
+    flash(t('quick.nothingFits'));
+    return;
+  }
+
+  render();
+  const changed = result.exerciseIds.filter((id) => !previous.includes(id)).length;
+  flash(changed ? tp('quick.shuffled', changed) : t('quick.shuffledSame'));
 }
 
 function drillRow(kicker, name, minutes) {

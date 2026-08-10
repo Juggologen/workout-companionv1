@@ -78,6 +78,7 @@ data/
   prescriptions.json    "
   vocabulary.json       "
   hypertrophy.json    hand-authored: the fourth goal, with its sources
+  complexity.json     hand-authored: skill tiers for Quick workout
 tools/
   extract-workbook.ps1  xlsx -> data/*.json
   serve.ps1             static file server
@@ -91,7 +92,8 @@ pushed from Home.
 
 | Screen | What it does |
 |---|---|
-| **Home** | The planned session at a glance, a 14-day training strip, the Monday-to-Sunday muscle summary, and the goal balance. Start or resume from here. |
+| **Home** | The planned session at a glance, Quick workout, a 14-day training strip, the Monday-to-Sunday muscle summary, and the goal balance. Start or resume from here. |
+| **Quick workout** | Muscle groups, time, focus and complexity in, a whole session out. Reached from Home. |
 | **Build** | Goal (each one expands to its prescription), lifts — each with its 1RM to hand — warm-up and mobility budgets. |
 | **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |
 | **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing asks how hard it was and logs exactly what you ticked. |
@@ -155,6 +157,52 @@ ranges wide because proximity to failure matters more than the exact number,
 2–3 min rest on multi-joint work rather than the 60 s that used to be standard
 advice, and 0–3 reps in reserve rather than training to failure. Those are
 population-level starting points, not advice for any individual.
+
+## Quick workout
+
+**Home → Quick workout.** Four questions — which muscle groups, how long you
+have, which goal, and how much technique you want handed to you — and it builds
+the session. Build asks you to know which lifts you want; this doesn't.
+
+The time is the **whole** session. The warm-up and mobility budgets come out of
+it before anything is chosen, so "I have an hour" means an hour in the building,
+and the screen shows the split as you change it.
+
+Selection rotates across the muscle groups you picked rather than ranking one
+list, because a single ranked list spends the whole budget on whichever group
+has the most catalog entries. Within a group the pick is weighted-random, not
+best-first — that is the variability, and it means the same request twice in a
+week gives you different lifts. Assistance is a fallback rather than a rival: an
+exercise that targets the group always beats one that merely helps, or asking
+for biceps would hand you a barbell row.
+
+One exercise per movement, where a movement is the pattern *and* whether it is a
+main lift or accessory work. Pattern alone was too coarse — every chest exercise
+in the catalog is Horizontal push, flies included — and pattern-plus-target was
+too fine, because a bench press and a close-grip bench press have different
+primary muscles and are still two bench presses.
+
+Every session carries the inputs it was built from and its random seed, so
+**Shuffle** on the plan re-rolls the same request, and reloading never silently
+gives you a different workout.
+
+### Complexity
+
+Three cumulative tiers — basic ⊂ medium ⊂ advanced — about how much skill a
+movement needs before it is worth loading, not how hard the set feels. A leg
+press to failure is agony and still basic.
+
+Familiarity counts: the barbell squat, bench, deadlift, press, row and pull-up
+are **basic** despite being technical, because they are what every beginner
+programme is built from. Held back are the genuinely obscure and the high-skill:
+Olympic lifts, ring work, pistol squats, depth jumps, Zercher anything.
+
+The tiers live in `data/complexity.json` — a rule per profile plus a
+hand-written list of the exercises the rule gets wrong. The rule alone can't
+tell a Bodyweight Squat from a Pistol Squat, since they're the same four fields
+all the way down; the overrides carry the judgement. It splits 91 / 40 / 36.
+Exercises you write yourself get tiered by the rule, since nobody is going to
+hand-rate those.
 
 ## Perceived exertion
 

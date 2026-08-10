@@ -493,6 +493,112 @@ input, select, textarea { font: inherit; color: inherit; }
   gap: 14px;
 }
 
+/* -------------------------------------------------------- quick workout
+
+   The time strip is the only scroll-driven control in the app. It is a
+   scroll-snap row with a fixed marker at the centre: the tick under the marker
+   is the value, so the gutters either side have to be half the strip wide or
+   the first and last values could never reach the middle.
+   ========================================================================= */
+
+.quick-entry .panel-head { width: 100%; align-items: center; }
+.quick-spark {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 15%, transparent);
+}
+
+.time-picker { display: flex; flex-direction: column; gap: 10px; }
+.time-readout { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+.time-value {
+  font: 500 34px var(--font-heading);
+  letter-spacing: -0.02em;
+  color: var(--g);
+  font-variant-numeric: tabular-nums;
+}
+.time-unit { font-size: 13px; color: var(--t-45); }
+
+.time-strip-wrap { position: relative; }
+
+.time-strip {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* Half the container each side, so 15 and 120 can both reach the marker. */
+  padding: 0 calc(50% - 24px);
+  -webkit-overflow-scrolling: touch;
+}
+.time-strip::-webkit-scrollbar { display: none; }
+
+.time-tick {
+  scroll-snap-align: center;
+  flex: none;
+  width: 48px;
+  height: 46px;
+  border: 0;
+  background: transparent;
+  color: var(--t-45);
+  font: 400 14px var(--font-heading);
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-md);
+}
+.time-tick.is-on { color: var(--g); font-weight: 500; }
+
+/* The marker sits behind the ticks and never moves; the strip moves under it. */
+.time-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 48px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--g);
+  background: color-mix(in srgb, var(--g) 10%, transparent);
+  pointer-events: none;
+}
+
+.goal-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.goal-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-divider);
+  background: transparent;
+  color: var(--t-55);
+  font: 500 12.5px var(--font-heading);
+}
+.goal-chip.is-on {
+  border-color: var(--gc);
+  background: color-mix(in srgb, var(--gc) 14%, transparent);
+  color: var(--gc);
+}
+
+.quick-split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--t-55);
+  border-top: 1px solid var(--color-divider);
+  padding-top: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.quick-split-sep { color: var(--t-45); }
+.quick-split .is-short { color: var(--muscle-primary); }
+
 /* ---------------------------------------------------------------- guide
 
    The entry point is a question mark in the top-right of Home, sized to the

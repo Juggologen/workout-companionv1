@@ -280,7 +280,21 @@ function render() {
     tabbar()
   );
 
-  mount(root, app, state.flash && h('div.flash', icon(ICONS.check, { size: 14 }), state.flash));
+  mount(
+    root,
+    app,
+    // The toast is a sibling of `.app`, not a child of it, so it cannot
+    // inherit the accent and was falling back to the `:root` default — saving
+    // an Endurance session flashed a Strength-orange tick. Same fault the
+    // dialogs had, and the same fix: hand it the accent explicitly.
+    state.flash &&
+      h(
+        'div.flash',
+        { style: `--g:${screenAccent()}` },
+        icon(ICONS.check, { size: 14 }),
+        state.flash
+      )
+  );
   root.dataset.screen = state.screen;
 
   syncTabbarHeight(app);

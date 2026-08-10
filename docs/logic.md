@@ -751,6 +751,57 @@ failing.
 
 ---
 
+## 17. Screen transitions
+
+Navigation was a hard cut: `render()` replaces the whole subtree, so switching
+tab swapped one screen for another with nothing in between.
+
+**Only the content moves.** `.screen-inner` animates; `.sticky-actions`, the
+rest timer and the tab bar do not. Chrome holding still is what makes the
+moving part read as "a new screen arrived" rather than "everything lurched".
+
+It is also the only place the transform *can* go. `.sticky-actions` and
+`.rest` are `position: sticky` siblings of `.screen-inner` inside `.screen`,
+and a transformed ancestor becomes their containing block — animating
+`.screen` would break both for the length of every transition.
+
+**Enter only.** The outgoing screen is gone before anything could animate it.
+Keeping both in the DOM to cross them over is a real architectural change for
+an effect nobody asks for, and a tuned enter reads the way a native push does.
+
+**Direction is the whole vocabulary.** `SCREEN_DEPTH` gives each screen a
+level; the sign of the difference picks the motion.
+
+| Move | Motion | Duration |
+|---|---|---|
+| deeper (`build` → `plan`) | rises 10px, fades in | 200ms |
+| shallower (`plan` → `build`) | drops 10px, fades in | 200ms |
+| level (`home` → `log`) | rises 5px, fades in | 150ms |
+
+Tab switching is the fastest because it happens dozens of times in a session,
+and anything repeated that often should get out of the way. The first render
+has no previous screen and gets nothing — animating the app into existence on
+load is a splash screen, and this app opens instantly.
+
+**The hard part is not animating.** The app re-renders on *every* interaction —
+ticking a set, typing a name, tapping a chip. Firing the transition on each
+one would flicker constantly and feel slower than the hard cut it replaced. So
+the class is only applied when the render actually changes screen.
+
+That alone is not quite enough: a navigation is often followed immediately by a
+second render in the same call stack, `finishSession` doing `go('home')` and
+then `flash()`. That second render would replace the DOM mid-animation and
+arrive with no class, snapping the screen in. `state.nav` carries a timestamp
+and the class survives for `NAV_MS`.
+
+> `NAV_MS` is 60ms, far shorter than the animation. Those follow-up renders are
+> in the same call stack, so a few frames covers them — and a longer window
+> starts catching real interactions, replaying the whole transition because
+> someone tapped a chip quickly after switching tab. It was 260ms first, which
+> did exactly that.
+
+---
+
 ## 17a. Home
 
 Three questions, in this order, and nothing else:

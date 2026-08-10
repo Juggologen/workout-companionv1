@@ -94,6 +94,13 @@ orange and blue stripes in whatever colour the current draft happened to be.
 
 Dark only, because the design system is.
 
+**Screens move, chrome does not.** Navigating animates only the content:
+deeper rises, back drops, tab-to-tab is a shorter flatter move at 150ms
+because you do it dozens of times a session. The tab bar, the sticky action
+bar and the rest timer stay exactly where they are — that stillness is what
+makes the moving part read as a new screen rather than everything lurching.
+Nothing animates on an ordinary re-render, which is most of them.
+
 **The page scrolls, not an inner pane.** A phone-shaped app shell — fixed-height
 column, scrolling content area — looks right but breaks on a desktop window:
 the column is 480px of a 1280px viewport, so the wheel does nothing across the

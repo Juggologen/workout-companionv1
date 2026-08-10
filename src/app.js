@@ -55,6 +55,44 @@ const WARM_BUDGETS = [10, 15, 20];
 const COOL_BUDGETS = [0, 10, 20, 30];
 const WINDOW_DAYS = 30;
 
+/* ------------------------------------------------------------- navigation
+
+   How deep each screen sits. It is the only thing the transition needs to
+   know: a deeper number is a push and rises, a shallower one is a return and
+   drops, an equal one is a tab switch and gets a shorter, flatter move.
+
+   Plan is 2 rather than 1 because it is reached from Build (0) and from Quick
+   (1), and both of those are forward.
+   ------------------------------------------------------------------------ */
+const SCREEN_DEPTH = {
+  home: 0,
+  build: 0,
+  log: 0,
+  library: 0,
+  guide: 1,
+  saved: 1,
+  quick: 1,
+  plan: 2,
+  live: 3,
+};
+
+/**
+ * How long a navigation stays "recent".
+ *
+ * The transition cannot simply be "this render changed screen", because a
+ * navigation is often followed immediately by a second render -- `finishSession`
+ * calls go('home') and then flash(), one after the other. That second render
+ * replaces the DOM mid-animation, and without this window it would arrive with
+ * no animation class at all and the screen would snap in. Re-applying the
+ * class restarts the animation a few milliseconds in, which nobody can see.
+ *
+ * Deliberately far shorter than the animation. Those follow-up renders are in
+ * the same call stack, so a few frames is plenty -- and a longer window would
+ * start catching real interactions, replaying the whole transition because
+ * someone tapped a chip quickly after switching tab.
+ */
+const NAV_MS = 60;
+
 /* ------------------------------------------------------------------ state */
 
 const state = {
@@ -85,6 +123,8 @@ const state = {
   quick: null,
   /** Where the focus row is scrolled to, held across re-renders. */
   focusScroll: 0,
+  /** The last navigation: `{ dir, at }`. Drives the screen transition. */
+  nav: null,
   flash: null,
 };
 
@@ -259,6 +299,20 @@ function screenAccent() {
  */
 const NEUTRAL_SCREENS = new Set(['home', 'guide', 'saved']);
 
+/**
+ * Which way the app just moved, from the two screen names.
+ *
+ * Deeper is a push, shallower is a return, level is a tab switch. The first
+ * render has no previous screen and gets no motion — animating the app into
+ * existence on load is a splash screen, and this app opens instantly.
+ */
+function navDirection(from, to) {
+  if (!from) return 'none';
+  const depth = (s) => SCREEN_DEPTH[s] ?? 0;
+  const delta = depth(to) - depth(from);
+  return delta > 0 ? 'forward' : delta < 0 ? 'back' : 'lateral';
+}
+
 function render() {
   const root = document.getElementById('app');
   saveDraft();
@@ -267,10 +321,25 @@ function render() {
   const sameScreen = root.dataset.screen === state.screen;
   const resume = state.live && state.screen !== 'live';
 
+  // Record the move on the render that actually changes screen, then keep it
+  // for a moment (see NAV_MS) so a follow-up render does not cut the
+  // animation off. Everything else — ticking a set, typing a name, tapping a
+  // chip — re-renders too, and must not animate or the app would flicker
+  // constantly and feel slower than the hard cut it replaced.
+  if (!sameScreen) {
+    state.nav = { dir: navDirection(root.dataset.screen, state.screen), at: Date.now() };
+  }
+  const navClass =
+    state.nav && Date.now() - state.nav.at < NAV_MS ? `nav-${state.nav.dir}` : null;
+
   const app = h(
     'div.app',
     {
-      class: [NEUTRAL_SCREENS.has(state.screen) && 'is-neutral', resume && 'has-resume']
+      class: [
+        NEUTRAL_SCREENS.has(state.screen) && 'is-neutral',
+        resume && 'has-resume',
+        navClass,
+      ]
         .filter(Boolean)
         .join(' '),
       style: `--g:${screenAccent()}`,

@@ -242,6 +242,45 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .screen-inner { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 22px; }
 
+/* ---- screen transitions ----
+
+   Only `.screen-inner` moves. `.sticky-actions` and the rest timer are its
+   siblings and stay exactly where they are, as does the tab bar — chrome
+   holding still is what makes the moving part read as "a new screen arrived"
+   rather than "everything lurched".
+
+   That is also why the transform lives here and not on `.screen`: both of
+   those siblings are `position: sticky`, and a transformed ancestor becomes
+   their containing block, which would break them for the length of every
+   animation.
+
+   Enter only. The outgoing screen is gone before we could animate it, and
+   keeping both in the DOM to cross them over would be a real architectural
+   change for an effect nobody asks for. A tuned enter reads the way a native
+   push does.
+
+   Direction is the entire vocabulary: deeper rises, back drops, sideways is a
+   shorter flatter move. Tab switching happens dozens of times in a session,
+   so it is the fastest of the three — anything repeated that often should get
+   out of the way. */
+
+.nav-forward .screen-inner { animation: nav-forward 200ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.nav-back .screen-inner { animation: nav-back 200ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.nav-lateral .screen-inner { animation: nav-lateral 150ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+
+@keyframes nav-forward {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes nav-back {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes nav-lateral {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* --------------------------------------------------------------- tab bar */
 
 /* Fixed to the viewport, but aligned to the column rather than the window. */

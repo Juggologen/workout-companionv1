@@ -639,6 +639,15 @@ dark-UI reader does not get dark-surface steps burned onto white paper.
 | 1RM only in the Exercise Library | Also on Build, beside each chosen lift | The suggested load is a percentage of it, so the number is asked for where it is needed |
 | You choose every lift | Quick workout generates one from four answers (§19) | The workbook assumes you already know what you came to do |
 | No notion of difficulty | Three skill tiers (§18) | A beginner and a competitor cannot be handed the same 167 exercises |
+
+### A note on the Build lift row
+
+It was one wide button that removed the lift wherever you pressed it, with
+"Enter your 1RM" sitting inside it. That text is an instruction; people followed
+it and lost the exercise. Removal is now on the tick alone, and pressing the row
+opens the field it was asking for. Worth remembering the shape of the mistake:
+a destructive action covering the whole row, with an invitation printed on top
+of it.
 | A Read Me sheet you have to know to open | A guide screen behind a question mark on Home (§18) | The sequence is the thing that needs explaining, and a spreadsheet tab is not where anyone looks for it |
 
 ## 15. Not yet translated
@@ -866,6 +875,32 @@ still works on a generated workout loaded back from Saved.
 > the value from render. The time picker updates state without re-rendering —
 > see below — so anything captured at render time is one scroll out of date.
 > That bug shipped a 5-minute budget an 8-exercise workout.
+
+### Marking the result
+
+A generated session is indistinguishable from a hand-built one — that is the
+point of routing it through Plan — so it has to say so itself.
+
+- A reveal overlay between Generate and the plan, roughly 1.3s door to door.
+  The step lines are the real stages and their numbers come off the finished
+  result, so nothing claims work that did not happen. Skipped entirely under
+  `prefers-reduced-motion`, which is a request for less of exactly this.
+- An **Auto-generated** badge on the plan, for the life of the session rather
+  than the transition. "Did I choose these or did it?" is a question the saved
+  list still has to answer a fortnight later.
+- The plan's exercise cards stagger in, but only on the render straight after
+  generating (`state.freshQuick`). Arriving any other way is instant.
+
+The overlay comes down on a timer, not an `animationend` listener. If anything
+stops the animation running, a stuck full-screen panel over the app is a far
+worse failure than a missed flourish.
+
+`markHandEdited()` deletes `session.quick` on any hand edit to what the
+generator decided — the lift list, the goal, the budgets. Two reasons: the
+badge stops claiming something untrue, and Shuffle disappears instead of
+sitting there ready to throw away the edit that was just made. Editing the
+session name or a per-lift weight leaves the marker alone, since Shuffle would
+not overwrite either.
 
 ### The time picker
 

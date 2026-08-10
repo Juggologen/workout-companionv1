@@ -599,6 +599,110 @@ input, select, textarea { font: inherit; color: inherit; }
 .quick-split-sep { color: var(--t-45); }
 .quick-split .is-short { color: var(--muscle-primary); }
 
+/* ---- the reveal ----
+
+   Sits between pressing Generate and seeing the plan, because otherwise the
+   only sign that a workout was decided for you is that the screen changed.
+   Roughly 1.3s door to door. Everything is driven by animation-delay off a
+   single mount, so there is no JS timeline to drift; the only timer is the one
+   that takes the overlay down, which must not depend on animation running. */
+
+.quick-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(6px);
+  animation: reveal-in 0.2s ease both;
+}
+.quick-reveal.is-leaving { animation: reveal-out 0.22s ease both; }
+
+@keyframes reveal-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes reveal-out { from { opacity: 1 } to { opacity: 0; transform: scale(1.015) } }
+
+.reveal-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 0 32px;
+  width: min(420px, 100%);
+}
+
+.reveal-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 16%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--g) 40%, transparent);
+  animation: orb-pulse 1.1s ease-out both;
+}
+/* The ring travels outward once rather than looping: a spinner says "waiting",
+   and this is not a wait, it is a thing finishing. */
+@keyframes orb-pulse {
+  0%   { transform: scale(0.7); opacity: 0; box-shadow: 0 0 0 0 color-mix(in srgb, var(--g) 55%, transparent) }
+  35%  { transform: scale(1); opacity: 1 }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 22px transparent }
+}
+
+.reveal-steps { display: flex; flex-direction: column; gap: 7px; align-items: center; }
+.reveal-step {
+  font-size: 12.5px;
+  color: var(--t-55);
+  opacity: 0;
+  animation: step-in 0.34s ease both;
+}
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(5px) }
+  to   { opacity: 0.85; transform: none }
+}
+
+.reveal-result {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  opacity: 0;
+  animation: step-in 0.36s ease both;
+  animation-delay: 700ms;
+}
+.reveal-count {
+  font: 500 34px var(--font-heading);
+  letter-spacing: -0.02em;
+  color: var(--g);
+  font-variant-numeric: tabular-nums;
+}
+.reveal-summary { font-size: 13px; color: var(--t-65); }
+
+/* Marks a generated session for as long as it exists, not just on arrival. */
+.plan-heading { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+
+.auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 14%, transparent);
+}
+
+/* The plan's cards deal themselves in after a generate, and only then. */
+.ex-card.is-fresh { animation: card-in 0.34s ease both; }
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px) }
+  to   { opacity: 1; transform: none }
+}
+
 /* ---------------------------------------------------------------- guide
 
    The entry point is a question mark in the top-right of Home, sized to the
@@ -813,12 +917,46 @@ input, select, textarea { font: inherit; color: inherit; }
 .chip-sm { flex: 0 0 auto; height: 30px; padding: 0 11px; font-size: 12px; border-radius: 999px; }
 .muscle-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* A chosen lift and its 1RM control. The row keeps its own borders off so the
-   line owns the divider, or the folded-out stepper would sit below a rule
-   that belongs to the row above it. */
+/* A chosen lift and its 1RM control.
+
+   Three separate targets, not one. The tick removes; the body and the pencil
+   both open the 1RM. It used to be a single button that removed the lift
+   wherever you pressed it — including on the words "Enter your 1RM", which
+   reads as an instruction and was being followed.
+
+   The line owns the divider rather than the row inside it, or the folded-out
+   stepper would sit below a rule belonging to the row above. */
 .lift-line { display: flex; align-items: center; border-bottom: 1px solid var(--color-divider); }
-.lift-line > .pick-row { border-bottom: 0; }
 .lift-line > .icon-btn { flex: none; margin-right: 10px; }
+
+.lift-tick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 12px 0 15px;
+  border: 0;
+  background: transparent;
+}
+/* The only destructive control on the row, so it is the only one that reddens.
+   Hover is not available on a phone, but the label and title carry it there. */
+.lift-tick:hover .tick { background: #d6666a; box-shadow: inset 0 0 0 1px #d6666a; }
+
+.lift-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 12px 13px 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+}
+.lift-main:hover:not(.is-static) { background: rgba(233, 233, 237, 0.05); }
+.is-static { cursor: default; }
 .lift-line.is-open { border-bottom-color: transparent; }
 .lift-rm {
   display: flex;

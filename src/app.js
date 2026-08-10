@@ -192,6 +192,22 @@ function saveDraft() {
   store.setDraft(state.session);
 }
 
+/**
+ * The session is no longer exactly what the generator produced.
+ *
+ * Drops the `quick` marker, which does two things: the "Auto-generated" badge
+ * stops claiming something that is no longer true, and Shuffle disappears
+ * rather than sitting there ready to throw away the edit that was just made.
+ *
+ * Called from every hand edit to the things the generator decided -- the lift
+ * list, the goal, the budgets. Anything else about the session (its name, a
+ * per-lift weight) leaves the marker alone, because none of it is something
+ * Shuffle would overwrite.
+ */
+function markHandEdited() {
+  if (state.session.quick) delete state.session.quick;
+}
+
 function saveLive() {
   if (state.live) store.setLive(state.live);
 }
@@ -1263,8 +1279,17 @@ function runQuick() {
       flash(t('quick.nothingFits'));
       return;
     }
-    go('plan');
-    flash(tp('quick.generated', result.exerciseIds.length));
+    // No flash afterwards: the reveal has already said what happened, and a
+    // second announcement would re-render the plan and restart its entrance.
+    quickReveal(q, result, () => {
+      state.freshQuick = true;
+      go('plan');
+      // Cleared without rendering — the class has done its work by now, and
+      // re-rendering to remove it would replay the animation it just finished.
+      setTimeout(() => {
+        state.freshQuick = false;
+      }, 1600);
+    });
   };
 
   const draftHasLifts = (state.session.exerciseIds || []).length > 0;
@@ -1282,6 +1307,76 @@ function runQuick() {
     cancelLabel: t('custom.cancel'),
     onConfirm: apply,
   });
+}
+
+/**
+ * The moment between pressing Generate and seeing the plan.
+ *
+ * Quick workout produces a session that looks exactly like one you built by
+ * hand, which is the point — but it means the only signal that something was
+ * decided for you is a screen change. This is that signal: an overlay in the
+ * goal colour naming what it did, in the order it did it, ending on the shape
+ * of the result.
+ *
+ * The steps are not fake progress. They are the real stages, and the counts
+ * are read off the finished result, so nothing here claims work that did not
+ * happen. It is short — under a second and a bit — because it sits between the
+ * user and the thing they asked for, and a delay you notice twice is a delay
+ * that has outstayed its welcome.
+ */
+function quickReveal(q, result, done) {
+  // Someone who has asked for less motion has asked for less of exactly this.
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    done();
+    flash(tp('quick.generated', result.exerciseIds.length));
+    return;
+  }
+
+  const built = buildSession(state.session, state.catalog, state.oneRm);
+  const lines = [
+    t('quick.reveal.pool', { n: state.catalog.exercises.filter((e) => !e.archived).length }),
+    q.muscles.length
+      ? t('quick.reveal.picking', { groups: q.muscles.slice(0, 3).join(', ') })
+      : t('quick.reveal.pickingAny'),
+    t('quick.reveal.warmup', { n: built.warmup.items.length }),
+  ];
+
+  const steps = lines.map((line, i) =>
+    h('div.reveal-step', { style: `animation-delay:${120 + i * 170}ms` }, line)
+  );
+
+  const overlay = h(
+    'div.quick-reveal',
+    { style: `--g:${GOAL_COLOR[q.goal] || 'var(--home-accent)'}`, role: 'status', 'aria-live': 'polite' },
+    h(
+      'div.reveal-inner',
+      h('span.reveal-orb', icon(ICONS.spark, { size: 26 })),
+      h('div.reveal-steps', steps),
+      h(
+        'div.reveal-result',
+        h('span.reveal-count', String(result.exerciseIds.length)),
+        h(
+          'span.reveal-summary',
+          tp('quick.reveal.result', result.exerciseIds.length, {
+            time: formatMinutes(built.totalMinutes),
+          })
+        )
+      )
+    )
+  );
+
+  document.body.appendChild(overlay);
+
+  // A timer, not an animationend listener: if anything stops the animation
+  // running the overlay still has to come down, and a stuck full-screen panel
+  // over the app is a far worse failure than a missed flourish.
+  setTimeout(() => {
+    overlay.classList.add('is-leaving');
+    setTimeout(() => {
+      overlay.remove();
+      done();
+    }, 220);
+  }, 1080);
 }
 
 /** Run the generator and install the result as the draft session. */
@@ -1388,6 +1483,7 @@ function goalCard(goal) {
       'aria-pressed': String(on),
       onclick: () => {
         state.session.goal = goal;
+        markHandEdited();
         render();
       },
     },
@@ -1457,12 +1553,19 @@ function liftsSection(exercises) {
  *
  * Folded away by default, and only offered at all where a 1RM means
  * something: a lift prescribed by bodyweight has no percentage to take.
+ *
+ * Removal lives on the tick and nowhere else. This row used to be one wide
+ * button that dropped the lift wherever you pressed it, including on the words
+ * "Enter your 1RM" — which is an instruction, so people followed it and lost
+ * the exercise. A destructive action needs its own target, and the text asking
+ * for a number should open the field for that number.
  */
 function liftRow(ex) {
   const load = loadFor(ex);
   const rm = state.oneRm[ex.id];
   const usesRm = load.kind !== 'bodyweight';
   const open = usesRm && state.buildRmOpen === ex.id;
+  const name = localized(ex.name);
 
   const setRm = (value) => {
     if (value <= 0) delete state.oneRm[ex.id];
@@ -1471,42 +1574,62 @@ function liftRow(ex) {
     render();
   };
 
-  const row = h(
-    'button.pick-row',
-    {
-      'aria-pressed': 'true',
-      onclick: () => {
-        state.session.exerciseIds = state.session.exerciseIds.filter((id) => id !== ex.id);
-        delete state.session.loads[ex.id];
-        if (state.buildRmOpen === ex.id) state.buildRmOpen = null;
-        render();
-      },
-    },
-    h('span.tick.tick-square.is-on', icon(ICONS.check, { size: 11, stroke: '#161826' })),
+  const toggleRm = () => {
+    state.buildRmOpen = open ? null : ex.id;
+    render();
+  };
+
+  const details = [
     h(
       'span.pick-main',
-      h('span.pick-name', localized(ex.name)),
+      h('span.pick-name', name),
       h('span.pick-meta', `${ex.profile} · ${ex.primary}`)
     ),
-    h('span.pick-load', { class: load.kind === 'no-1rm' ? 'is-missing' : '' }, loadLabel(load))
-  );
+    h('span.pick-load', { class: load.kind === 'no-1rm' ? 'is-missing' : '' }, loadLabel(load)),
+  ];
 
   return [
     h(
       'div.lift-line',
       { class: open ? 'is-open' : '' },
-      row,
+      h(
+        'button.lift-tick',
+        {
+          'aria-label': t('build.remove', { name }),
+          title: t('build.remove', { name }),
+          onclick: () => {
+            state.session.exerciseIds = state.session.exerciseIds.filter((id) => id !== ex.id);
+            delete state.session.loads[ex.id];
+            if (state.buildRmOpen === ex.id) state.buildRmOpen = null;
+            markHandEdited();
+            render();
+          },
+        },
+        h('span.tick.tick-square.is-on', icon(ICONS.check, { size: 11, stroke: '#161826' }))
+      ),
+      // The body of the row opens the 1RM rather than doing nothing, because
+      // that is what people were already pressing it for. A bodyweight lift has
+      // nothing to open, so it is inert text instead of a dead button.
+      usesRm
+        ? h(
+            'button.lift-main',
+            {
+              'aria-expanded': String(open),
+              'aria-label': `${t('library.oneRm')} — ${name}`,
+              title: t('build.setRmFor', { name }),
+              onclick: toggleRm,
+            },
+            details
+          )
+        : h('div.lift-main.is-static', details),
       usesRm &&
         h(
           'button.icon-btn',
           {
             'aria-expanded': String(open),
-            'aria-label': `${t('library.oneRm')} — ${localized(ex.name)}`,
-            title: t('build.setRmFor', { name: localized(ex.name) }),
-            onclick: () => {
-              state.buildRmOpen = open ? null : ex.id;
-              render();
-            },
+            'aria-label': `${t('library.oneRm')} — ${name}`,
+            title: t('build.setRmFor', { name }),
+            onclick: toggleRm,
           },
           icon(rm ? ICONS.pencil : ICONS.plus, { size: 14 })
         )
@@ -1562,6 +1685,7 @@ function budgetSection(key, label, options, built) {
             'aria-pressed': String(state.session[key] === value),
             onclick: () => {
               state.session[key] = value;
+              markHandEdited();
               render();
             },
           },
@@ -1606,10 +1730,18 @@ function viewPlan() {
         h(
           'div.plan-title',
           h(
-            'h1',
-            sessionTitle(),
-            h('br'),
-            h('span.goal-word', goalLabel(state.session.goal))
+            'div.plan-heading',
+            h(
+              'h1',
+              sessionTitle(),
+              h('br'),
+              h('span.goal-word', goalLabel(state.session.goal))
+            ),
+            // Stays for the life of the session, not just the transition: a
+            // week later, in the saved list, "did I choose these or did it?"
+            // is a question the plan should still be able to answer.
+            state.session.quick &&
+              h('span.auto-badge', icon(ICONS.spark, { size: 11 }), t('quick.autoBadge'))
           ),
           h(
             'div.plan-total',
@@ -1633,7 +1765,7 @@ function viewPlan() {
         'div.stack',
         { style: 'gap:10px' },
         h('div.section-label', t('plan.main', { n: built.mainMinutes })),
-        built.main.map((row) => planExerciseCard(row))
+        built.main.map((row, i) => planExerciseCard(row, i))
       ),
 
       built.cooldown.items.length > 0 &&
@@ -1705,10 +1837,17 @@ function drillRow(kicker, name, minutes) {
   );
 }
 
-function planExerciseCard(row) {
+function planExerciseCard(row, index = 0) {
   const { exercise: ex, prescription: p, suggested } = row;
+  // The cards deal themselves in only on the render straight after generating,
+  // so arriving here any other way is instant.
+  const fresh = state.freshQuick;
   return h(
     'div.ex-card',
+    {
+      class: fresh ? 'is-fresh' : '',
+      style: fresh ? `animation-delay:${index * 55}ms` : null,
+    },
     h(
       'div.ex-head',
       h(
@@ -3645,6 +3784,7 @@ function libraryItem(ex, refresh) {
     } else {
       state.session.exerciseIds.push(ex.id);
     }
+    markHandEdited();
     saveDraft();
     refresh();
   };

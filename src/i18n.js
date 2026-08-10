@@ -94,6 +94,13 @@ const LOCALES = {
     'quick.replaceBody.other':
       '“{name}” has {n} lifts in it. Generating a workout will replace them — a saved copy is not affected.',
     'quick.replaceConfirm': 'Replace it',
+    'quick.autoBadge': 'Auto-generated',
+    'quick.reveal.pool': 'Reading {n} exercises',
+    'quick.reveal.picking': 'Choosing lifts for {groups}',
+    'quick.reveal.pickingAny': 'Choosing lifts across the whole body',
+    'quick.reveal.warmup': 'Building a {n}-drill warm-up',
+    'quick.reveal.result.one': 'lift · {time}',
+    'quick.reveal.result.other': 'lifts · {time}',
     'quick.shuffle': 'Shuffle the lifts',
     'quick.shuffled.one': '{n} lift swapped',
     'quick.shuffled.other': '{n} lifts swapped',
@@ -224,6 +231,7 @@ const LOCALES = {
     'build.generate': 'Generate plan',
     'build.name': 'Session name',
     'build.namePlaceholder': 'Lower body',
+    'build.remove': 'Remove {name} from this session',
     'build.setRmFor': 'Set your 1RM for {name}',
     'build.rmHint':
       'Your one-rep max. The suggested load is a percentage of it, and this is the same number the Library holds.',

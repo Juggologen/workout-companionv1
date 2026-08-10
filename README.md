@@ -122,6 +122,12 @@ on the Build screen next to each chosen lift as well as in the Library — the
 suggested load is a percentage of your 1RM, so the number is asked for where
 the sentence asking for it appears.
 
+On Build, **the tick is the only thing that removes a lift.** The row used to be
+one wide button that dropped the exercise wherever you pressed it, including on
+the words "Enter your 1RM" — which reads as an instruction, so people followed
+it and lost the lift. Pressing the row now opens the 1RM field it was asking
+for, and the destructive action has its own target.
+
 ## Finding your way in
 
 **Home → the question mark, top right.** It opens a walkthrough of one whole
@@ -185,6 +191,19 @@ primary muscles and are still two bench presses.
 Every session carries the inputs it was built from and its random seed, so
 **Shuffle** on the plan re-rolls the same request, and reloading never silently
 gives you a different workout.
+
+Generating plays a short reveal — about a second — naming the stages as they
+happen and ending on the shape of the result, because otherwise the only sign
+that a workout was chosen for you is that the screen changed. The counts in it
+are read off the finished session, so it never claims work that did not happen,
+and it is skipped entirely under `prefers-reduced-motion`. The plan then carries
+an **Auto-generated** badge for the life of the session, which answers the same
+question a fortnight later in the saved list.
+
+Editing a generated session by hand — adding or removing a lift, changing the
+goal or a budget — drops the badge and the Shuffle button. The badge means "this
+is exactly what the generator produced", and Shuffle would otherwise sit there
+ready to discard the edit you just made.
 
 ### Complexity
 

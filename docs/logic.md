@@ -751,6 +751,65 @@ failing.
 
 ---
 
+## 17a. Home
+
+Three questions, in this order, and nothing else:
+
+| | |
+|---|---|
+| What am I doing now? | the hero card, and the two ways to get a session |
+| How did this week go? | the week card |
+| How am I trending? | balance, and the way through to the Log |
+
+### What was wrong
+
+Three container idioms ran down one column — a bordered card with a gradient
+accent line, a bordered button, and two sections with no container at all — so
+nothing looked related to anything and the eye had no grouping to work with.
+A 14-day streak strip sat immediately above the Monday-to-Sunday card,
+answering nearly the same question in a second visual language. Five colour
+systems shared the screen. An `h1` reading "Home" spent the largest type
+available restating the tab the user had just pressed.
+
+### The rules
+
+**One card.** `.home-card` — same border, radius, padding. `.is-hero` adds the
+only surface fill and holds the only filled button on the screen; every other
+card is something you read rather than somewhere you leave from. `.is-link`
+for the ones that navigate, `.is-row` for the single-line ones.
+
+**One accent.** Home is not a training mode (§13), so Home's yellow is the only
+emphasis colour it owns. Goal colours appear exactly twice, both times naming
+a goal: the pill on the planned session, and the balance bar, which ships its
+labelled legend directly beneath it. The muscle red/amber does not appear on
+Home at all — the primary/supporting split is real but it cannot be read
+without its legend, and the legend belongs with the full breakdown on the Log.
+Home answers *whether* a group was trained; the Log answers *how*.
+
+**Two equal ways in.** Build was a filled button inside the planned card;
+Quick workout was a wide bordered panel below it. That layout had an opinion —
+that Build was the real route and the generator an add-on. They are two
+answers to the same question and are now the same size, side by side. With
+nothing planned they take an accent border, since they are the only way
+forward.
+
+**One week strip.** The day cells carry the volume the 14-day strip was
+showing, scaled within the week and floored so a trained day is always
+visible. `dailySets` went with it. The set count is no longer printed in the
+cell — beside "10–16 Aug" it read as a date — so the height carries it and the
+tooltip has the figure.
+
+**One coverage control.** A legend, a list of paired bars and a separate "not
+trained this week" paragraph — three elements, two colour languages, one
+question — became a row of pills: filled with a count if trained, outlined if
+not. Trained first by volume, then the rest.
+
+**No nested frames.** An empty state inside a card uses `.card-empty`, plain
+text, rather than the dashed `.empty` panel, which put two borders around one
+message.
+
+---
+
 ## 18. Complexity tiers
 
 The compendium records what an exercise trains and never how hard it is to do
@@ -890,6 +949,14 @@ point of routing it through Plan — so it has to say so itself.
   list still has to answer a fortnight later.
 - The plan's exercise cards stagger in, but only on the render straight after
   generating (`state.freshQuick`). Arriving any other way is instant.
+
+Timing is one object, `REVEAL`, because the CSS delays are written inline from
+it and the teardown timer is computed from it — split them and the overlay
+leaves mid-sentence. Steps are 620ms apart, which is a line of six or seven
+words read rather than glimpsed; the result holds 900ms; the whole thing is
+about 3.2s. The first pass was 170ms a line, which registered only as
+"something happened". A tap anywhere skips to the end, because the pacing is
+for a first read and by the tenth generate you know what it says.
 
 The overlay comes down on a timer, not an `animationend` listener. If anything
 stops the animation running, a stuck full-screen panel over the app is a far

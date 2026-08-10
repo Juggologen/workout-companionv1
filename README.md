@@ -35,6 +35,39 @@ yellow (`#f3dd53`) and drops the corner glow — validated at ΔE ≥ 23.4 from
 every colour it can share a screen with, including the three goals and both
 muscle tokens.
 
+## Home
+
+Home answers three questions in order — what am I doing now, how did this week
+go, how am I trending — and everything on it is the same card.
+
+It did not used to be. Three container idioms ran down one column: a bordered
+card with a gradient accent line, a bordered button, and two sections with no
+container at all. Nothing looked related to anything else. Two strips answered
+nearly the same question in different visual languages, stacked. Five colour
+systems competed.
+
+The rules now:
+
+- **One card.** Same border, radius and padding throughout. The hero — the
+  planned session — is the only one with a surface fill, and it holds the only
+  filled button on the screen. Every other card is something you read.
+- **Home's yellow is the only emphasis colour Home owns.** Goal colours appear
+  twice, both naming a goal: the pill on the planned session, and the balance
+  bar with its legend. The muscle red/amber does not appear at all — a real
+  distinction, but unreadable without the legend that lives on the Log. Home
+  says *whether* a group was trained; the Log says *how*.
+- **The date is the heading.** There was an `h1` reading "Home" above it,
+  spending the biggest type on the screen restating the tab you just pressed.
+- **Quick workout and Build are the same size.** Build was a filled button
+  inside the planned card and Quick workout a wide panel beneath it, which
+  said one was the real way in. They are two answers to the same question.
+- **One week strip, not two.** The 14-day streak sat directly above the
+  Monday-to-Sunday card. The day cells carry the volume the strip was showing,
+  and stepping back a week reaches further than fourteen days ever did.
+- **One coverage control.** A legend, a list of paired bars and a "not trained
+  this week" paragraph became a single row of pills: filled with a count if
+  trained, outlined if not.
+
 Dark only, because the design system is.
 
 **The page scrolls, not an inner pane.** A phone-shaped app shell — fixed-height
@@ -92,7 +125,7 @@ pushed from Home.
 
 | Screen | What it does |
 |---|---|
-| **Home** | The planned session at a glance, Quick workout, a 14-day training strip, the Monday-to-Sunday muscle summary, and the goal balance. Start or resume from here. |
+| **Home** | The planned session, the two ways to get one, the Monday-to-Sunday week with muscle coverage, and the goal balance. Start or resume from here. |
 | **Quick workout** | Muscle groups, time, focus and complexity in, a whole session out. Reached from Home. |
 | **Build** | Goal (each one expands to its prescription), lifts — each with its 1RM to hand — warm-up and mobility budgets. |
 | **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |

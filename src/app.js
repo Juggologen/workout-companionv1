@@ -26,7 +26,6 @@ import {
   summariseProgress,
   formatMinutes,
   withinDays,
-  dailySets,
   musclesetsFromLog,
   goalMixFromLog,
   weekStart,
@@ -54,7 +53,6 @@ const REPRESENTATIVE_PROFILE = 'Heavy compound';
 
 const WARM_BUDGETS = [10, 15, 20];
 const COOL_BUDGETS = [0, 10, 20, 30];
-const STREAK_DAYS = 14;
 const WINDOW_DAYS = 30;
 
 /* ------------------------------------------------------------------ state */
@@ -458,7 +456,27 @@ function empty(title, hint) {
   return h('div.empty', h('p.empty-title', title), hint && h('p.empty-hint', hint));
 }
 
-/* ---------------------------------------------------------------- today */
+/* ----------------------------------------------------------------- home
+
+   Home answers three questions, in this order, and nothing else:
+
+     What am I doing now?     the hero card, and the two ways to get one
+     How did this week go?    the week card
+     How am I trending?       balance, and the way through to the Log
+
+   Everything is the same card. Home previously ran three container idioms
+   down one column -- a bordered card with an accent line, a bordered button,
+   and two sections floating with no container at all -- so nothing looked
+   related to anything and the eye had no grouping to work with.
+
+   COLOUR POLICY. Home is not a training mode, so it takes Home's yellow and
+   that is the only emphasis colour it owns. Goal colours appear in exactly
+   two places, both of which name a goal: the pill on the planned session, and
+   the balance bar with its labelled legend. The muscle red/amber does not
+   appear at all -- the primary/supporting split is a real distinction but it
+   needs its legend to be read, and that legend lives on the Log. Home says
+   whether a muscle group was trained; the Log says how.
+   ------------------------------------------------------------------------ */
 
 function viewHome() {
   const exercises = sessionExercises();
@@ -468,26 +486,10 @@ function viewHome() {
   return h(
     'div.screen',
     h(
-      'div.screen-inner',
-      h(
-        'div.home-head',
-        screenHead(formatToday(), t('today.title')),
-        // Deliberately quiet: a question mark in the corner, not a banner. It
-        // is the only thing on Home that isn't your training, and someone on
-        // their fortieth session should be able to stop seeing it.
-        h(
-          'button.help-btn',
-          {
-            onclick: () => go('guide'),
-            'aria-label': t('guide.open'),
-            title: t('guide.open'),
-          },
-          icon(ICONS.help, { size: 18 })
-        )
-      ),
-      plannedCard(exercises, built),
-      quickCard(),
-      streakCard(),
+      'div.screen-inner.home',
+      homeHeader(),
+      heroCard(exercises, built),
+      startTiles(exercises.length > 0),
       weekCard(),
       balanceCard(mix),
       savedCard()
@@ -495,21 +497,53 @@ function viewHome() {
   );
 }
 
-function formatToday() {
+/**
+ * The date is the heading.
+ *
+ * There used to be an `h1` reading "Home" above it, which spent the largest
+ * type on the screen restating the tab you just pressed. The date is the one
+ * piece of chrome here that is actually information.
+ */
+function homeHeader() {
   const d = new Date();
-  return `${d.getDate()} ${d.toLocaleString('en', { month: 'long' })}`;
+  return h(
+    'header.home-top',
+    h(
+      'div.stack',
+      { style: 'gap:1px' },
+      h('div.kicker', d.toLocaleString('en', { weekday: 'long' })),
+      h('h1.home-date', `${d.getDate()} ${d.toLocaleString('en', { month: 'long' })}`)
+    ),
+    // Deliberately quiet: a question mark in the corner, not a banner. It is
+    // the only thing on Home that isn't your training, and someone on their
+    // fortieth session should be able to stop seeing it.
+    h(
+      'button.help-btn',
+      { onclick: () => go('guide'), 'aria-label': t('guide.open'), title: t('guide.open') },
+      icon(ICONS.help, { size: 18 })
+    )
+  );
 }
 
-function plannedCard(exercises, built) {
+/** A card header: a kicker on the left, anything you like on the right. */
+function cardHead(kicker, right) {
+  return h('div.card-head', h('div.kicker', kicker), right);
+}
+
+/**
+ * The one thing Home exists to answer: what am I doing now.
+ *
+ * Given the most type on the screen and the only filled button, because on
+ * every other card you are reading and on this one you are leaving.
+ */
+function heroCard(exercises, built) {
   if (!exercises.length) {
     return h(
-      'div.card',
-      h('div.card-accent-line'),
-      h(
-        'div.card-body',
-        empty(t('today.noPlan'), t('today.noPlanHint')),
-        h('button.btn.btn-goal.btn-block', { onclick: () => go('build') }, t('today.buildOne'))
-      )
+      'section.home-card.is-hero',
+      cardHead(t('today.planned')),
+      h('div.hero-title', t('today.noPlan')),
+      // Points at the two tiles directly below rather than naming one of them.
+      h('p.hint', t('today.noPlanHint'))
     );
   }
 
@@ -519,66 +553,31 @@ function plannedCard(exercises, built) {
   const busy = !!state.live;
 
   return h(
-    'div.card',
-    h('div.card-accent-line'),
-    h(
-      'div.card-body',
+    'section.home-card.is-hero',
+    cardHead(
+      t('today.planned'),
       h(
-        'div',
-        { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:12px' },
-        h(
-          'div.stack',
-          { style: 'gap:5px' },
-          h('div.kicker', t('today.planned')),
-          h('div', { style: 'font-size:21px;font-weight:500;letter-spacing:-.015em' }, sessionTitle())
-        ),
-        h(
-          'span.pill-goal',
-          { style: `--gs:${GOAL_COLOR[state.session.goal]}` },
-          goalLabel(state.session.goal)
-        )
-      ),
-      h(
-        'div.stat-row',
-        stat(exercises.length, t('today.lifts')),
-        stat(formatMinutes(built.totalMinutes), t('today.estimated')),
-        stat(built.warmup.minutes, t('today.warmup'), t('units.min'))
-      ),
-      h(
-        'div',
-        { style: 'display:flex;gap:9px' },
-        h(
-          'button.btn.btn-goal',
-          { style: 'flex:1', onclick: startSession, disabled: busy, title: busy ? t('today.busy') : null },
-          busy ? t('today.busy') : t('today.start')
-        ),
-        h('button.btn', { style: 'flex:1', onclick: () => go('plan') }, t('today.seePlan'))
+        'span.pill-goal',
+        { style: `--gs:${GOAL_COLOR[state.session.goal]}` },
+        goalLabel(state.session.goal)
       )
-    )
-  );
-}
-
-/**
- * The way into Quick workout.
- *
- * Sits directly under the planned session because it is the alternative to
- * having one: the answer to "I am at the gym and have not thought about this".
- */
-function quickCard() {
-  return h(
-    'button.panel-btn.quick-entry',
-    { onclick: () => go('quick') },
-    h(
-      'div.panel-head',
-      h(
-        'div',
-        { style: 'display:flex;align-items:center;gap:9px' },
-        h('span.quick-spark', icon(ICONS.spark, { size: 15 })),
-        h('div.panel-title', t('quick.title'))
-      ),
-      icon(ICONS.chevronRight, { size: 14 })
     ),
-    h('p.hint', { style: 'text-align:left' }, t('quick.entryHint'))
+    h('div.hero-title', sessionTitle()),
+    h(
+      'div.hero-stats',
+      stat(exercises.length, t('today.lifts')),
+      stat(formatMinutes(built.totalMinutes), t('today.estimated')),
+      stat(built.warmup.minutes, t('today.warmup'), t('units.min'))
+    ),
+    h(
+      'div.hero-actions',
+      h(
+        'button.btn.btn-goal',
+        { style: 'flex:1', onclick: startSession, disabled: busy, title: busy ? t('today.busy') : null },
+        busy ? t('today.busy') : t('today.start')
+      ),
+      h('button.btn', { style: 'flex:1', onclick: () => go('plan') }, t('today.seePlan'))
+    )
   );
 }
 
@@ -590,34 +589,29 @@ function stat(value, label, unit) {
   );
 }
 
-function streakCard() {
-  const days = dailySets(state.log, STREAK_DAYS, today());
-  const max = days.reduce((m, d) => Math.max(m, d.sets), 0);
-  const active = days.filter((d) => d.sets > 0).length;
-  const first = days[0];
+/**
+ * The two ways to get a session, side by side and the same size.
+ *
+ * They were not equals before: Build was a filled button inside the planned
+ * card and Quick workout was a wide bordered panel below it, which said Build
+ * was the real way and the generator was an add-on. They are two answers to
+ * the same question and the layout should not have an opinion about which one
+ * you want.
+ */
+function startTiles(hasPlan) {
+  const tile = (screen, iconPath, title, blurb) =>
+    h(
+      'button.start-tile',
+      { class: hasPlan ? '' : 'is-primary', onclick: () => go(screen) },
+      h('span.tile-icon', icon(iconPath, { size: 17 })),
+      h('span.tile-title', title),
+      h('span.tile-blurb', blurb)
+    );
 
   return h(
-    'div.stack',
-    { style: 'gap:10px' },
-    h('div.kicker', t('today.streak')),
-    h(
-      'div.streak',
-      days.map((d) =>
-        h('div.streak-bar', {
-          // A day with work always reads as present; the rest is proportion.
-          style: `height:${d.sets ? 12 + Math.round((d.sets / max) * 32) : 6}px;${
-            d.sets ? `background:${d.daysAgo <= 2 ? 'var(--g)' : 'rgba(233,233,237,.35)'}` : ''
-          }`,
-          title: `${d.date} — ${d.sets} sets`,
-        })
-      )
-    ),
-    h(
-      'div.streak-scale',
-      h('span', shortDate(first.date)),
-      h('span', tp('today.sessions', active)),
-      h('span', t('today.title'))
-    )
+    'div.start-tiles',
+    tile('quick', ICONS.spark, t('quick.title'), t('home.quickBlurb')),
+    tile('build', ICONS.dumbbell, t('home.buildTitle'), t('home.buildBlurb'))
   );
 }
 
@@ -636,10 +630,14 @@ function shortDate(iso) {
  * and because a rolling window silently drops Monday's work as soon as the
  * next Monday arrives — which is exactly when you want to look back at it.
  *
- * The 14-day strip above answers "have I been training". This answers "what
- * have I been training", which is a different question and the one a weekly
- * summary is for. What was NOT trained is given equal billing: a list of the
- * muscle groups you hit says nothing about the ones you keep missing.
+ * This card used to sit directly beneath a 14-day strip that answered almost
+ * the same question in a different visual language — two rows of bars, one
+ * grey-and-yellow and one boxed, stacked. They are merged: the day cells carry
+ * the volume the strip was showing, and stepping back a week reaches further
+ * than fourteen days ever did.
+ *
+ * What was NOT trained is given equal billing, because a list of the groups
+ * you hit says nothing about the ones you keep missing.
  */
 function weekCard() {
   const start = weekStart(today(), state.weekOffset);
@@ -666,54 +664,113 @@ function weekCard() {
     );
 
   return h(
-    'div.stack',
-    { style: 'gap:12px' },
-    h(
-      'div.week-head',
-      h(
-        'div.stack',
-        { style: 'gap:2px' },
-        h('div.kicker', weekTitle()),
-        h('div.week-range', weekRangeLabel(sum.start, sum.end))
-      ),
+    'section.home-card',
+    cardHead(
+      weekTitle(),
       h(
         'div.week-nav',
+        h('span.week-range', weekRangeLabel(sum.start, sum.end)),
         nav(-1, t('week.previous'), false),
         // Never past the current week: there is nothing logged in the future,
         // and an endlessly advancing empty week is a dead end to walk into.
         nav(1, t('week.next'), state.weekOffset >= 0)
       )
     ),
-    h(
-      'div.week-days',
-      sum.days.map((d) =>
-        h(
-          'div.week-day',
-          { class: d.sets ? 'is-on' : '', title: `${d.date} — ${tp('log.sets', d.sets)}` },
-          h('span.week-day-name', weekdayShort(d.date)),
-          h('span.week-day-sets', d.sets ? String(d.sets) : '·')
-        )
-      )
-    ),
+    weekDayStrip(sum),
     sum.sets
       ? h(
           'div.stack',
-          { style: 'gap:12px' },
+          { style: 'gap:14px' },
           h(
-            'div.week-meta',
-            tp('week.summary', sum.daysTrained, { sets: sum.sets, muscles: sum.rows.length })
+            'div.hero-stats.is-compact',
+            stat(sum.daysTrained, tp('week.daysUnit', sum.daysTrained)),
+            stat(sum.sets, t('week.setsUnit')),
+            stat(sum.rows.length, t('week.groupsUnit'))
           ),
-          muscleRoleKey(),
-          muscleBars(sum.rows),
-          sum.untouched.length > 0 &&
-            h(
-              'p.hint',
-              h('span.week-untouched-label', t('week.untouched')),
-              ' ',
-              sum.untouched.join(' · ')
-            )
+          coverage(sum),
+          h(
+            'button.btn-link',
+            { onclick: () => go('log') },
+            t('week.detail'),
+            icon(ICONS.chevronRight, { size: 12 })
+          )
         )
-      : empty(t('week.empty'), state.weekOffset === 0 ? t('week.emptyHint') : null)
+      : // Plain text, not the dashed `empty` box: this is already inside a
+        // card, and a bordered panel within a bordered panel is the nesting
+        // this redesign exists to get rid of.
+        h(
+          'div.card-empty',
+          h('p.card-empty-title', t('week.empty')),
+          state.weekOffset === 0 && h('p.hint', t('week.emptyHint'))
+        )
+  );
+}
+
+/**
+ * Seven cells, Monday first, with a bar for the day's volume.
+ *
+ * The count used to be printed in the cell, which read as a date next to the
+ * "10–16 Aug" beside it. The height carries the volume instead and the exact
+ * figure is in the tooltip, so nothing on the card can be mistaken for a
+ * calendar.
+ */
+function weekDayStrip(sum) {
+  const max = sum.days.reduce((m, d) => Math.max(m, d.sets), 0) || 1;
+  const now = today();
+
+  return h(
+    'div.week-days',
+    sum.days.map((d) =>
+      h(
+        'div.week-day',
+        {
+          class: [d.sets ? 'is-on' : '', d.date === now ? 'is-today' : ''].filter(Boolean).join(' '),
+          title: `${shortDate(d.date)} — ${tp('log.sets', d.sets)}`,
+        },
+        h('span.week-day-name', weekdayShort(d.date)),
+        h(
+          'span.week-day-track',
+          // A day with any work always reads as present; above that it is
+          // proportion. A 1-set day and a 20-set day must not look the same.
+          h('span.week-day-bar', {
+            style: d.sets ? `height:${20 + Math.round((d.sets / max) * 60)}%` : '',
+          })
+        )
+      )
+    )
+  );
+}
+
+/**
+ * Which muscle groups the week covered, and which it did not.
+ *
+ * One control for both halves. This replaces a legend, a list of bars and a
+ * separate "not trained this week" paragraph — three elements answering one
+ * question, in two colour languages, taking most of the card.
+ *
+ * Deliberately not split by primary/supporting. That distinction is real but
+ * unreadable without its legend, and the legend belongs with the full
+ * breakdown on the Log. Here a group is either trained or it is not.
+ */
+function coverage(sum) {
+  const trained = sum.rows.map((r) => ({ muscle: r.muscle, sets: r.total }));
+  const rest = sum.untouched.map((muscle) => ({ muscle, sets: 0 }));
+
+  return h(
+    'div.coverage',
+    [...trained, ...rest].map((row) =>
+      h(
+        'span.cover-pill',
+        {
+          class: row.sets ? 'is-on' : '',
+          title: row.sets
+            ? `${row.muscle} — ${tp('log.sets', row.sets)}`
+            : `${row.muscle} — ${t('week.notTrained')}`,
+        },
+        h('span.cover-name', row.muscle),
+        row.sets > 0 && h('span.cover-count', String(row.sets))
+      )
+    )
   );
 }
 
@@ -783,22 +840,28 @@ function muscleRoleKey() {
   );
 }
 
+/**
+ * The 30-day goal mix.
+ *
+ * The one place on Home besides the planned session's pill where goal colours
+ * appear, and it earns them: the bar is a chart of four named things and it
+ * ships its legend right underneath.
+ */
 function balanceCard(mix) {
   if (!mix.total) {
     return h(
-      'button.panel-btn',
+      'button.home-card.is-link',
       { onclick: () => go('log') },
-      h('div.panel-head', h('div.panel-title', t('today.balance')), h('span.muted', { style: 'font-size:11px' }, t('log.empty')))
+      cardHead(t('today.balance'), h('span.card-meta', t('log.empty')))
     );
   }
 
   return h(
-    'button.panel-btn',
+    'button.home-card.is-link',
     { onclick: () => go('log') },
-    h(
-      'div.panel-head',
-      h('div.panel-title', t('today.balance')),
-      h('span.muted', { style: 'font-size:11px' }, t('today.balanceMeta', { n: mix.total }))
+    cardHead(
+      t('today.balance'),
+      h('span.card-meta', t('today.balanceMeta', { n: mix.total }))
     ),
     mixBar(mix),
     h(
@@ -852,13 +915,11 @@ function mixBar(mix, tall = false) {
 function savedCard() {
   if (!state.sessions.length) return null;
   return h(
-    'button.panel-btn',
+    'button.home-card.is-link.is-row',
     { onclick: () => go('saved') },
-    h(
-      'div.panel-head',
-      h('div.panel-title', t('today.saved')),
-      h('span.muted', { style: 'font-size:11px' }, t('today.savedMeta', { n: state.sessions.length }))
-    )
+    h('span.card-row-title', t('today.saved')),
+    h('span.card-meta', t('today.savedMeta', { n: state.sessions.length })),
+    icon(ICONS.chevronRight, { size: 14 })
   );
 }
 
@@ -1324,6 +1385,20 @@ function runQuick() {
  * user and the thing they asked for, and a delay you notice twice is a delay
  * that has outstayed its welcome.
  */
+/**
+ * Reveal timing, in milliseconds. One place, because the CSS delays and the
+ * teardown timer have to agree or the overlay leaves mid-sentence.
+ *
+ *   first  when the first step appears
+ *   gap    between steps -- long enough to read six or seven words
+ *   result when the count lands, one gap after the last step
+ *   hold   how long the finished state sits there before it starts leaving
+ *   leave  the fade
+ */
+const REVEAL = { first: 180, gap: 620, hold: 900, leave: 260 };
+const revealResultAt = (steps) => REVEAL.first + steps * REVEAL.gap;
+const revealTotal = (steps) => revealResultAt(steps) + REVEAL.hold;
+
 function quickReveal(q, result, done) {
   // Someone who has asked for less motion has asked for less of exactly this.
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
@@ -1341,8 +1416,11 @@ function quickReveal(q, result, done) {
     t('quick.reveal.warmup', { n: built.warmup.items.length }),
   ];
 
+  // Paced to be read, not just seen. Each line needs to land, be recognised as
+  // words and understood before the next one moves; 170ms apart was a flicker
+  // that only registered as "something happened".
   const steps = lines.map((line, i) =>
-    h('div.reveal-step', { style: `animation-delay:${120 + i * 170}ms` }, line)
+    h('div.reveal-step', { style: `animation-delay:${REVEAL.first + i * REVEAL.gap}ms` }, line)
   );
 
   const overlay = h(
@@ -1354,6 +1432,7 @@ function quickReveal(q, result, done) {
       h('div.reveal-steps', steps),
       h(
         'div.reveal-result',
+        { style: `animation-delay:${revealResultAt(lines.length)}ms` },
         h('span.reveal-count', String(result.exerciseIds.length)),
         h(
           'span.reveal-summary',
@@ -1365,18 +1444,28 @@ function quickReveal(q, result, done) {
     )
   );
 
+  overlay.appendChild(h('span.reveal-skip', t('quick.reveal.skip')));
   document.body.appendChild(overlay);
 
-  // A timer, not an animationend listener: if anything stops the animation
-  // running the overlay still has to come down, and a stuck full-screen panel
-  // over the app is a far worse failure than a missed flourish.
-  setTimeout(() => {
+  // A tap anywhere skips to the end. The pacing is for a first read, and the
+  // tenth time you generate a workout you already know what it says.
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
     overlay.classList.add('is-leaving');
     setTimeout(() => {
       overlay.remove();
       done();
-    }, 220);
-  }, 1080);
+    }, REVEAL.leave);
+  };
+
+  overlay.addEventListener('click', finish);
+
+  // A timer, not an animationend listener: if anything stops the animation
+  // running the overlay still has to come down, and a stuck full-screen panel
+  // over the app is a far worse failure than a missed flourish.
+  setTimeout(finish, revealTotal(lines.length));
 }
 
 /** Run the generator and install the result as the draft session. */

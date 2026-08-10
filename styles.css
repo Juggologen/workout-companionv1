@@ -412,14 +412,8 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* --------------------------------------------------------------- pieces */
 
-.card {
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  overflow: hidden;
-}
-.card-accent-line { height: 2px; background: linear-gradient(to right, var(--g), transparent); }
-.card-body { padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+/* `.card`, `.card-accent-line` and `.card-body` lived here — the third
+   container idiom on the old Home. Gone with it; `.home-card` is the one. */
 
 /* Wears the goal's own colour, not the screen accent: the pill exists to say
    which mode the session is in, and Home paints everything else yellow. */
@@ -434,7 +428,6 @@ input, select, textarea { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 
-.stat-row { display: flex; gap: 20px; }
 .stat { display: flex; flex-direction: column; gap: 1px; }
 .stat-value { font-size: 19px; font-weight: 500; }
 .stat-value .unit { font-size: 12px; color: var(--t-45); }
@@ -459,31 +452,104 @@ input, select, textarea { font: inherit; color: inherit; }
 .tick.is-on svg { opacity: 1; }
 .tick-square { border-radius: 5px; width: 19px; height: 19px; }
 
-/* ---------------------------------------------------------------- today */
+/* ============================================================== home
 
-.streak { display: flex; gap: 4px; align-items: flex-end; height: 44px; }
-.streak-bar { flex: 1; border-radius: 3px; background: rgba(233, 233, 237, 0.09); min-height: 6px; }
-.streak-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--t-45); }
+   ONE card. Home used to run three container idioms down a single column --
+   a bordered card with a gradient accent line, a bordered button, and two
+   sections with no container at all -- so nothing looked related to anything
+   else and there was no grouping for the eye to use.
 
-.panel-btn {
-  text-align: left;
+   COLOUR. Home is not a training mode, so Home's yellow is the only emphasis
+   colour it owns. Goal colours appear twice, both times naming a goal: the
+   pill on the planned session, and the balance bar with its legend. The
+   muscle red/amber does not appear here at all -- it is a real distinction
+   but it cannot be read without its legend, and that legend lives on the Log.
+
+   HIERARCHY. Exactly one filled button on the screen, in the hero. Every
+   other card is something you read; the hero is somewhere you leave from.
+   ===================================================================== */
+
+.home { gap: 16px; }
+
+.home-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.home-date { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; }
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 17px;
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-lg);
   background: transparent;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   font-family: inherit;
   color: inherit;
+  text-align: left;
 }
-.panel-btn:hover { background: rgba(233, 233, 237, 0.04); }
+/* The hero is the only card that lifts off the ground. */
+.home-card.is-hero {
+  background: var(--color-surface);
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+  gap: 16px;
+  padding: 17px 18px 18px;
+}
+.home-card.is-link:hover { background: rgba(233, 233, 237, 0.04); }
+.home-card.is-row { flex-direction: row; align-items: center; gap: 10px; padding: 15px 17px; }
 
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 20px; }
+.card-meta { font-size: 11.5px; color: var(--t-45); font-variant-numeric: tabular-nums; }
+.card-row-title { flex: 1; font-size: 14px; font-weight: 500; }
+
+.hero-title { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; }
+.hero-actions { display: flex; gap: 9px; }
+
+.hero-stats { display: flex; gap: 26px; }
+.hero-stats.is-compact { gap: 22px; }
+.hero-stats.is-compact .stat-value { font-size: 17px; }
+
+/* ---- the two ways to start ----
+   Same size, same weight. Build was a filled button and Quick workout a wide
+   panel below it, which said one was the real way in and the other an add-on.
+   They are two answers to the same question. */
+
+.start-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.start-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 14px 14px 15px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+}
+.start-tile:hover { background: rgba(233, 233, 237, 0.04); border-color: var(--g); }
+/* With nothing planned these are the only way forward, so they say so. */
+.start-tile.is-primary { border-color: color-mix(in srgb, var(--g) 45%, transparent); }
+.tile-icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 5px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 14%, transparent);
+}
+.tile-title { font-size: 14px; font-weight: 500; }
+.tile-blurb { font-size: 11.5px; line-height: 1.4; color: var(--t-45); text-wrap: pretty; }
+
+/* `.panel-btn` lived here — the second of the old Home's three idioms. The
+   Log still uses `.panel` and `.panel-head` below. */
 .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .panel-title { font-size: 15px; font-weight: 500; }
 
-/* The static twin of .panel-btn, for a panel that holds its own controls and
-   so cannot itself be a button. */
 .panel {
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-lg);
@@ -500,19 +566,6 @@ input, select, textarea { font: inherit; color: inherit; }
    is the value, so the gutters either side have to be half the strip wide or
    the first and last values could never reach the middle.
    ========================================================================= */
-
-.quick-entry .panel-head { width: 100%; align-items: center; }
-.quick-spark {
-  width: 26px;
-  height: 26px;
-  flex: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--g);
-  background: color-mix(in srgb, var(--g) 15%, transparent);
-}
 
 .time-picker { display: flex; flex-direction: column; gap: 10px; }
 .time-readout { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
@@ -642,7 +695,7 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--g);
   background: color-mix(in srgb, var(--g) 16%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--g) 40%, transparent);
-  animation: orb-pulse 1.1s ease-out both;
+  animation: orb-pulse 1.4s ease-out both;
 }
 /* The ring travels outward once rather than looping: a spinner says "waiting",
    and this is not a wait, it is a thing finishing. */
@@ -653,15 +706,17 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 .reveal-steps { display: flex; flex-direction: column; gap: 7px; align-items: center; }
+/* Sized to be read, not glimpsed. The delays are set inline from REVEAL in
+   app.js so the CSS and the teardown timer cannot drift apart. */
 .reveal-step {
-  font-size: 12.5px;
-  color: var(--t-55);
+  font-size: 13.5px;
+  color: var(--t-65);
   opacity: 0;
-  animation: step-in 0.34s ease both;
+  animation: step-in 0.42s ease both;
 }
 @keyframes step-in {
   from { opacity: 0; transform: translateY(5px) }
-  to   { opacity: 0.85; transform: none }
+  to   { opacity: 1; transform: none }
 }
 
 .reveal-result {
@@ -669,8 +724,17 @@ input, select, textarea { font: inherit; color: inherit; }
   align-items: baseline;
   gap: 8px;
   opacity: 0;
-  animation: step-in 0.36s ease both;
-  animation-delay: 700ms;
+  animation: step-in 0.42s ease both;
+}
+
+.reveal-skip {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  color: var(--t-45);
+  opacity: 0;
+  animation: step-in 0.4s ease both;
+  animation-delay: 1.4s;
 }
 .reveal-count {
   font: 500 34px var(--font-heading);
@@ -793,29 +857,62 @@ input, select, textarea { font: inherit; color: inherit; }
    accent; a day without gets a middle dot rather than a 0, because a rest day
    is not a failed training day. */
 
-.week-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.week-range { font-size: 13px; color: var(--t-65); font-variant-numeric: tabular-nums; }
-.week-nav { display: flex; gap: 4px; flex: none; }
-.week-nav .icon-btn:disabled { opacity: 0.3; cursor: default; }
+.week-range { font-size: 11.5px; color: var(--t-45); font-variant-numeric: tabular-nums; margin-right: 2px; }
+.week-nav { display: flex; align-items: center; gap: 2px; flex: none; }
+.week-nav .icon-btn { width: 30px; height: 30px; }
+.week-nav .icon-btn:disabled { opacity: 0.25; cursor: default; }
 
-.week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.week-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 7px 0 8px;
-  border-radius: var(--radius-md);
-  background: rgba(233, 233, 237, 0.04);
-}
+/* Seven cells with a bar for the day's volume. The set count used to be
+   printed in the cell, where it read as a date beside the "10–16 Aug" in the
+   header; the height carries it now and the tooltip has the figure. */
+.week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .week-day-name { font-size: 10.5px; letter-spacing: 0.04em; color: var(--t-45); }
-.week-day-sets { font-size: 14px; font-weight: 500; color: var(--t-45); font-variant-numeric: tabular-nums; }
-.week-day.is-on { background: color-mix(in srgb, var(--g) 15%, transparent); }
-.week-day.is-on .week-day-sets { color: var(--g); }
-.week-day.is-on .week-day-name { color: color-mix(in srgb, var(--color-text) 62%, transparent); }
+.week-day-track {
+  width: 100%;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: rgba(233, 233, 237, 0.05);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.week-day-bar { width: 100%; border-radius: var(--radius-sm); background: var(--g); }
+.week-day.is-today .week-day-name { color: var(--g); font-weight: 500; }
+.week-day.is-today .week-day-track { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--g) 45%, transparent); }
 
-.week-meta { font-size: 12.5px; color: var(--t-65); }
-.week-untouched-label { color: var(--t-65); }
+/* ---- coverage ----
+   One control for "what did I train" and "what did I miss". It replaces a
+   legend, a list of paired bars and a separate "not trained this week"
+   paragraph: three elements, two colour languages, one question. */
+
+/* An empty state that is already inside a card, so it brings no box of its
+   own — the dashed `.empty` panel nested in a bordered card was two frames
+   around one message. */
+.card-empty { padding: 6px 0 2px; }
+.card-empty-title { font-size: 14px; font-weight: 500; color: var(--t-78); margin-bottom: 4px; }
+
+.coverage { display: flex; flex-wrap: wrap; gap: 5px; }
+.cover-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  border: 1px solid var(--color-divider);
+  color: var(--t-45);
+}
+.cover-pill.is-on {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--g) 15%, transparent);
+  color: color-mix(in srgb, var(--color-text) 82%, transparent);
+}
+.cover-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--g);
+}
 
 /* ------------------------------------------------------------ mix bar */
 

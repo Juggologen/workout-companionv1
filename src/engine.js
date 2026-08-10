@@ -657,31 +657,13 @@ export function weekSummary(entries, startIso, byId, allMuscles = []) {
   };
 }
 
-/**
- * Sets logged per day for the last `days` days, oldest first.
- *
- * Drives the streak strip on Today. Returns the date and the count, not a bar
- * height -- how that maps to pixels is the view's business.
+/*
+ * `dailySets` lived here: sets per day over a trailing 14-day window, for the
+ * streak strip on Home. Removed with that strip, which sat immediately above
+ * the Monday-to-Sunday card and answered nearly the same question in a second
+ * visual language. `weekSummary` covers it, and stepping back a week reaches
+ * further than fourteen days ever did.
  */
-export function dailySets(entries, days, today) {
-  const counts = new Map();
-  for (const entry of entries) {
-    const d = daysAgo(entry.date, today);
-    if (d >= 0 && d < days) counts.set(entry.date, (counts.get(entry.date) || 0) + 1);
-  }
-
-  // Dates come from local components via `localIso`, never toISOString: local
-  // midnight is the previous day in UTC for any positive offset, which would
-  // shift the whole strip back a day and make today's work never line up.
-  const out = [];
-  for (let i = days - 1; i >= 0; i -= 1) {
-    const d = new Date(`${today}T00:00:00`);
-    d.setDate(d.getDate() - i);
-    const date = localIso(d);
-    out.push({ date, sets: counts.get(date) || 0, daysAgo: i });
-  }
-  return out;
-}
 
 /**
  * Share of logged sets by training goal.

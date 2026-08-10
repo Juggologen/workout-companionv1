@@ -222,7 +222,7 @@ const LOCALES = {
 
     // --- build ---
     'build.kicker': 'New session',
-    'build.title': 'Build',
+    // No 'build.title': the session's name is the screen's title now.
     'build.goal': 'Goal',
     'build.lifts': 'Lifts',
     'build.chosen': '{n} chosen',

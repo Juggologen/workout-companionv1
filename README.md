@@ -68,6 +68,17 @@ The rules now:
   this week" paragraph became a single row of pills: filled with a count if
   trained, outlined if not.
 
+**Build** got the same treatment. Its goal picker was four stacked full-width
+cards, the chosen one expanded: 474px, 58% of a phone screen, to choose one of
+four things — and it pushed the lifts, which are what a workout actually *is*,
+below the fold. It uses the same focus scroller as Quick workout now, at about
+half the height, with the chosen goal's prescription underneath where it is
+easier to read than it was crammed into a card. The lifts start above the fold.
+
+The session name is the screen's title, replacing an `h1` that read "Build" and
+a labelled field beneath it — the same fix as Home's date, and it stops asking
+you to name a session before you have decided what it is.
+
 **Saved workouts** uses the same card. It groups by goal in the intensity order
 everything else uses, sorts each group by what you trained most recently, and
 puts the goal colour on the edge of every card — a stripe rather than another
@@ -137,7 +148,7 @@ pushed from Home.
 |---|---|
 | **Home** | The planned session, the two ways to get one, the Monday-to-Sunday week with muscle coverage, and the goal balance. Start or resume from here. |
 | **Quick workout** | Muscle groups, time, focus and complexity in, a whole session out. Reached from Home. |
-| **Build** | Goal (each one expands to its prescription), lifts — each with its 1RM to hand — warm-up and mobility budgets. |
+| **Build** | Name it in the title, pick a goal from the same scroller Quick uses, choose lifts — each with its 1RM to hand — and set the budgets. |
 | **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |
 | **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing asks how hard it was and logs exactly what you ticked. |
 | **Log** | Goal balance over 30 days, perceived exertion over a week, month or year, sets per muscle group, history, per-exercise bests, and your data. |

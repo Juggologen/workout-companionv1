@@ -1021,6 +1021,28 @@ The cards carry no swatch. The chosen one is already tinted its own colour in
 the border, the background and the name, so a dot beside the title was a legend
 for something the card was saying three times over.
 
+Holding the position creates its own problem: arriving on a screen unable to
+see which goal is selected. So the chosen card is scrolled into view on mount
+*only if less than 60% of it is visible*. Nudging a card that is merely clipped
+at the edge would reintroduce the jump the position-holding exists to prevent.
+
+**Build uses the same scroller.** Its goal picker was four stacked full-width
+cards, the chosen one expanded — measured at 474px, 58% of an 812px viewport,
+to choose one of four things, and it pushed the lift list to y=713, below the
+fold. The scroller plus the prescription strip is 264px and the lifts start at
+y=451. Sharing the component also means the pulse behaves identically in both
+places, which it visibly did not when Build had its own cards.
+
+That also fixed a subtler complaint: the pulse *was* wired to Build and firing
+correctly, but Build had only two accent-bearing elements on the whole screen,
+so the wave had almost nothing to leave behind and read as broken. The goal
+detail's figures fall back to `--g`, which puts four more on screen.
+
+Build's `h1` read "Build" — the same wasted-title problem as Home's — with a
+labelled name field costing another 66px directly beneath it. The name is the
+title now. It stays an `<input>` so typing behaves as before, and it does not
+re-render on keystroke or the caret would jump on every letter.
+
 Choosing a goal repaints every interactive surface, since `--g` drives all of
 them. Rather than snapping between two saturated colours, the new one arrives
 as a wave:

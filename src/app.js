@@ -1133,7 +1133,11 @@ function viewQuick() {
 
       quickSection(t('quick.time'), timeScroller(q.minutes)),
 
-      quickSection(t('quick.focus'), focusScroller(q.goal), t('quick.focusHint')),
+      quickSection(
+        t('quick.focus'),
+        focusScroller(q.goal, (e, goal) => pickGoal(e, goal, () => setQuick({ goal }))),
+        t('quick.focusHint')
+      ),
 
       quickSection(
         t('quick.complexity'),
@@ -1214,7 +1218,7 @@ function quickSection(label, body, hint) {
  * this screen, and four full-width cards would push the time picker and the
  * complexity control off the bottom.
  */
-function focusScroller(current) {
+function focusScroller(current, onPick) {
   const scroller = h(
     'div.focus-scroller',
     { role: 'radiogroup', 'aria-label': t('quick.focus') },
@@ -1229,7 +1233,7 @@ function focusScroller(current) {
           style: `--gc:${GOAL_COLOR[goal]}`,
           role: 'radio',
           'aria-checked': String(on),
-          onclick: (e) => pickGoal(e, goal, () => setQuick({ goal })),
+          onclick: (e) => onPick(e, goal),
         },
         // No swatch beside the name: the card is already tinted its own colour
         // when chosen and the name carries it, so a dot was a legend for
@@ -1258,8 +1262,26 @@ function focusScroller(current) {
   scroller.addEventListener('scroll', () => {
     state.focusScroll = scroller.scrollLeft;
   });
+
   requestAnimationFrame(() => {
     scroller.scrollLeft = state.focusScroll || 0;
+
+    // ...but arriving on a screen unable to see which goal is selected is its
+    // own problem. If the chosen card is mostly out of view, bring it in. The
+    // test is generous on purpose: nudging a card that is merely clipped at
+    // the edge would reintroduce the jump this position-holding exists to
+    // stop, so only a card that is genuinely not on screen moves.
+    const chosen = scroller.querySelector('.focus-card.is-on');
+    if (!chosen) return;
+
+    const card = chosen.getBoundingClientRect();
+    const view = scroller.getBoundingClientRect();
+    const visible = Math.min(card.right, view.right) - Math.max(card.left, view.left);
+
+    if (visible < card.width * 0.6) {
+      chosen.scrollIntoView({ inline: 'center', block: 'nearest' });
+      state.focusScroll = scroller.scrollLeft;
+    }
   });
 
   return scroller;
@@ -1724,8 +1746,7 @@ function viewBuild() {
     'div.screen',
     h(
       'div.screen-inner',
-      screenHead(t('build.kicker'), t('build.title')),
-      nameField(),
+      buildHeader(),
       goalSection(),
       liftsSection(exercises),
       budgetSection('warmupBudget', t('build.warmBudget'), WARM_BUDGETS, built),
@@ -1743,15 +1764,28 @@ function viewBuild() {
   );
 }
 
-function nameField() {
+/**
+ * The session's name is the screen's title.
+ *
+ * There were two problems stacked on top of each other: an `h1` reading
+ * "Build", spending the largest type on the screen restating the tab you just
+ * pressed, and a labelled name field costing another 66px directly beneath it
+ * — asking you to name a session before you had decided what it was.
+ *
+ * A name belongs where a title goes. It stays an `<input>` rather than
+ * anything cleverer so typing works exactly as it did, and it does not
+ * re-render on keystroke, or the caret would jump on every letter.
+ */
+function buildHeader() {
   return h(
-    'div.field',
-    h('label.field-label', { for: 'session-name' }, t('build.name')),
-    h('input.input#session-name', {
+    'div.stack',
+    { style: 'gap:1px' },
+    h('div.kicker', t('build.kicker')),
+    h('input.build-title', {
       type: 'text',
       value: state.session.name,
       placeholder: t('build.namePlaceholder'),
-      // No re-render: retyping the name shouldn't rebuild the screen.
+      'aria-label': t('build.name'),
       oninput: (e) => {
         state.session.name = e.target.value;
         saveDraft();
@@ -1760,50 +1794,36 @@ function nameField() {
   );
 }
 
+/**
+ * Goal, as the same scroller the Quick screen uses.
+ *
+ * It was four stacked full-width cards, the chosen one expanded: 474px, 58% of
+ * a phone screen, spent choosing one of four things — and it pushed the lifts,
+ * which are what a workout actually is, below the fold. The scroller costs
+ * about a third of that.
+ *
+ * The prescription that used to be inside the expanded card moves below the
+ * row, where it is bigger and easier to read than it was crammed into a card,
+ * and where it does not have to compete with three collapsed siblings.
+ */
 function goalSection() {
+  const goal = state.session.goal;
+  const p = getPrescription(state.catalog.prescriptionIndex, REPRESENTATIVE_PROFILE, goal);
+
   return h(
     'div.stack',
-    { style: 'gap:8px' },
+    { style: 'gap:10px' },
     h('div.kicker', t('build.goal')),
-    state.catalog.vocabulary.goals.map((goal) => goalCard(goal))
-  );
-}
-
-function goalCard(goal) {
-  const on = state.session.goal === goal;
-  const p = getPrescription(state.catalog.prescriptionIndex, REPRESENTATIVE_PROFILE, goal);
-  const color = GOAL_COLOR[goal];
-
-  return h(
-    'button.goal-card',
-    {
-      class: on ? 'is-on' : '',
-      style: `--gc:${color}`,
-      'aria-pressed': String(on),
-      // Same pulse as the Quick screen's focus cards: picking a goal repaints
-      // the app wherever you do it, so it should look the same wherever you
-      // do it.
-      onclick: (e) =>
-        pickGoal(e, goal, () => {
-          state.session.goal = goal;
-          markHandEdited();
-          render();
-        }),
-    },
-    h(
-      'span.goal-head',
-      h('span.goal-mark'),
-      h(
-        'span.stack',
-        { style: 'flex:1;gap:2px' },
-        h('span.goal-name', goalLabel(goal)),
-        h('span.goal-blurb', t(`goal.blurb.${goal}`))
-      )
+    focusScroller(goal, (e, picked) =>
+      pickGoal(e, picked, () => {
+        state.session.goal = picked;
+        markHandEdited();
+        render();
+      })
     ),
-    on &&
-      p &&
+    p &&
       h(
-        'span.goal-detail',
+        'div.goal-detail',
         h(
           'span.figures',
           figure(p.sets, t('figures.sets')),
@@ -1811,7 +1831,7 @@ function goalCard(goal) {
           figure(p.load.replace(/ of 1RM$/, ''), t('figures.load')),
           figure(p.rest, t('figures.rest'))
         ),
-        h('span.hint', p.note)
+        h('p.hint', p.note)
       )
   );
 }

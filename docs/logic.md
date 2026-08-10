@@ -773,10 +773,22 @@ available restating the tab the user had just pressed.
 
 ### The rules
 
-**One card.** `.home-card` — same border, radius, padding. `.is-hero` adds the
-only surface fill and holds the only filled button on the screen; every other
-card is something you read rather than somewhere you leave from. `.is-link`
-for the ones that navigate, `.is-row` for the single-line ones.
+**One card.** `.home-card` — same border, radius, padding, `.is-link` for the
+ones that navigate.
+
+**Three ways to start, as one block.** Two square tiles (Quick workout, Build)
+over a wide `.start-platform` carrying the saved workouts, all the same
+material. The platform is the only one with contents rather than a promise: a
+saved workout already exists, so its chips load straight to the plan — one tap
+from Home rather than three. Each chip wears its goal colour on the left edge,
+the same coding the Saved screen uses, so the rail can be read without being
+read.
+
+> A `PLANNED` hero card sat above all of this, holding the draft session with a
+> Start button. Removed on request. The consequence is real and worth knowing:
+> the draft is now reached through the Build tab, and a built session is
+> started from Plan rather than from Home. A running session is still reachable
+> anywhere via the resume bubble. Twelve `today.*` strings went with it.
 
 **One accent.** Home is not a training mode (§13), so Home's yellow is the only
 emphasis colour it owns. Goal colours appear exactly twice, both times naming

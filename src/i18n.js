@@ -38,22 +38,16 @@ const LOCALES = {
     'goal.blurb.Muscular endurance': 'Long sets, short rest, clean technique.',
 
     // --- home ---
-    'today.title': 'Home',
-    'today.planned': 'Planned',
-    'today.noPlan': 'Nothing planned',
-    'today.noPlanHint': 'Pick one of the two below and it shows up here.',
-    'today.buildOne': 'Build a session',
-    'today.lifts': 'lifts',
-    'today.estimated': 'estimated',
-    'today.warmup': 'warm-up',
-    'today.start': 'Start session',
-    'today.seePlan': 'See the plan',
-    'today.resume': 'Resume session',
-    'today.busy': 'Session in progress',
-    'today.balance': 'Balance',
+    // Twelve `today.*` keys went with the PLANNED card and the "Home" h1 --
+    // title, planned, noPlan, noPlanHint, buildOne, lifts, estimated, warmup,
+    // start, seePlan, resume, busy. Removed rather than left behind: §15
+    // counts what is left to translate, and dead keys inflate the number.
     'home.quickBlurb': 'Muscles and minutes in, session out',
     'home.buildTitle': 'Build your own',
     'home.buildBlurb': 'Choose every lift yourself',
+    'home.savedNone': 'None yet',
+    'home.savedEmptyHint': 'Save a workout from the plan and it lands here, ready to run again.',
+    'today.balance': 'Balance',
     'today.balanceMeta': '30 days · {n} sets',
     'today.saved': 'Saved workouts',
     'today.savedMeta': '{n} kept',

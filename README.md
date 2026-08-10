@@ -48,9 +48,12 @@ systems competed.
 
 The rules now:
 
-- **One card.** Same border, radius and padding throughout. The hero — the
-  planned session — is the only one with a surface fill, and it holds the only
-  filled button on the screen. Every other card is something you read.
+- **One card.** Same border, radius and padding throughout.
+- **Home opens on the three ways to start** — Quick workout and Build as two
+  square tiles, with the saved workouts as a wide platform beneath them, all
+  the same material so they read as one block. The platform is the only one of
+  the three with contents rather than a promise: a saved workout already exists
+  and can be stepped straight onto, one tap from Home.
 - **Home's yellow is the only emphasis colour Home owns.** Goal colours appear
   twice, both naming a goal: the pill on the planned session, and the balance
   bar with its legend. The muscle red/amber does not appear at all — a real
@@ -146,7 +149,7 @@ pushed from Home.
 
 | Screen | What it does |
 |---|---|
-| **Home** | The planned session, the two ways to get one, the Monday-to-Sunday week with muscle coverage, and the goal balance. Start or resume from here. |
+| **Home** | The three ways to start — generate one, build one, or step onto a saved one — then the Monday-to-Sunday week with muscle coverage, and the goal balance. |
 | **Quick workout** | Muscle groups, time, focus and complexity in, a whole session out. Reached from Home. |
 | **Build** | Name it in the title, pick a goal from the same scroller Quick uses, choose lifts — each with its 1RM to hand — and set the budgets. |
 | **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |

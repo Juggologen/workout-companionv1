@@ -491,8 +491,6 @@ function empty(title, hint) {
    ------------------------------------------------------------------------ */
 
 function viewHome() {
-  const exercises = sessionExercises();
-  const built = buildSession(state.session, state.catalog, state.oneRm);
   const mix = goalMixFromLog(withinDays(state.log, WINDOW_DAYS, today()), state.catalog.vocabulary.goals);
 
   return h(
@@ -500,11 +498,9 @@ function viewHome() {
     h(
       'div.screen-inner.home',
       homeHeader(),
-      heroCard(exercises, built),
-      startTiles(exercises.length > 0),
+      startBlock(),
       weekCard(),
-      balanceCard(mix),
-      savedCard()
+      balanceCard(mix)
     )
   );
 }
@@ -548,51 +544,6 @@ function cardHead(kicker, right) {
  * Given the most type on the screen and the only filled button, because on
  * every other card you are reading and on this one you are leaving.
  */
-function heroCard(exercises, built) {
-  if (!exercises.length) {
-    return h(
-      'section.home-card.is-hero',
-      cardHead(t('today.planned')),
-      h('div.hero-title', t('today.noPlan')),
-      // Points at the two tiles directly below rather than naming one of them.
-      h('p.hint', t('today.noPlanHint'))
-    );
-  }
-
-  // A session already running is reached through the bubble, so this button
-  // always starts the planned one — and is held back while one is in progress
-  // rather than silently doing nothing.
-  const busy = !!state.live;
-
-  return h(
-    'section.home-card.is-hero',
-    cardHead(
-      t('today.planned'),
-      h(
-        'span.pill-goal',
-        { style: `--gs:${GOAL_COLOR[state.session.goal]}` },
-        goalLabel(state.session.goal)
-      )
-    ),
-    h('div.hero-title', sessionTitle()),
-    h(
-      'div.hero-stats',
-      stat(exercises.length, t('today.lifts')),
-      stat(formatMinutes(built.totalMinutes), t('today.estimated')),
-      stat(built.warmup.minutes, t('today.warmup'), t('units.min'))
-    ),
-    h(
-      'div.hero-actions',
-      h(
-        'button.btn.btn-goal',
-        { style: 'flex:1', onclick: startSession, disabled: busy, title: busy ? t('today.busy') : null },
-        busy ? t('today.busy') : t('today.start')
-      ),
-      h('button.btn', { style: 'flex:1', onclick: () => go('plan') }, t('today.seePlan'))
-    )
-  );
-}
-
 function stat(value, label, unit) {
   return h(
     'div.stat',
@@ -602,19 +553,23 @@ function stat(value, label, unit) {
 }
 
 /**
- * The two ways to get a session, side by side and the same size.
+ * The three ways to start training: generate one, build one, or reuse one.
  *
- * They were not equals before: Build was a filled button inside the planned
- * card and Quick workout was a wide bordered panel below it, which said Build
- * was the real way and the generator was an add-on. They are two answers to
- * the same question and the layout should not have an opinion about which one
- * you want.
+ * Two square tiles over a wide one, all the same material, so they read as a
+ * single block rather than three unrelated offers. The wide one is the
+ * platform: it is the only one with contents rather than a promise, since a
+ * saved workout is a thing that already exists and can be stepped straight
+ * onto.
+ *
+ * There used to be a PLANNED card above all this holding the draft session and
+ * a Start button. It is gone at the user's request, which does mean the draft
+ * is now reached through Build rather than from here.
  */
-function startTiles(hasPlan) {
+function startBlock() {
   const tile = (screen, iconPath, title, blurb) =>
     h(
       'button.start-tile',
-      { class: hasPlan ? '' : 'is-primary', onclick: () => go(screen) },
+      { onclick: () => go(screen) },
       h('span.tile-icon', icon(iconPath, { size: 17 })),
       h('span.tile-title', title),
       h('span.tile-blurb', blurb)
@@ -623,7 +578,74 @@ function startTiles(hasPlan) {
   return h(
     'div.start-tiles',
     tile('quick', ICONS.spark, t('quick.title'), t('home.quickBlurb')),
-    tile('build', ICONS.dumbbell, t('home.buildTitle'), t('home.buildBlurb'))
+    tile('build', ICONS.dumbbell, t('home.buildTitle'), t('home.buildBlurb')),
+    savedPlatform()
+  );
+}
+
+/**
+ * The saved workouts, as a wide slab under the two tiles.
+ *
+ * The header navigates to the full list; the rail below carries the workouts
+ * themselves, so the common case — "run the one I always run" — is one tap
+ * from Home instead of three. Each carries its goal colour, the same coding
+ * the Saved screen uses, so the row is scannable without reading it.
+ *
+ * With nothing saved it keeps the header and says what would land here. An
+ * empty slab is worth one line: it is how you find out the feature exists.
+ */
+function savedPlatform() {
+  const saved = state.sessions;
+
+  const head = h(
+    'button.platform-head',
+    { onclick: () => go('saved'), disabled: !saved.length },
+    h('span.tile-icon', icon(ICONS.save, { size: 16 })),
+    h('span.tile-title', t('today.saved')),
+    h(
+      'span.card-meta',
+      saved.length ? t('today.savedMeta', { n: saved.length }) : t('home.savedNone')
+    ),
+    saved.length > 0 && icon(ICONS.chevronRight, { size: 14 })
+  );
+
+  if (!saved.length) {
+    return h('div.start-platform', head, h('p.tile-blurb', t('home.savedEmptyHint')));
+  }
+
+  // Most recently trained first, then most recently saved — the same order the
+  // Saved screen uses inside a goal, for the same reason.
+  const recent = (s) => lastCompleted(s) || '';
+  const rail = saved
+    .slice()
+    .sort((a, b) => recent(b).localeCompare(recent(a)) || (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 8);
+
+  return h(
+    'div.start-platform',
+    head,
+    h(
+      'div.platform-rail',
+      rail.map((s) =>
+        h(
+          'button.saved-chip',
+          {
+            style: `--gs:${goalColor(s.goal)}`,
+            title: `${s.name} — ${goalLabel(s.goal)}`,
+            onclick: () => {
+              state.session = JSON.parse(JSON.stringify(s));
+              saveDraft();
+              go('plan');
+            },
+          },
+          h('span.saved-chip-name', s.name),
+          h(
+            'span.saved-chip-meta',
+            tp('saved.lifts', (s.exerciseIds || []).length)
+          )
+        )
+      )
+    )
   );
 }
 
@@ -924,16 +946,9 @@ function mixBar(mix, tall = false) {
   );
 }
 
-function savedCard() {
-  if (!state.sessions.length) return null;
-  return h(
-    'button.home-card.is-link.is-row',
-    { onclick: () => go('saved') },
-    h('span.card-row-title', t('today.saved')),
-    h('span.card-meta', t('today.savedMeta', { n: state.sessions.length })),
-    icon(ICONS.chevronRight, { size: 14 })
-  );
-}
+/* `savedCard` lived here: a one-line link row at the bottom of Home that said
+   how many workouts you had and nothing about them. Replaced by
+   `savedPlatform`, which carries the workouts themselves. */
 
 /* ---------------------------------------------------------------- guide
 

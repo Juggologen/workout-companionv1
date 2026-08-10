@@ -68,6 +68,16 @@ The rules now:
   this week" paragraph became a single row of pills: filled with a count if
   trained, outlined if not.
 
+**Saved workouts** uses the same card. It groups by goal in the intensity order
+everything else uses, sorts each group by what you trained most recently, and
+puts the goal colour on the edge of every card — a stripe rather than another
+pill, because the group header already names the goal but the stripe survives
+that header scrolling away.
+
+Like Home and the guide, Saved is not a training mode, so it takes Home's
+yellow rather than the draft session's accent. It previously washed a list of
+orange and blue stripes in whatever colour the current draft happened to be.
+
 Dark only, because the design system is.
 
 **The page scrolls, not an inner pane.** A phone-shaped app shell — fixed-height
@@ -132,7 +142,7 @@ pushed from Home.
 | **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing asks how hard it was and logs exactly what you ticked. |
 | **Log** | Goal balance over 30 days, perceived exertion over a week, month or year, sets per muscle group, history, per-exercise bests, and your data. |
 | **Library** | All 167 exercises plus any you write yourself. Search by name, filter by equipment, movement pattern, primary muscle and supporting muscle, read the cue, set your 1RMs — and pick lifts from here when building. |
-| **Saved** | Your workouts. Load one back, print it, or record that you did it again. |
+| **Saved** | Your workouts, grouped by goal and colour-coded to it. Load one back, print it, or record that you did it again. |
 | **How this works** | A walk through one session start to finish, for someone who has just arrived. Reached from a question mark in the corner of Home. |
 
 While a session is running, a **bubble** floats above the tab bar on every

@@ -163,9 +163,10 @@ input, select, textarea { font: inherit; color: inherit; }
   z-index: 0;
 }
 
-/* Home carries no training mode, so it takes neither the goal tint nor the
-   glow — it stays a plain ground. */
-.app.is-home::before { display: none; }
+/* Screens that carry no training mode take neither the goal tint nor the glow
+   — they stay a plain ground. Home, the guide, and Saved, which is a list of
+   workouts of every goal and should not wash them all in one of them. */
+.app.is-neutral::before { display: none; }
 
 .screen {
   position: relative;
@@ -1531,19 +1532,51 @@ select.input { height: 44px; padding: 0 10px; }
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------------- saved */
+/* ---------------------------------------------------------------- saved
 
-.saved-row {
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-lg);
-  padding: 15px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+   Home's card, grouped by goal, with the goal on the edge of each card. The
+   stripe rather than another pill: the group header above already names the
+   goal, so repeating the word on every card would be noise — but the stripe
+   survives the header scrolling away and makes a long list scannable by
+   colour alone.
+
+   This is the one screen besides Home where goal colour appears without a
+   legend, and it does not need one: the header three lines up is the legend,
+   and it is the same four colours the Build screen taught you. */
+
+.goal-group { display: flex; align-items: center; gap: 9px; padding: 0 2px; }
+.goal-group-name {
+  flex: 1;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--t-65);
 }
-.saved-name { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
-.saved-meta { font-size: 11.5px; color: var(--t-45); margin-top: 2px; }
-.saved-done { font-size: 12px; color: var(--g); margin-top: 4px; }
+
+.saved-card { position: relative; overflow: hidden; padding-left: 20px; gap: 12px; }
+.saved-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gs, var(--g));
+}
+
+.saved-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.saved-name { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; min-width: 0; }
+.saved-time {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--t-55);
+  font-variant-numeric: tabular-nums;
+}
+.saved-meta { font-size: 11.5px; color: var(--t-45); }
+/* Yellow only once it has actually been trained; a workout you have never done
+   should not wear the same "achieved" colour as one you have. */
+.saved-done { font-size: 12px; color: var(--t-45); }
+.saved-done.is-done { color: var(--g); }
 
 /* --------------------------------------------------------------- misc */
 

@@ -241,11 +241,15 @@ function screenAccent() {
 
 /**
  * Screens that are not a training mode, and so keep Home's yellow rather than
- * being repainted by whichever goal the draft session happens to hold. The
- * guide belongs here for the same reason Home does: it describes all four
- * goals, so wearing one of them would be picking a side.
+ * being repainted by whichever goal the draft session happens to hold.
+ *
+ * The guide belongs here for the same reason Home does: it describes all four
+ * goals, so wearing one of them would be picking a side. Saved belongs for a
+ * sharper reason — it is a list of workouts of every goal, each colour-coded
+ * to its own, and painting the whole screen in the draft's unrelated accent
+ * put a magenta wash over a row of orange and blue stripes.
  */
-const NEUTRAL_SCREENS = new Set(['home', 'guide']);
+const NEUTRAL_SCREENS = new Set(['home', 'guide', 'saved']);
 
 function render() {
   const root = document.getElementById('app');
@@ -258,7 +262,7 @@ function render() {
   const app = h(
     'div.app',
     {
-      class: [NEUTRAL_SCREENS.has(state.screen) && 'is-home', resume && 'has-resume']
+      class: [NEUTRAL_SCREENS.has(state.screen) && 'is-neutral', resume && 'has-resume']
         .filter(Boolean)
         .join(' '),
       style: `--g:${screenAccent()}`,
@@ -2648,43 +2652,127 @@ function completionLine(session) {
   const done = session.completions || [];
   if (!done.length) return t('saved.never');
   const last = done.reduce((a, b) => (a.date > b.date ? a : b));
+  // Formatted, not raw ISO: it sits directly beside "saved 11 Jul" and two
+  // date formats one line apart look like two different kinds of date.
   return done.length === 1
-    ? t('saved.completedOnce', { date: last.date })
-    : t('saved.completedMany', { n: done.length, date: last.date });
+    ? t('saved.completedOnce', { date: shortDate(last.date) })
+    : t('saved.completedMany', { n: done.length, date: shortDate(last.date) });
 }
 
+/**
+ * Saved workouts, grouped by goal and wearing Home's card.
+ *
+ * Grouped rather than merely sorted: the goal is a category, and a flat list
+ * ordered by one puts the boundary between Strength and Hypertrophy nowhere in
+ * particular. A header per group gives that boundary somewhere to be.
+ *
+ * Groups follow the goal order everything else uses — the intensity continuum
+ * from §1, not alphabetical — so this list reads the way Build does. A goal
+ * with nothing saved under it is not shown; an empty heading is just a hole.
+ */
 function viewSaved() {
   return h(
     'div.screen',
     h(
-      'div.screen-inner',
+      'div.screen-inner.home',
       backLink(t('tab.home'), () => go('home')),
       screenHead(t('saved.kicker', { n: state.sessions.length }), t('saved.title')),
-      state.sessions.length
-        ? h(
-            'div.stack',
-            { style: 'gap:10px' },
-            state.sessions.map((s) => savedRow(s))
-          )
-        : empty(t('saved.empty'), t('saved.emptyHint'))
+      state.sessions.length ? savedGroups() : empty(t('saved.empty'), t('saved.emptyHint'))
     )
   );
 }
 
+/** The most recent completion date, or null if it has never been done. */
+function lastCompleted(session) {
+  const done = session.completions || [];
+  if (!done.length) return null;
+  return done.reduce((a, b) => (a.date > b.date ? a : b)).date;
+}
+
+/** A goal's colour, with a neutral fallback for one the catalog has dropped. */
+function goalColor(goal) {
+  return GOAL_COLOR[goal] || 'var(--color-neutral-700)';
+}
+
+function savedGroups() {
+  const buckets = new Map(state.catalog.vocabulary.goals.map((goal) => [goal, []]));
+
+  // A workout saved under a goal the catalog no longer lists still has to go
+  // somewhere, so it gets its own group rather than vanishing from the screen.
+  const orphans = [];
+  for (const s of state.sessions) {
+    if (buckets.has(s.goal)) buckets.get(s.goal).push(s);
+    else orphans.push(s);
+  }
+
+  // Freshest first inside a group: what you trained most recently is what you
+  // are most likely to want again. Anything never completed sorts by the day
+  // it was saved, below everything that has actually been done.
+  const recent = (s) => lastCompleted(s) || '';
+  const bySession = (a, b) =>
+    recent(b).localeCompare(recent(a)) || (b.date || '').localeCompare(a.date || '');
+
+  const groups = [...buckets.entries()]
+    .filter(([, list]) => list.length)
+    .map(([goal, list]) => [goal, list.sort(bySession)]);
+
+  if (orphans.length) groups.push([null, orphans.sort(bySession)]);
+
+  return h(
+    'div.stack',
+    { style: 'gap:22px' },
+    groups.map(([goal, list]) =>
+      h(
+        'div.stack',
+        { style: 'gap:10px' },
+        h(
+          'div.goal-group',
+          h('span.swatch.swatch-lg', { style: `background:${goalColor(goal)}` }),
+          h('span.goal-group-name', goal ? goalLabel(goal) : t('saved.otherGoal')),
+          h('span.card-meta', String(list.length))
+        ),
+        list.map((s) => savedRow(s))
+      )
+    )
+  );
+}
+
+/**
+ * One saved workout, on Home's card with its goal on the edge.
+ *
+ * The colour is a stripe rather than a pill because the group header above it
+ * already names the goal — repeating the word on every card would be noise,
+ * but the stripe keeps each card identifiable once the header has scrolled
+ * away, and makes a long list scannable by colour alone.
+ *
+ * The goal is dropped from the meta line for the same reason. What is left is
+ * what the header cannot tell you: how big it is, how long it takes, and
+ * whether you have ever actually done it.
+ */
 function savedRow(s) {
   const exercises = sessionExercises(s);
   const built = buildSession(s, state.catalog, state.oneRm);
 
   return h(
-    'div.saved-row',
+    'div.home-card.saved-card',
+    { style: `--gs:${goalColor(s.goal)}` },
     h(
-      'div',
+      'div.saved-head',
       h('div.saved-name', s.name),
+      h('div.saved-time', formatMinutes(built.totalMinutes))
+    ),
+    h(
+      'div.stack',
+      { style: 'gap:3px' },
       h(
         'div.saved-meta',
-        `${s.date} · ${goalLabel(s.goal)} · ${exercises.length} ${t('today.lifts')} · ${formatMinutes(built.totalMinutes)}`
+        `${tp('saved.lifts', exercises.length)} · ${t('saved.savedOn', { date: shortDate(s.date) })}`
       ),
-      h('div.saved-done', completionLine(s))
+      h(
+        'div.saved-done',
+        { class: lastCompleted(s) ? 'is-done' : '' },
+        completionLine(s)
+      )
     ),
     h(
       'div.row-actions',

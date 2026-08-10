@@ -808,6 +808,34 @@ not. Trained first by volume, then the rest.
 text, rather than the dashed `.empty` panel, which put two borders around one
 message.
 
+### Saved workouts
+
+The same card, grouped by goal.
+
+Grouped rather than sorted: the goal is a category, and a flat list ordered by
+one leaves the boundary between Strength and Hypertrophy nowhere in
+particular. Groups follow the goal order from §1 — the intensity continuum,
+not alphabetical — so the list reads the way Build does. Empty goals are not
+shown. A workout saved under a goal the catalog no longer lists lands in an
+"Other" group with a neutral swatch rather than disappearing.
+
+Within a group: most recently completed first, since what you trained last is
+what you are most likely to want again. Never-completed workouts sort by save
+date, below everything that has actually been done, and their completion line
+stays grey — a workout you have never trained should not wear the same colour
+as one you have.
+
+The goal colour is a 3px stripe on the card edge, not another pill. The group
+header already names the goal, so the word on every card would be noise, but
+the stripe survives the header scrolling off and makes a long list scannable
+by colour alone. The goal is dropped from the meta line for the same reason;
+what is left is what the header cannot tell you.
+
+`NEUTRAL_SCREENS` gained `saved` for a sharper reason than Home and the guide
+have: it is a list of workouts of every goal, each colour-coded to its own,
+and the screen accent was painting all of them in whatever the draft session
+happened to be. A magenta wash over a column of orange and blue stripes.
+
 ---
 
 ## 18. Complexity tiers

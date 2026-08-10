@@ -420,9 +420,13 @@ const LOCALES = {
     'saved.emptyHint': 'Build a session and press Save on the plan.',
     'saved.load': 'Load',
     'saved.again': 'Did it again',
-    'saved.never': 'Not completed yet',
-    'saved.completedOnce': 'Completed once · last {date}',
-    'saved.completedMany': 'Completed {n} times · last {date}',
+    'saved.never': 'Never done',
+    'saved.completedOnce': 'Done once · {date}',
+    'saved.completedMany': 'Done {n} times · last {date}',
+    'saved.lifts.one': '{n} lift',
+    'saved.lifts.other': '{n} lifts',
+    'saved.savedOn': 'saved {date}',
+    'saved.otherGoal': 'Other',
     'saved.saved': 'Saved',
 
     // --- print sheet ---

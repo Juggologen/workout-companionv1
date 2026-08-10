@@ -997,6 +997,50 @@ sitting there ready to throw away the edit that was just made. Editing the
 session name or a per-lift weight leaves the marker alone, since Shuffle would
 not overwrite either.
 
+### Focus, and the accent pulse
+
+Four cards in a horizontal scroller, each carrying the goal's blurb and the
+prescription a heavy compound would get under it. Pills gave a goal a word and
+nothing else, which assumes you already know what the word means — and Quick
+workout is the screen someone reaches for when they do not. Side-scrolling
+rather than stacked because Focus is one of six sections here and four
+full-width cards would push the rest off the bottom.
+
+`scroll-padding: 0 20px` matters: the scroller bleeds to both screen edges and
+pads itself back, and without matching scroll padding the snap aligns a card to
+the scrollport edge and scrolls straight past that padding on load, leaving the
+first card flush against the screen instead of lined up with its label.
+
+Choosing a goal repaints every interactive surface, since `--g` drives all of
+them. Rather than snapping between two saturated colours, the new one arrives
+as a wave:
+
+| | |
+|---|---|
+| the pulse | a circle in the new colour expanding from the press point, `z-index: 0` — above `.app`'s flat background and below `.screen`, so it washes *through* the transparent cards rather than over them |
+| the repaint | `.app.is-repainting *` cross-fades colour, background, border, fill, stroke and shadow over 620ms, so the new colour appears to be left behind by the wave |
+
+The repaint transition is added for the pulse and removed after. Left on
+permanently it would put a 600ms fade on every hover in the app. It has to be
+`*` with `!important` — the accent reaches dozens of unrelated selectors and an
+enumerated list would rot the first time another was added.
+
+The pulse is appended *after* the re-render, because `render()` replaces the
+whole app subtree and would take the element with it. It scales a fixed-size
+element rather than animating width and height, so the wave runs on the
+compositor. Removal is on a timer, not `animationend`, so a suppressed
+animation still leaves the app repaint-free.
+
+The origin is the pointer coordinates, falling back to the control's centre for
+a keyboard activation (which reports `detail: 0` and coordinates of 0,0, and
+would otherwise fire from the top-left corner), and clamped to the viewport
+because a card in a horizontal scroller can be activated while scrolled out of
+sight.
+
+> `screenAccent()` returns the *quick* goal on this screen, not the draft
+> session's. Without that the focus cards were changing a colour the screen
+> never showed: the pulse spread and nothing followed it.
+
 ### The time picker
 
 The one scroll-driven control in the app: a scroll-snap strip, 15 to 120 in

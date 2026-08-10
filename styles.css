@@ -168,6 +168,63 @@ input, select, textarea { font: inherit; color: inherit; }
    workouts of every goal and should not wash them all in one of them. */
 .app.is-neutral::before { display: none; }
 
+/* ---- accent pulse ----
+
+   Choosing a goal repaints every interactive surface in the app. Rather than
+   snapping between two saturated colours, the new one arrives as a wave from
+   wherever the press landed.
+
+   Sits at z-index 0: above `.app`'s own flat background, below `.screen`
+   (z-index 1). So it washes *through* the cards — which are transparent over
+   a border — rather than over them. The hero card on Home is the one opaque
+   surface and correctly stays unwashed. */
+
+.accent-pulse {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  left: var(--px);
+  top: var(--py);
+  width: calc(var(--pr) * 2);
+  height: calc(var(--pr) * 2);
+  margin-left: calc(var(--pr) * -1);
+  margin-top: calc(var(--pr) * -1);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--pc) 38%, transparent) 0%,
+    color-mix(in srgb, var(--pc) 20%, transparent) 55%,
+    transparent 72%
+  );
+  /* Scale, not width/height: the size is fixed and only the transform moves,
+     so the wave runs on the compositor instead of relaying out every frame. */
+  transform: scale(0);
+  animation: accent-pulse 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes accent-pulse {
+  from { transform: scale(0); opacity: 1; }
+  62%  { opacity: 0.5; }
+  to   { transform: scale(1); opacity: 0; }
+}
+
+/* The repaint, for the duration of the wave only. Left on permanently this
+   would put a 600ms fade on every hover in the app, which is the opposite of
+   responsive — so `pickGoal` adds the class and takes it away again.
+
+   It has to be `*` and `!important`: the accent reaches borders, fills,
+   strokes and shadows on dozens of unrelated selectors, and enumerating them
+   would be a list that silently rots the next time one is added. */
+.app.is-repainting * {
+  transition:
+    color 620ms ease,
+    background-color 620ms ease,
+    border-color 620ms ease,
+    fill 620ms ease,
+    stroke 620ms ease,
+    box-shadow 620ms ease !important;
+}
+
 .screen {
   position: relative;
   z-index: 1;
@@ -620,24 +677,83 @@ input, select, textarea { font: inherit; color: inherit; }
   pointer-events: none;
 }
 
-.goal-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.goal-chip {
+/* ---- focus ----
+
+   The four goals as cards you scroll, not four small pills. A pill gives a
+   goal a word and nothing else, which is no help at all on the screen a
+   beginner reaches for; a card has room for the sentence and for the numbers
+   it will actually prescribe.
+
+   The scroller bleeds to both screen edges and pads itself back, so a card
+   can sit flush against the edge as you scroll and the row reads as
+   continuing rather than as stopping at a margin. */
+
+.focus-scroller {
   display: flex;
-  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  margin: 0 -20px;
+  padding: 2px 20px 4px;
+  /* Without this the snap aligns a card to the scrollport edge and scrolls
+     straight past the 20px padding on load, so the first card sits flush
+     against the screen edge instead of lining up with the section label. */
+  scroll-padding: 0 20px;
+}
+.focus-scroller::-webkit-scrollbar { display: none; }
+
+.focus-card {
+  scroll-snap-align: start;
+  flex: none;
+  width: 208px;
+  display: flex;
+  flex-direction: column;
   gap: 7px;
-  height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
+  padding: 14px 15px 13px;
   border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
   background: transparent;
-  color: var(--t-55);
-  font: 500 12.5px var(--font-heading);
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
 }
-.goal-chip.is-on {
+.focus-card:hover:not(.is-on) { background: rgba(233, 233, 237, 0.04); }
+.focus-card.is-on {
   border-color: var(--gc);
-  background: color-mix(in srgb, var(--gc) 14%, transparent);
-  color: var(--gc);
+  background: color-mix(in srgb, var(--gc) 12%, transparent);
 }
+
+.focus-top { display: flex; align-items: center; gap: 8px; }
+.focus-dot {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--gc);
+}
+.focus-name { font-size: 14.5px; font-weight: 500; }
+.focus-card.is-on .focus-name { color: var(--gc); }
+
+.focus-blurb {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--t-55);
+  text-wrap: pretty;
+  min-height: 34px;
+}
+.focus-figures {
+  display: flex;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--t-45);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+  border-top: 1px solid var(--color-divider);
+  margin-top: 1px;
+}
+.focus-card.is-on .focus-figures { color: color-mix(in srgb, var(--gc) 78%, var(--color-text)); }
+.focus-sep { opacity: 0.45; }
 
 .quick-split {
   display: flex;

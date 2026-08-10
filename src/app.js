@@ -234,9 +234,15 @@ function saveCustomExercises() {
  * repainted by whichever goal the draft session happens to hold.
  */
 function screenAccent() {
-  return NEUTRAL_SCREENS.has(state.screen)
-    ? 'var(--home-accent)'
-    : GOAL_COLOR[state.session.goal];
+  if (NEUTRAL_SCREENS.has(state.screen)) return 'var(--home-accent)';
+  // Quick workout is picking a goal for a session that does not exist yet, so
+  // it wears the goal being chosen rather than the draft's. Without this the
+  // focus cards changed a colour the screen never showed: the pulse spread and
+  // nothing followed it.
+  if (state.screen === 'quick') {
+    return GOAL_COLOR[quickState().goal] || GOAL_COLOR.Strength;
+  }
+  return GOAL_COLOR[state.session.goal];
 }
 
 /**
@@ -1125,25 +1131,7 @@ function viewQuick() {
 
       quickSection(t('quick.time'), timeScroller(q.minutes)),
 
-      quickSection(
-        t('quick.focus'),
-        h(
-          'div.goal-chips',
-          v.goals.map((goal) =>
-            h(
-              'button.goal-chip',
-              {
-                class: q.goal === goal ? 'is-on' : '',
-                style: `--gc:${GOAL_COLOR[goal]}`,
-                'aria-pressed': String(q.goal === goal),
-                onclick: () => setQuick({ goal }),
-              },
-              h('span.swatch.swatch-lg', { style: `background:${GOAL_COLOR[goal]}` }),
-              goalLabel(goal)
-            )
-          )
-        )
-      ),
+      quickSection(t('quick.focus'), focusScroller(q.goal), t('quick.focusHint')),
 
       quickSection(
         t('quick.complexity'),
@@ -1201,8 +1189,146 @@ function viewQuick() {
   );
 }
 
-function quickSection(label, body) {
-  return h('div.stack', { style: 'gap:10px' }, h('div.kicker', label), body);
+function quickSection(label, body, hint) {
+  return h(
+    'div.stack',
+    { style: 'gap:10px' },
+    h('div.kicker', label),
+    body,
+    hint && h('p.hint', hint)
+  );
+}
+
+/**
+ * The four goals as cards you scroll through, not four small pills.
+ *
+ * Pills gave each goal a word and nothing else, which is fine once you know
+ * what the words mean and useless before that — and this screen is the one a
+ * beginner reaches for. A card has room for the sentence that explains it and
+ * for the numbers it will actually prescribe, so the choice can be made by
+ * reading rather than by guessing.
+ *
+ * Side-scrolling rather than a stack of four: the section is one of six on
+ * this screen, and four full-width cards would push the time picker and the
+ * complexity control off the bottom.
+ */
+function focusScroller(current) {
+  return h(
+    'div.focus-scroller',
+    { role: 'radiogroup', 'aria-label': t('quick.focus') },
+    state.catalog.vocabulary.goals.map((goal) => {
+      const on = goal === current;
+      const p = getPrescription(state.catalog.prescriptionIndex, REPRESENTATIVE_PROFILE, goal);
+
+      return h(
+        'button.focus-card',
+        {
+          class: on ? 'is-on' : '',
+          style: `--gc:${GOAL_COLOR[goal]}`,
+          role: 'radio',
+          'aria-checked': String(on),
+          onclick: (e) => pickGoal(e, goal, () => setQuick({ goal })),
+        },
+        h(
+          'span.focus-top',
+          h('span.focus-dot'),
+          h('span.focus-name', goalLabel(goal))
+        ),
+        h('span.focus-blurb', t(`goal.blurb.${goal}`)),
+        // The prescription for a heavy compound, which is what makes the
+        // difference between the goals concrete: "3–4 × 8–12 at 70–80%" says
+        // more than "Hypertrophy" ever will.
+        p &&
+          h(
+            'span.focus-figures',
+            `${p.sets} × ${p.reps}`,
+            h('span.focus-sep', '·'),
+            p.load.replace(/ of 1RM$/, '')
+          )
+      );
+    })
+  );
+}
+
+/* ------------------------------------------------------------ accent pulse
+
+   Choosing a goal repaints the whole app, because `--g` drives every
+   interactive surface. Snapping between two saturated colours is abrupt and
+   says nothing about what caused it, so the new colour arrives as a wave from
+   wherever you pressed.
+
+   Two halves, and both are needed:
+
+     the pulse    a circle in the new colour, expanding from the press point,
+                  behind the content -- it sits above the app's flat ground
+                  and below `.screen`, so it washes through the cards rather
+                  than over them
+
+     the repaint  every accent-bearing property cross-fades over roughly the
+                  same time, so the new colour appears to be left behind by
+                  the wave rather than to beat it there
+
+   The repaint transition is switched on for the duration and then switched
+   off again. Leaving it on permanently would put a 600ms fade on every hover
+   in the app, which is the opposite of responsive.
+   ------------------------------------------------------------------------ */
+
+const PULSE_MS = 700;
+
+/** Where the press happened, falling back to the control's centre for keys. */
+function pressPoint(event) {
+  const rect = event.currentTarget.getBoundingClientRect();
+
+  // A keyboard-activated click reports detail 0 and coordinates of 0,0, which
+  // would fire the pulse from the top-left corner of the screen.
+  const keyed = !event.detail || (!event.clientX && !event.clientY);
+  const x = keyed ? rect.left + rect.width / 2 : event.clientX;
+  const y = keyed ? rect.top + rect.height / 2 : event.clientY;
+
+  // Clamped, because a card inside a horizontal scroller can be activated
+  // while sitting outside the viewport -- the wave would then start off-screen
+  // and arrive as a wash with no visible origin.
+  const clamp = (v, max) => Math.max(0, Math.min(v, max));
+  return { x: clamp(x, window.innerWidth), y: clamp(y, window.innerHeight) };
+}
+
+/**
+ * Apply a goal change and paint it outward from the press.
+ *
+ * `apply` does the state change and the re-render; the pulse is appended
+ * afterwards, because render() replaces the whole app subtree and would take
+ * the element with it.
+ */
+function pickGoal(event, goal, apply) {
+  const from = pressPoint(event);
+  const colour = GOAL_COLOR[goal];
+
+  apply();
+
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+  const app = document.querySelector('.app');
+  if (!app) return;
+
+  // Reach the furthest corner, or the wave stops short of the screen edge.
+  const radius = Math.hypot(
+    Math.max(from.x, window.innerWidth - from.x),
+    Math.max(from.y, window.innerHeight - from.y)
+  );
+
+  const pulse = h('span.accent-pulse', {
+    style: `--px:${from.x}px;--py:${from.y}px;--pr:${radius}px;--pc:${colour}`,
+  });
+
+  app.classList.add('is-repainting');
+  app.appendChild(pulse);
+
+  // Timers rather than animationend: a suppressed animation must still leave
+  // the app repaint-free and the element removed.
+  setTimeout(() => {
+    pulse.remove();
+    document.querySelector('.app')?.classList.remove('is-repainting');
+  }, PULSE_MS + 120);
 }
 
 function quickBudget(key, options, q) {
@@ -1574,11 +1700,15 @@ function goalCard(goal) {
       class: on ? 'is-on' : '',
       style: `--gc:${color}`,
       'aria-pressed': String(on),
-      onclick: () => {
-        state.session.goal = goal;
-        markHandEdited();
-        render();
-      },
+      // Same pulse as the Quick screen's focus cards: picking a goal repaints
+      // the app wherever you do it, so it should look the same wherever you
+      // do it.
+      onclick: (e) =>
+        pickGoal(e, goal, () => {
+          state.session.goal = goal;
+          markHandEdited();
+          render();
+        }),
     },
     h(
       'span.goal-head',

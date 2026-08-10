@@ -70,6 +70,8 @@ const LOCALES = {
     'quick.musclesN': '{n} selected. It rotates between them so none gets all the time.',
     'quick.time': 'How long have you got?',
     'quick.focus': 'Focus',
+    'quick.focusHint':
+      'Sets, reps, load and rest all come from this. The figures shown are for a heavy compound lift — lighter movements get their own.',
     'quick.complexity': 'Complexity',
     'quick.level.basic': 'Basic',
     'quick.level.medium': 'Medium',

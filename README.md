@@ -217,6 +217,20 @@ The time is the **whole** session. The warm-up and mobility budgets come out of
 it before anything is chosen, so "I have an hour" means an hour in the building,
 and the screen shows the split as you change it.
 
+**Focus** is a side-scrolling row of cards rather than four pills. A pill gives
+a goal a word and nothing else, which is no use on the screen a beginner
+reaches for; a card has room for the sentence that explains it and the numbers
+it will actually prescribe — "3–4 × 8–12 · 70–80%" says more than
+"Hypertrophy" ever will.
+
+Choosing one sends a **pulse** of the new colour out from wherever you pressed.
+It sits behind the content, above the flat ground and below the screen, so it
+washes through the cards rather than over them; every accent-bearing property
+cross-fades over roughly the same time, so the new colour looks like it was
+left behind by the wave rather than beating it there. The Build screen's goal
+cards do the same thing, because picking a goal repaints the app wherever you
+do it. Skipped under `prefers-reduced-motion`.
+
 Selection rotates across the muscle groups you picked rather than ranking one
 list, because a single ranked list spends the whole budget on whichever group
 has the most catalog entries. Within a group the pick is weighted-random, not

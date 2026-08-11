@@ -12,6 +12,10 @@
  *     prescriptions.json and vocabulary.json wholesale every time it runs.
  *     Merging it here means the goal survives a re-extract.
  *
+ *   - data/conditioning.json, the HIIT movements and the pace overlay. Same
+ *     reasoning again: the compendium is a lifting compendium and has no idea
+ *     what a calorie or an AMRAP is.
+ *
  *   - the user's own exercises, via `withCustomExercises`. That one takes the
  *     list as an argument rather than reading storage, so this file still has
  *     no idea store.js exists and the reference/user split holds.
@@ -27,6 +31,7 @@ const FILES = [
   'vocabulary',
   'hypertrophy',
   'complexity',
+  'conditioning',
 ];
 
 /**
@@ -63,15 +68,36 @@ function goalsWithHypertrophy(goals) {
   return out;
 }
 
+/**
+ * Conditioning movements become ordinary catalog rows.
+ *
+ * They have to: a log entry refers to an exercise id, the warm-up builder reads
+ * `pattern` and `secondary` off whatever is in the session, and the "how to do
+ * it" panel wants the same `how` field a mobility drill has. Giving them their
+ * own parallel catalog would mean teaching every one of those about a second
+ * kind of exercise.
+ *
+ * `mode: 'conditioning'` is what keeps them out of the places they do not
+ * belong -- the Library, the Build picker, the quick-workout generator -- all
+ * of which want lifts. Rows without the field are lifting rows, so nothing that
+ * already exists has to be touched.
+ */
+const CONDITIONING = 'conditioning';
+
+function asExerciseRows(movements) {
+  return movements.map((m) => ({ ...m, mode: CONDITIONING }));
+}
+
 export async function loadCatalog() {
-  const [exercises, warmups, mobility, prescriptions, vocabulary, hypertrophy, complexity] =
+  const [exercises, warmups, mobility, prescriptions, vocabulary, hypertrophy, complexity, conditioning] =
     await Promise.all(FILES.map(loadJson));
 
   const prescriptionItems = [...prescriptions.items, ...hypertrophy.items];
 
   return finish({
     complexity,
-    exercises: exercises.items,
+    conditioning,
+    exercises: [...exercises.items, ...asExerciseRows(conditioning.movements)],
     warmups: withRowNumbers(warmups.items),
     mobility: withRowNumbers(mobility.items),
     prescriptions: prescriptionItems,
@@ -88,12 +114,48 @@ export async function loadCatalog() {
  */
 function finish(catalog) {
   const byId = new Map(catalog.exercises.map((ex) => [ex.id, ex]));
+  const paces = catalog.conditioning?.paces || {};
+  const tierOf = indexComplexity(catalog.complexity);
+
+  /**
+   * How this exercise is measured in a conditioning block, or null if it has
+   * no business in one.
+   *
+   * Two sources, one answer. A native conditioning movement carries its own
+   * unit and pace; an exercise the compendium already had gets them from the
+   * `paces` overlay, because a Thruster does not need a second catalog row --
+   * it needs a second way of being prescribed. Anything in neither is not
+   * pickable for conditioning, which is the right default when most of the
+   * catalog is loaded barbell work.
+   */
+  function conditioningOf(exercise) {
+    if (!exercise) return null;
+    const own = exercise.mode === CONDITIONING;
+    const overlay = paces[exercise.name?.en ?? exercise.name];
+    if (!own && !overlay) return null;
+    const src = own ? exercise : overlay;
+    return {
+      unit: src.unit,
+      /** Units per minute at a hard but repeatable effort. See the data file. */
+      pace: src.pace,
+      kit: src.kit,
+      impact: src.impact || 'low',
+      tier: tierOf(exercise),
+      native: own,
+    };
+  }
+
   return {
     ...catalog,
     byId,
     prescriptionIndex: indexPrescriptions(catalog.prescriptions),
     /** Skill tier for any exercise, the user's own included. See §18. */
-    tierOf: indexComplexity(catalog.complexity),
+    tierOf,
+    conditioningOf,
+    /** Everything pickable for a conditioning block, lifts and movements alike. */
+    conditioningPool: catalog.exercises.filter((ex) => conditioningOf(ex)),
+    /** The lifting catalog: what the Library, the picker and Quick workout mean. */
+    liftingPool: catalog.exercises.filter((ex) => ex.mode !== CONDITIONING),
     /**
      * Exercise ids are numbers in the shipped catalog and strings ('u3') for
      * the user's own, so anything that has been through a `value` attribute or

@@ -1740,7 +1740,7 @@ function quickReveal(q, result, done) {
 
   const built = buildSession(state.session, state.catalog, state.oneRm);
   const lines = [
-    t('quick.reveal.pool', { n: state.catalog.exercises.filter((e) => !e.archived).length }),
+    t('quick.reveal.pool', { n: state.catalog.liftingPool.filter((e) => !e.archived).length }),
     q.muscles.length
       ? t('quick.reveal.picking', { groups: q.muscles.slice(0, 3).join(', ') })
       : t('quick.reveal.pickingAny'),
@@ -3671,14 +3671,16 @@ function historyDisclosure() {
 function manualLogForm() {
   const draft = {
     date: today(),
-    exerciseId: state.session.exerciseIds[0] ?? state.catalog.exercises[0].id,
+    exerciseId: state.session.exerciseIds[0] ?? state.catalog.liftingPool[0].id,
     goal: state.session.goal,
     weight: '',
     reps: '',
     rpe: '',
   };
 
-  const options = state.catalog.exercises
+  // Manual log entry is weight × reps, so it offers lifts only. Conditioning
+  // results are logged by their own block, not one set at a time.
+  const options = state.catalog.liftingPool
     .filter((ex) => !ex.archived)
     .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
 
@@ -3881,7 +3883,10 @@ function viewLibrary() {
     const q = state.libQuery.trim().toLowerCase();
     // Archived exercises are still in the catalog so old workouts and log
     // entries keep resolving, but they are not on offer here or in the picker.
-    const results = state.catalog.exercises.filter(
+    // Lifts only for now. Every card here offers a 1RM field and filters on
+    // equipment and pattern, and a rowing machine answers none of those
+    // questions -- conditioning movements need their own shelf, not this one.
+    const results = state.catalog.liftingPool.filter(
       (ex) => !ex.archived && matchesFilters(ex, state.libFilters) && matchesQuery(ex, q)
     );
 

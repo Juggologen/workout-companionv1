@@ -232,6 +232,10 @@ export function indexComplexity(complexity) {
 
   return (exercise) => {
     if (!exercise) return fallback;
+    // A row that states its own tier is the most authoritative source there is,
+    // and it saves conditioning.json from having to repeat its whole movement
+    // list inside complexity.json's override arrays.
+    if (exercise.tier) return exercise.tier;
     const override = byName.get(exercise.name?.en ?? exercise.name);
     return override || byProfile[exercise.profile] || fallback;
   };
@@ -384,7 +388,9 @@ export function generateQuickWorkout(options, catalog, oneRmById = {}) {
     ? muscles
     : catalog.vocabulary.muscles.filter((m) => m !== 'Full body');
 
-  const eligible = catalog.exercises
+  // liftingPool, not exercises: quick workout prescribes against sets, reps and
+  // a percentage of a 1RM, none of which a rowing machine has.
+  const eligible = catalog.liftingPool
     .filter((ex) => !ex.archived && tierAllows(complexity, tierOf(ex)))
     .map((ex) => {
       const prescription = getPrescription(catalog.prescriptionIndex, ex.profile, goal);

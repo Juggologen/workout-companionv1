@@ -1,0 +1,495 @@
+{
+  "meta": {
+    "source": "Hand-authored. NOT generated from the workbook.",
+    "why": "The compendium is a lifting compendium. It knows what an exercise trains and how to prescribe it against a 1RM, and it has no concept of a movement you do for calories, for metres, or for as many rounds as possible. Conditioning needs a different unit of work and a different way of sizing it, so it lives in its own app-owned file for the same reason as hypertrophy.json and complexity.json: tools/extract-workbook.ps1 rewrites the generated files wholesale and would take this with it.",
+    "authored": "2026-08-11",
+
+    "model": "Two lists. `movements` are conditioning movements the compendium does not have at all -- the ergs, the run, the burpee family. `paces` is an overlay on exercises that are already in exercises.json: a Thruster does not need a second catalog row, it needs a second way of being prescribed. Keyed on the English name, like complexity.json, and a renamed exercise silently drops out of conditioning rather than breaking.",
+
+    "pace": "The keystone number: units per minute at a hard but repeatable effort -- roughly the pace you could hold for ten minutes, not a sprint and not a warm-up. Everything else is derived from it. An EMOM minute is sized to about 40 s of work, so 40/60 x pace. An AMRAP round is sized to 60-120 s. A for-time workout's estimate is total units / pace. Get the pace right and every format sizes itself.",
+
+    "paceIsNotAPromise": "These are middle-of-the-distribution numbers for a reasonably fit adult, drawn from common interval programming rather than from any single source. They exist to make a generated workout land in the right ballpark -- twelve burpees in a minute rather than forty. They are not a target and not a benchmark, and a session that comes out too easy or too hard is a pace to tune, not a failure.",
+
+    "units": {
+      "reps": "Countable repetitions.",
+      "calories": "What the erg's own display reads. Not comparable between machines, which is why pace is per-movement rather than per-unit.",
+      "metres": "Distance covered.",
+      "seconds": "Time under tension or effort. Pace is always 60 for these -- a minute of work per minute -- so the amount IS the duration."
+    },
+
+    "kit": "Which of the four availability groups a movement needs, so the generator can be asked what is actually to hand: `erg` (rower, ski, bike), `run` (space or a treadmill), `floor` (open floor, plus whatever kit lives on it -- rope, box, ball, kettlebell, barbell, sled), `rig` (something to hang from).",
+
+    "impact": "How much pounding the joints take. Not a difficulty rating -- a burpee is `high` and basic, a ski erg is `low` and basic. It exists so a session can be generated without jumping when that is what someone needs.",
+
+    "tier": "Same three tiers and the same meaning as complexity.json: how much skill the movement needs before it is worth doing fast and tired, NOT how much it hurts. An air bike is agony and still basic. Double-unders are advanced because a beginner doing them under fatigue mostly whips their own shins."
+  },
+
+  "unitList": ["reps", "calories", "metres", "seconds"],
+  "kitList": ["erg", "run", "floor", "rig"],
+
+  "movements": [
+    {
+      "id": "c1",
+      "name": { "en": "Row (erg)", "sv": "Rodd (ergometer)" },
+      "equipment": "Erg",
+      "kit": "erg",
+      "pattern": "Monostructural",
+      "primary": "Full body",
+      "secondary": ["Back", "Quads", "Hamstrings"],
+      "profile": "Conditioning",
+      "unit": "calories",
+      "pace": 12,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Legs, then hips, then arms. Reverse it on the way back.",
+      "how": {
+        "en": "Drive with the legs first and let the arms follow. Damper 4-6 for most people. Calories climb far faster at a hard pull than at an easy one, so the display is honest about effort.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c2",
+      "name": { "en": "Ski Erg", "sv": "Skidergometer" },
+      "equipment": "Erg",
+      "kit": "erg",
+      "pattern": "Monostructural",
+      "primary": "Back",
+      "secondary": ["Core", "Triceps", "Full body"],
+      "profile": "Conditioning",
+      "unit": "calories",
+      "pace": 10,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Hinge through the pull; it is a hip movement, not an arm one.",
+      "how": {
+        "en": "Reach tall, then drive the handles down past the hips by folding at the hips rather than yanking with the arms. Slower calories than a rower for the same effort -- that is the machine, not you.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c3",
+      "name": { "en": "Air Bike", "sv": "Luftcykel" },
+      "equipment": "Erg",
+      "kit": "erg",
+      "pattern": "Monostructural",
+      "primary": "Full body",
+      "secondary": ["Quads", "Shoulders", "Core"],
+      "profile": "Conditioning",
+      "unit": "calories",
+      "pace": 12,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Push and pull the handles; do not just pedal.",
+      "how": {
+        "en": "Resistance rises with the square of your speed, so going twice as hard costs far more than twice the effort. Settle into a rhythm early -- an air bike punishes a fast start harder than any other machine.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c4",
+      "name": { "en": "Bike Erg", "sv": "Cykelergometer" },
+      "equipment": "Erg",
+      "kit": "erg",
+      "pattern": "Monostructural",
+      "primary": "Quads",
+      "secondary": ["Glutes", "Hamstrings", "Calves"],
+      "profile": "Conditioning",
+      "unit": "calories",
+      "pace": 16,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Spin, do not grind. Cadence over gear.",
+      "how": {
+        "en": "Calories come easier here than on any other erg, which is why the prescribed number is larger. Keep the cadence up rather than fighting a heavy damper.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c5",
+      "name": { "en": "Run", "sv": "Löpning" },
+      "equipment": "Bodyweight",
+      "kit": "run",
+      "pattern": "Monostructural",
+      "primary": "Full body",
+      "secondary": ["Quads", "Hamstrings", "Calves"],
+      "profile": "Conditioning",
+      "unit": "metres",
+      "pace": 200,
+      "tier": "basic",
+      "impact": "high",
+      "cue": "Short, quick steps under the hips.",
+      "how": {
+        "en": "200 m per minute is a 5:00/km pace -- hard but holdable. Outside, a lap or a measured out-and-back beats guessing. On a treadmill, set the speed before the clock starts.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c6",
+      "name": { "en": "Shuttle Run", "sv": "Skyttellöpning" },
+      "equipment": "Bodyweight",
+      "kit": "run",
+      "pattern": "Monostructural",
+      "primary": "Full body",
+      "secondary": ["Quads", "Glutes", "Calves"],
+      "profile": "Conditioning",
+      "unit": "metres",
+      "pace": 170,
+      "tier": "basic",
+      "impact": "high",
+      "cue": "Decelerate early; the turn is where people pull something.",
+      "how": {
+        "en": "Back and forth over a short marked distance, usually 10 m. Slower per metre than open running because every turn costs a full stop and restart -- which is the point.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c7",
+      "name": { "en": "Burpee", "sv": "Burpee" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Full body",
+      "primary": "Full body",
+      "secondary": ["Chest", "Quads", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 12,
+      "tier": "basic",
+      "impact": "high",
+      "cue": "Chest to floor, stand all the way up. Everything else is style.",
+      "how": {
+        "en": "Drop to the floor, chest and thighs down, stand, and jump with the hands overhead. Step rather than jump the feet back to save your lower back when you are tired -- it is barely slower and much safer.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c8",
+      "name": { "en": "Burpee Over Bar", "sv": "Burpee över skivstång" },
+      "equipment": "Barbell",
+      "kit": "floor",
+      "pattern": "Full body",
+      "primary": "Full body",
+      "secondary": ["Chest", "Quads", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 10,
+      "tier": "medium",
+      "impact": "high",
+      "cue": "Two feet over, both directions. Do not clip the bar.",
+      "how": {
+        "en": "A burpee finishing with a jump laterally over a loaded barbell. Land soft and immediately drop into the next one -- the rhythm is what makes it survivable.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c9",
+      "name": { "en": "Burpee Box Jump-Over", "sv": "Burpee med lådhopp" },
+      "equipment": "Box",
+      "kit": "floor",
+      "pattern": "Full body",
+      "primary": "Full body",
+      "secondary": ["Quads", "Glutes", "Chest"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 8,
+      "tier": "advanced",
+      "impact": "high",
+      "cue": "Step up when the legs go. Nobody is impressed by a shin injury.",
+      "how": {
+        "en": "Burpee, then over the box -- jumping up and off, or stepping, both count. Under fatigue the step-over is faster than a missed jump, and the box does not forgive a tired foot.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c10",
+      "name": { "en": "Single-Unders", "sv": "Hopprep" },
+      "equipment": "Jump rope",
+      "kit": "floor",
+      "pattern": "Monostructural",
+      "primary": "Calves",
+      "secondary": ["Forearms", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 90,
+      "tier": "basic",
+      "impact": "medium",
+      "cue": "Wrists turn the rope, not the arms.",
+      "how": {
+        "en": "One rope pass per jump. Keep the elbows in and the jumps low -- an inch off the floor is plenty, and it is the difference between two minutes and twenty seconds of skipping.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c11",
+      "name": { "en": "Double-Unders", "sv": "Dubbelhopp" },
+      "equipment": "Jump rope",
+      "kit": "floor",
+      "pattern": "Monostructural",
+      "primary": "Calves",
+      "secondary": ["Forearms", "Core", "Shoulders"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 55,
+      "tier": "advanced",
+      "impact": "high",
+      "cue": "Same jump height, faster wrists. Not a higher jump.",
+      "how": {
+        "en": "Two rope passes per jump. The common failure is jumping higher instead of turning the rope faster, which burns the calves out in thirty seconds. If they are not there yet, trade one double for three singles.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c12",
+      "name": { "en": "Wall Ball", "sv": "Wall ball" },
+      "equipment": "Medicine ball",
+      "kit": "floor",
+      "pattern": "Squat",
+      "primary": "Quads",
+      "secondary": ["Shoulders", "Glutes", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 15,
+      "tier": "medium",
+      "impact": "low",
+      "cue": "Squat below parallel, then throw with the legs.",
+      "how": {
+        "en": "Front squat the ball, and stand up hard enough that the ball leaves your hands on the way to the target. Catch it back into the next squat. Breathe at the top -- there is nowhere else to.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c13",
+      "name": { "en": "Devil's Press", "sv": "Devil's press" },
+      "equipment": "Dumbbell/Kettlebell",
+      "kit": "floor",
+      "pattern": "Full body",
+      "primary": "Full body",
+      "secondary": ["Shoulders", "Hamstrings", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 8,
+      "tier": "advanced",
+      "impact": "high",
+      "cue": "One movement, floor to overhead. Do not stop halfway.",
+      "how": {
+        "en": "A burpee onto the dumbbells, then swing them from the floor straight overhead in one motion. Brutally efficient and brutally taxing -- the prescribed number is small on purpose.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c14",
+      "name": { "en": "Sit-Up", "sv": "Situps" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Core/Anti-movement",
+      "primary": "Core",
+      "secondary": [],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 22,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Touch the floor behind you, touch your feet in front.",
+      "how": {
+        "en": "Soles together or feet anchored, whichever your back prefers. Full range each rep -- half sit-ups done fast are the easiest place in a workout to fool yourself.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c15",
+      "name": { "en": "Mountain Climber", "sv": "Bergsklättrare" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Core/Anti-movement",
+      "primary": "Core",
+      "secondary": ["Shoulders", "Quads"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 40,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Hips stay low. Count both legs.",
+      "how": {
+        "en": "From a push-up position, drive the knees to the chest one at a time. The hips want to rise as you tire; keeping them down is most of the work.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c16",
+      "name": { "en": "Jumping Jack", "sv": "Sprattelgubbe" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Monostructural",
+      "primary": "Full body",
+      "secondary": ["Shoulders", "Calves"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 45,
+      "tier": "basic",
+      "impact": "medium",
+      "cue": "Hands meet overhead, feet land wide.",
+      "how": {
+        "en": "The lowest-skill way to raise a heart rate, which makes it the honest choice when everything else is too technical for how tired you are.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c17",
+      "name": { "en": "High Knees", "sv": "Höga knän" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Monostructural",
+      "primary": "Quads",
+      "secondary": ["Core", "Calves"],
+      "profile": "Conditioning",
+      "unit": "seconds",
+      "pace": 60,
+      "tier": "basic",
+      "impact": "high",
+      "cue": "Knees to hip height, quick feet.",
+      "how": {
+        "en": "Run on the spot bringing the knees up to hip height. Prescribed in seconds because counting them while doing them is hopeless.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c18",
+      "name": { "en": "Box Step-Up", "sv": "Uppsteg på låda" },
+      "equipment": "Box",
+      "kit": "floor",
+      "pattern": "Lunge/Single-leg",
+      "primary": "Quads",
+      "secondary": ["Glutes", "Hamstrings"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 20,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Drive through the heel on the box, not the trailing toe.",
+      "how": {
+        "en": "Step up, stand fully, step down. Alternate legs. The low-impact answer to box jumps and, over a long workout, barely slower.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c19",
+      "name": { "en": "Toes-to-Bar", "sv": "Tår till stång" },
+      "equipment": "Bodyweight/Rings",
+      "kit": "rig",
+      "pattern": "Core/Anti-movement",
+      "primary": "Core",
+      "secondary": ["Back", "Forearms"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 10,
+      "tier": "advanced",
+      "impact": "low",
+      "cue": "Swing from the shoulders, not the hips alone.",
+      "how": {
+        "en": "Hang and bring both feet to touch the bar. The kip is a rhythm, not a cheat -- but if the rhythm goes, hanging knee raises get the same work done without ripping your hands.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c20",
+      "name": { "en": "Skater Hop", "sv": "Skridskohopp" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Lunge/Single-leg",
+      "primary": "Glutes",
+      "secondary": ["Quads", "Adductors", "Calves"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 40,
+      "tier": "basic",
+      "impact": "medium",
+      "cue": "Land on one foot and stick it before the next.",
+      "how": {
+        "en": "Bound side to side, landing on the outside leg. One of the few conditioning movements that trains sideways, which is where most people are weakest.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c21",
+      "name": { "en": "Tuck Jump", "sv": "Tuckhopp" },
+      "equipment": "Bodyweight",
+      "kit": "floor",
+      "pattern": "Plyometric",
+      "primary": "Quads",
+      "secondary": ["Glutes", "Calves", "Core"],
+      "profile": "Conditioning",
+      "unit": "reps",
+      "pace": 25,
+      "tier": "medium",
+      "impact": "high",
+      "cue": "Knees to chest, land soft, reset.",
+      "how": {
+        "en": "Jump and pull the knees up rather than reaching down with the hands. High impact and it degrades fast when tired, so it belongs in short bursts rather than long grinds.",
+        "sv": null
+      }
+    },
+    {
+      "id": "c22",
+      "name": { "en": "Battle Ropes", "sv": "Battle ropes" },
+      "equipment": "Bands",
+      "kit": "floor",
+      "pattern": "Monostructural",
+      "primary": "Shoulders",
+      "secondary": ["Core", "Back", "Forearms"],
+      "profile": "Conditioning",
+      "unit": "seconds",
+      "pace": 60,
+      "tier": "basic",
+      "impact": "low",
+      "cue": "Quarter squat, brace, and let the arms hammer.",
+      "how": {
+        "en": "Alternating waves unless told otherwise. All the arm and lung cost of a sprint with none of the pounding, which makes it the go-to when the knees have had enough.",
+        "sv": null
+      }
+    }
+  ],
+
+  "paces": {
+    "comment": "Exercises already in exercises.json that work in a conditioning context. Keyed on the English name. `pace` and `unit` are the same idea as in `movements`; `kit` says what has to be available. Anything not listed here is simply never picked for a conditioning block -- which is the right default, since most of the compendium is loaded barbell work that has no business in an AMRAP.",
+
+    "Bodyweight Squat": { "unit": "reps", "pace": 25, "kit": "floor", "impact": "low" },
+    "Jump Squat": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "high" },
+    "Goblet Squat": { "unit": "reps", "pace": 16, "kit": "floor", "impact": "low" },
+    "Walking Lunge": { "unit": "reps", "pace": 24, "kit": "floor", "impact": "low" },
+    "Reverse Lunge": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "low" },
+    "Box Jump": { "unit": "reps", "pace": 15, "kit": "floor", "impact": "high" },
+    "Broad Jump": { "unit": "reps", "pace": 14, "kit": "floor", "impact": "high" },
+
+    "Push-Up": { "unit": "reps", "pace": 20, "kit": "floor", "impact": "low" },
+    "Ring Push-Up": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
+    "Handstand Push-Up": { "unit": "reps", "pace": 8, "kit": "floor", "impact": "low" },
+    "Dip": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
+    "Pull-Up": { "unit": "reps", "pace": 12, "kit": "rig", "impact": "low" },
+    "Band-Assisted Pull-Up": { "unit": "reps", "pace": 15, "kit": "rig", "impact": "low" },
+    "Ring Row": { "unit": "reps", "pace": 18, "kit": "rig", "impact": "low" },
+    "Inverted Row": { "unit": "reps", "pace": 18, "kit": "rig", "impact": "low" },
+    "Hanging Leg Raise": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
+
+    "Plank": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
+    "Side Plank": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
+    "Hollow Body Hold": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
+    "Wall Sit": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
+    "Russian Twist": { "unit": "reps", "pace": 30, "kit": "floor", "impact": "low" },
+    "Bear Crawl": { "unit": "metres", "pace": 25, "kit": "floor", "impact": "low" },
+
+    "Kettlebell Swing": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "low" },
+    "Kettlebell Snatch": { "unit": "reps", "pace": 14, "kit": "floor", "impact": "low" },
+    "Dumbbell Snatch": { "unit": "reps", "pace": 16, "kit": "floor", "impact": "low" },
+    "Kettlebell Clean": { "unit": "reps", "pace": 16, "kit": "floor", "impact": "low" },
+    "Thruster": { "unit": "reps", "pace": 12, "kit": "floor", "impact": "low" },
+    "Power Clean": { "unit": "reps", "pace": 10, "kit": "floor", "impact": "low" },
+    "Medicine Ball Slam": { "unit": "reps", "pace": 18, "kit": "floor", "impact": "low" },
+    "Rotational Med Ball Throw": { "unit": "reps", "pace": 20, "kit": "floor", "impact": "low" },
+
+    "Farmer's Walk": { "unit": "metres", "pace": 45, "kit": "floor", "impact": "low" },
+    "Suitcase Carry": { "unit": "metres", "pace": 45, "kit": "floor", "impact": "low" },
+    "Front Rack Carry": { "unit": "metres", "pace": 35, "kit": "floor", "impact": "low" },
+    "Overhead Carry": { "unit": "metres", "pace": 30, "kit": "floor", "impact": "low" },
+    "Sled Push": { "unit": "metres", "pace": 30, "kit": "floor", "impact": "low" },
+    "Sled Drag": { "unit": "metres", "pace": 32, "kit": "floor", "impact": "low" }
+  }
+}

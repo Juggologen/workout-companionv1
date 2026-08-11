@@ -66,6 +66,24 @@
   --goal-hypertrophy: #c9739d;
   --goal-endurance: #3f9d79;
 
+  /* Conditioning is the fifth, and it is the one that had to break the pattern.
+     The four above all sit at L 58–60, chroma 38–50, contrast 5.2–5.6 — one
+     lightness, four hues. Sweeping a fifth hue through that same band (14,754
+     candidates) found nothing usable: the best normal-vision separation left is
+     ΔE 26.7 at a gold that collapses to ΔE 2.6 against Strength under
+     deuteranopia, and the best colourblind separation is ΔE 9.7 at a rose that
+     would then be the closest pair in the palette. Four hues at one lightness
+     have used the circle up.
+
+     So this one is brighter rather than merely differently hued — L 69 against
+     their 59 — which lets lightness carry the separation that hue no longer
+     can. It lands at ΔE 20.1 normal, 15.2 protanopia, 11.8 deuteranopia, all
+     three above the 10.5 the existing four already sit at among themselves, at
+     contrast 7.45. Cyan because 164°–276° is the one genuinely empty arc, and
+     because reading hotter than the strength goals is right for the mode that
+     is meant to be the hard one. */
+  --goal-conditioning: #43b8c4;
+
   /* Home is not a training mode, so it does not take a goal colour. This
      yellow sits at least ΔE 23.4 from every colour it can share a screen with
      — the three goals, both muscle tokens, and Nocturne's accent — with

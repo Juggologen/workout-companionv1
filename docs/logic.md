@@ -13,7 +13,7 @@ sheets and the visible formulas in columns `C:P`.
 ## 1. Data model
 
 Five JSON files under `data/`, regenerated from the workbook by
-`tools/extract-workbook.ps1`, plus one that is not.
+`tools/extract-workbook.ps1`, plus three that are not.
 
 | File | Rows | From |
 |---|---|---|
@@ -24,6 +24,7 @@ Five JSON files under `data/`, regenerated from the workbook by
 | `vocabulary.json` | — | derived: distinct equipment / patterns / muscles / profiles / goals |
 | `hypertrophy.json` | 7 (7 profiles × 1 goal) | **hand-authored** — see §16 |
 | `complexity.json` | 1 rule set + 62 overrides | **hand-authored** — see §18 |
+| `conditioning.json` | 22 movements + 36 pace overlays | **hand-authored** — see §20 |
 
 ### Reference vs. user data
 
@@ -1270,3 +1271,151 @@ Contrast, measured by compositing each token over `#161826`:
 | Lede | 9.2 |
 | Body text, goal key labels | 6.8 |
 | The question-mark button | 5.1 |
+
+---
+
+## 20. Conditioning — HIIT, and why it needed a second unit of work
+
+Everything above this section assumes the unit of work is **a set with a
+weight**. A log entry is `{exerciseId, setNo, weight, reps}`; volume is
+`weight × reps`; a prescription comes from `profile × goal → sets/reps/%1RM`;
+the live screen is a checkbox per set. Conditioning's unit is **a time
+interval**, and for an AMRAP the score is the *output* rather than the input —
+you do not know it until you stop.
+
+That is the whole of the difficulty. Adding movements is the easy part.
+
+### What was already there
+
+More than expected. Push-Up, Pull-Up, Dip, Plank, Wall Sit, Bear Crawl,
+Farmer's Walk, Walking Lunge, Box Jump, Jump Squat, Thruster, Kettlebell Swing,
+Medicine Ball Slam, Sled Push and Broad Jump are all in the compendium already.
+What was missing was the **monostructural** work — there is no rower, ski erg,
+bike or treadmill anywhere in 167 exercises — and the burpee family.
+
+So `data/conditioning.json` is two lists rather than a second catalogue:
+
+- **`movements`** — the 22 the compendium genuinely lacks, as ordinary catalog
+  rows with string ids (`c1`), the same trick the user's own exercises use to
+  avoid colliding with the workbook's numeric ones.
+- **`paces`** — an overlay on exercises that already exist, keyed on the English
+  name like `complexity.json`. A Thruster does not need a second catalog row; it
+  needs a second *way of being prescribed*.
+
+Together that is **58 movements pickable for conditioning** out of 189 total,
+with only 22 new rows.
+
+### Pace is the keystone
+
+Every conditioning movement declares a **pace: units per minute at a hard but
+repeatable effort** — roughly what you could hold for ten minutes. Everything
+else derives from it:
+
+| Format | Sizing |
+|---|---|
+| EMOM | a chunk of about 40 s → `pace × 40/60` |
+| AMRAP | a round of 60–120 s, split across its movements |
+| Intervals | work period × pace |
+| For time | estimated duration = total units ÷ pace |
+
+Get the pace right and every format sizes itself. Measured across all 58
+movements: EMOM chunks land at 39–41 s against a 40 s target, and three-movement
+AMRAP rounds at 59–78 s against a 60–120 s band, with nothing out of band.
+
+Time-based movements (planks, holds, battle ropes) carry `pace: 60` — a minute
+of work per minute — so the amount *is* the duration and no special case is
+needed anywhere downstream.
+
+These are middle-of-the-distribution numbers, not benchmarks. They exist so a
+generated workout lands in the right ballpark — twelve burpees in a minute
+rather than forty. A session that comes out too easy is a pace to tune.
+
+### Conditioning movements are ordinary catalog rows
+
+They have to be. A log entry refers to an exercise id, the warm-up builder reads
+`pattern` and `secondary` off whatever is in the session, and the "how to do it"
+panel wants the same `how` field a mobility drill has. A parallel catalogue
+would mean teaching every one of those about a second kind of exercise.
+
+`mode: 'conditioning'` is what keeps them out of where they do not belong. Rows
+without the field are lifting rows, so nothing that already existed had to
+change — only the five places that enumerate the catalog now say which pool they
+mean:
+
+| Site | Pool | Why |
+|---|---|---|
+| Library | `liftingPool` | every card offers a 1RM and filters on equipment |
+| Build picker, manual log | `liftingPool` | both are weight × reps |
+| Quick workout (`engine.js`) | `liftingPool` | prescribes against %1RM |
+| Reveal animation's pool count | `liftingPool` | it is counting what it drew from |
+
+`catalog.conditioningOf(exercise)` returns `{unit, pace, kit, impact, tier}` or
+null, resolving native movements and overlaid lifts to one shape so callers
+never have to know which they are holding.
+
+### Kit, so the generator can ask
+
+Four availability groups — `erg`, `run`, `floor`, `rig` — because the equipment
+question is real here in a way it never was for lifting: a ski-erg workout is
+useless to someone without a ski erg. Current spread: floor 44, rig 8, erg 4,
+run 2.
+
+### Tier, reused as-is
+
+The same three tiers and the same meaning as §18: how much skill a movement
+needs before it is worth doing *fast and tired*, not how much it hurts. An air
+bike is agony and still basic; double-unders are advanced because a beginner
+doing them under fatigue mostly whips their own shins. Spread: 32 basic, 15
+medium, 11 advanced.
+
+`indexComplexity` now checks `exercise.tier` before the override list, so a row
+that states its own tier is believed. That saves `conditioning.json` from having
+to repeat its whole movement list inside `complexity.json`.
+
+### Conditioning is not a fifth goal
+
+Tempting, and wrong. `session.goal` feeds `getPrescription(profile, goal)`, and
+a fifth value would return nothing for every lifting profile — a user who picked
+Conditioning and a Back Squat would get an empty prescription.
+
+So the four goals stay as they are, and conditioning carries its own accent off
+the session's *kind* instead. The log is the one place the word appears as a
+goal: conditioning entries are written with `goal: 'Conditioning'` so the weekly
+summary and the goal mix can report it. The string is doing two different jobs —
+prescription lookup and reporting — and only the reporting job needs a fifth
+value.
+
+### The accent had to break the pattern
+
+The four existing accents sit at L 58–60, chroma 38–50, contrast 5.2–5.6: one
+lightness, four hues. Sweeping a fifth hue through that same band — 14,754
+candidates — found nothing usable. The best normal-vision separation left is
+ΔE 26.7, at a gold that collapses to ΔE 2.6 against Strength under deuteranopia.
+The best colourblind separation is ΔE 9.7, at a rose that would then be the
+closest pair in the palette. **Four hues at one lightness have used the circle
+up.**
+
+So `--goal-conditioning: #43b8c4` is *brighter* rather than merely differently
+hued — L 69 against their 59 — letting lightness carry the separation hue no
+longer can. It lands at ΔE 20.1 normal, 15.2 protanopia, 11.8 deuteranopia, all
+three above the 10.5 the existing four already sit at among themselves, at
+contrast 7.45. Cyan because 164°–276° is the one genuinely empty arc, and
+because reading hotter than the strength goals suits the mode meant to be hard.
+
+### Still to come
+
+This section covers the data foundation only. The formats (EMOM, AMRAP, Tabata,
+intervals, for time), the generator, the equipment ask, the countdown screen and
+the score history are not built yet. The shape they will attach to:
+
+```js
+session.conditioning = { blocks: [ {
+  id, format, minutes,
+  partner: null | { mode: 'alternating' | 'shared' | 'relay', people: 2 },
+  movements: [ { ref, amount, unit } ],
+} ] }
+```
+
+Optional field, which is what makes a HIIT block able to be either a session of
+its own (no `exerciseIds`) or a finisher on a lifting session (both present).
+One field, both answers.

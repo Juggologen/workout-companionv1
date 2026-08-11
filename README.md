@@ -315,6 +315,44 @@ all the way down; the overrides carry the judgement. It splits 91 / 40 / 36.
 Exercises you write yourself get tiered by the rule, since nobody is going to
 hand-rate those.
 
+## Conditioning
+
+**Groundwork only so far — the data layer, not yet the workouts.**
+
+Everything else in the app assumes the unit of work is a set with a weight. Log
+entries are `{exerciseId, setNo, weight, reps}`, volume is `weight × reps`, and
+a prescription comes from `profile × goal → sets/reps/%1RM`. HIIT's unit is a
+time interval, and for an AMRAP the score is the *output* — you don't know it
+until you stop. That mismatch is the whole difficulty; adding movements is the
+easy part.
+
+The compendium turned out to be half-stocked already: Push-Up, Pull-Up, Dip,
+Plank, Bear Crawl, Farmer's Walk, Box Jump, Thruster, Kettlebell Swing, Med Ball
+Slam and Sled Push were all in there. What was missing was the machines — no
+rower, ski erg, bike or treadmill anywhere in 167 exercises — and the burpee
+family. So `data/conditioning.json` is **22 new movements plus a pace overlay on
+36 exercises that already existed**. A Thruster doesn't need a second catalog
+row; it needs a second way of being prescribed. 58 movements are pickable for
+conditioning in total.
+
+**Pace is the keystone.** Every movement declares units per minute at a hard but
+repeatable effort — what you could hold for ten minutes. An EMOM minute is
+`pace × 40/60`. An AMRAP round is 60–120 seconds split across its movements. A
+for-time estimate is total units ÷ pace. Get the pace right and every format
+sizes itself: measured across all 58, EMOM chunks land at 39–41 s against a 40 s
+target and three-movement rounds at 59–78 s, nothing out of band.
+
+Movements carry a `kit` group — erg, run, floor, rig — because "do you have a
+ski erg" is a real question in a way it never was for lifting, and the same
+three complexity tiers as everything else. An air bike is agony and still basic;
+double-unders are advanced because a beginner doing them tired mostly whips
+their own shins.
+
+Not built yet: the formats themselves (EMOM, AMRAP, Tabata, intervals, for
+time), the generator, the equipment prompt, the countdown screen, partner modes
+and score history. See [docs/logic.md](docs/logic.md) §20 for the shape they
+attach to.
+
 ## Perceived exertion
 
 Finishing a session asks for a 1–10 rating before it writes the log, and

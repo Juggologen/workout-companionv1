@@ -2312,3 +2312,43 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* Deals itself in with the exercise cards after a generate, same as `.ex-card`. */
 .cond-card.is-fresh { animation: card-in 0.34s ease both; }
+
+/* ---- multi-block conditioning ----
+
+   The breather between blocks is drawn rather than merely counted: it is two
+   minutes of the workout's wall-clock and part of what makes the next block
+   attackable, so a plan that ran one card straight into the next would be
+   describing a harder session than the one it costed. */
+.cond-rest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+}
+.cond-rest-line { flex: 1; height: 1px; background: var(--color-divider); }
+.cond-rest-label {
+  flex: none;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--t-45);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet ordinal, so "the second one" is a thing you can point at. Sized to
+   match the format name's optical weight without competing with it. */
+.cond-index {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 16%, transparent);
+}
+.cond-head { align-items: center; }
+.cond-format { flex: none; }

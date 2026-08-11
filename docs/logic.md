@@ -1733,3 +1733,110 @@ conditioning plan), on-its-own (`HIIT workout / Tabata`, 0 lift cards, format
 accent), finisher (`Leg day / Strength`, 2 lift cards, Warm-up → Main lifts →
 Finisher → Cool-down, goal accent on the screen and format accent on the card),
 and cancel (sheet closes, screen unchanged, draft byte-identical).
+
+---
+
+## 25. Multi-block conditioning
+
+One block of three movements over twenty minutes is those three movements six
+times each. It trains a narrow slice of you and is dull by minute ten. That was
+the complaint, and it was right.
+
+`conditioning.blocks` has been an array since §20 and only ever held one thing.
+`generateConditioningWorkout` fills it.
+
+### What the split buys, measured
+
+Average distinct movements and body regions over the same minutes, 300 seeds
+each against the full catalog:
+
+| | 1 block | 2 | 3 | 4 |
+|---|---|---|---|---|
+| **12 min** | 2.6 mv / 2.5 roles | 4.6 / 3.4 | — | — |
+| **16 min** | 2.8 / 2.7 | 5.7 / 3.8 | — | — |
+| **20 min** | 2.8 / 2.7 | 5.9 / 3.9 | 7.2 / 4.0 | — |
+| **25 min** | 2.8 / 2.7 | 6.0 / 3.9 | 8.4 / 4.3 | — |
+| **30 min** | 2.7 / 2.6 | 5.3 / 3.6 | 8.5 / 4.2 | **10.6 / 4.4** |
+
+Roles top out at five (mono / upper / lower / core / full), so four blocks is
+near-complete coverage against one block's 2.7.
+
+### Scaling to the clock
+
+`BLOCK_MIN_MINUTES = 5`, `BLOCK_REST_MINUTES = 2`, so N blocks cost
+`N × 5 + (N-1) × 2` and the ceiling falls out of that: 1 block below 10 min, 2
+from 12, 3 from 19, 4 from 26. Capped at four regardless — past that the
+transitions cost more than the work.
+
+Two minutes of transition is **drawn on the plan and counted in the total**.
+Changing station, resetting a rower and getting your breath back is real time,
+and leaving it out would make a four-block estimate lie by the length of a whole
+block.
+
+The chips show all four counts always, disabling the unreachable ones. A control
+that grows and shrinks as the time strip scrolls is a control you cannot aim at,
+and seeing that four exists but needs more minutes is what makes the scaling read
+as a rule rather than as arbitrary.
+
+**The ceiling limits what is shown as chosen, never what is stored.** Writing the
+clamp back meant scrolling the time strip down to eight minutes and back up to
+thirty silently forgot that three blocks were wanted — and a strip is a thing you
+scroll *through*.
+
+### Two rules that make blocks worth having
+
+**Movements do not repeat across blocks** while the pool can afford it, so three
+blocks really is nine movements rather than the same three dealt again. Where the
+pool cannot afford it the rule is abandoned rather than the block shrunk: ergs +
+running is six movements total, and four blocks would rather repeat a rower than
+hand back a block with one thing in it.
+
+**Formats vary across blocks** when none was asked for. An EMOM then an AMRAP
+then a for-time is three different relationships with the clock, which is most of
+what makes the third block feel unlike the first.
+
+Multi-block auto-selection draws only from **EMOM, AMRAP and for-time**. Tabata
+is one movement per four minutes by protocol and intervals are one or two, so
+spending a block on either costs most of the coverage the split exists to buy —
+an early version handed back three blocks holding *four* distinct movements, fewer
+than one long block. Both are still available when chosen by name.
+
+### Sizing fixes the short blocks forced
+
+Blocks are short by design now, and two format rules were tuned for one long
+block:
+
+- **For time** capped stations at `minutes × 2 / rounds`. Rounds multiply
+  stations, so five minutes at five rounds of four movements is twelve seconds a
+  station — which prescribed **two burpees**.
+- **AMRAP** relaxed its station ceiling from `minutes / 2` to `minutes / 1.7`,
+  admitting three rounds rather than demanding four. A five-minute AMRAP capped
+  at two movements is half the coverage the block could carry, bought for a
+  fourth round nobody asked for.
+
+### A workout of several shapes is not one of them
+
+A three-block workout of an EMOM, an AMRAP and a for-time is **not an EMOM**.
+Titling it after whichever block is first describes two thirds of it wrongly, so
+where the blocks disagree the title reads "3 blocks" and the screen accent falls
+back to conditioning's own cyan — while each card keeps its block's colour. Where
+they agree, the single format names the workout as before.
+
+Re-roll and remove moved out of the card to the section. One set per card would
+read as "re-roll this block", which is not what they do — and building that would
+let a block be re-rolled into a movement its neighbour already has.
+
+### Measured
+
+12,000 workouts across 5 kit sets × 6 durations × every reachable block count:
+
+| | |
+|---|---|
+| Shortfalls | 0 |
+| Wrong block count | 0 |
+| Over the time budget | 0 |
+| Stations under 15 s | 0 |
+| Repeated movement, pools ≥ 20 movements | **0%** |
+| Repeated movement, ergs+running (pool of 6) | 5% at 2 blocks, 97% at 4 |
+| Repeated format, 1–3 blocks | **0%** |
+| Repeated format, 4 blocks | 100% — unavoidable against 3 formats |

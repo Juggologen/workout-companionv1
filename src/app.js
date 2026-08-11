@@ -37,6 +37,9 @@ import {
   generateQuickWorkout,
   COMPLEXITY_LEVELS,
   generateConditioning,
+  generateConditioningWorkout,
+  maxConditioningBlocks,
+  BLOCK_REST_MINUTES,
   CONDITIONING_FORMATS,
   PARTNER_MODES,
 } from './engine.js';
@@ -155,12 +158,16 @@ const COND_TIMES = [4, 6, 8, 10, 12, 14, 15, 16, 18, 20, 25, 30];
 const COND_DEFAULTS = {
   minutes: 12,
   format: 'any',
+  blocks: 2,
   kit: ['bodyweight'],
   complexity: 'medium',
   lowImpact: false,
   partnerMode: 'solo',
   people: 2,
 };
+
+/** The most the control ever offers; the clock decides how many are reachable. */
+const COND_BLOCK_CHOICES = [1, 2, 3, 4];
 
 const QUICK_PRESETS = {
   upper: ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'],
@@ -317,7 +324,11 @@ function screenAccent() {
   // same as where it left.
   if (state.screen === 'cond') return formatColor(condState().format);
   if (state.screen === 'plan' && conditioningBlocks().length && !sessionExercises().length) {
-    return formatColor(conditioningBlocks()[0].format);
+    // Mixed shapes have no one colour, so the screen wears the mode's own and
+    // lets each card carry its block's. Painting the whole screen in the first
+    // block's colour would say the workout is an EMOM when it is three things.
+    const only = condFormat();
+    return only ? formatColor(only) : 'var(--goal-conditioning)';
   }
   return GOAL_COLOR[state.session.goal];
 }
@@ -1420,8 +1431,16 @@ function viewConditioning() {
 
       quickSection(
         t('cond.time'),
-        timeScroller(c.minutes, COND_TIMES, (minutes) => setCond({ minutes }, { rerender: false }))
+        timeScroller(c.minutes, COND_TIMES, (minutes) => {
+          setCond({ minutes }, { rerender: false });
+          updateBlockChips(minutes);
+        })
       ),
+
+      // How many pieces the time is cut into. One block of three movements over
+      // twenty minutes is those three movements six times each; three blocks is
+      // nine movements and a second half that does not feel like the first.
+      quickSection(t('cond.blocks'), blockChips(c), blockSplitHint(c)),
 
       // Shape gets the scrolling-card treatment the goals get, and for the same
       // reason: "EMOM" and "AMRAP" are jargon that mean nothing until someone
@@ -1579,11 +1598,81 @@ function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick, colourOf 
  * session. Neither case needs a decision from the user, because the draft
  * already says which they meant.
  */
-function conditioningBlockFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
-  const block = generateConditioning(
+/**
+ * How many blocks, with the ones the clock cannot afford shown but disabled.
+ *
+ * Disabled rather than absent: a control that grows and shrinks as the time
+ * strip scrolls is a control you cannot aim at, and seeing that four blocks
+ * exist but need more minutes is the fact that makes the scaling
+ * understandable rather than arbitrary.
+ */
+function blockChips(c) {
+  const ceiling = maxConditioningBlocks(c.minutes);
+  // The ceiling limits what is *shown as chosen*, never what is stored. Writing
+  // the clamp back would mean scrolling the time strip down to eight minutes and
+  // back up to thirty silently forgot that three blocks were wanted -- and the
+  // strip is a thing you scroll through, so that would happen by accident.
+  const shown = Math.min(c.blocks, ceiling);
+  return h(
+    'div.chips',
+    { id: 'cond-blocks' },
+    COND_BLOCK_CHOICES.map((n) =>
+      h(
+        'button.chip',
+        {
+          class: shown === n ? 'is-on' : '',
+          disabled: n > ceiling,
+          dataset: { blocks: String(n) },
+          'aria-pressed': String(shown === n),
+          onclick: () => setCond({ blocks: n }),
+        },
+        String(n)
+      )
+    )
+  );
+}
+
+/** "3 × 6 min, 2 min between" — what the choice actually buys, in minutes. */
+function blockSplitHint(c) {
+  const n = Math.min(c.blocks, maxConditioningBlocks(c.minutes));
+  if (n <= 1) return t('cond.blocksOne');
+  const per = Math.floor((c.minutes - (n - 1) * BLOCK_REST_MINUTES) / n);
+  return t('cond.blocksSplit', { n, per, rest: BLOCK_REST_MINUTES });
+}
+
+/**
+ * Keep the block control honest while the time strip is scrolling.
+ *
+ * The strip writes minutes without re-rendering -- see `timeScroller` -- so the
+ * chips have to be told, the same way the quick-workout split line is.
+ */
+function updateBlockChips(minutes) {
+  const row = document.getElementById('cond-blocks');
+  if (!row) return;
+
+  const ceiling = maxConditioningBlocks(minutes);
+  const c = condState();
+  // Shown, not stored -- see `blockChips`. Scrolling past a short time must not
+  // cost the user the answer they gave.
+  const chosen = Math.min(c.blocks, ceiling);
+
+  for (const chip of row.querySelectorAll('.chip')) {
+    const n = Number(chip.dataset.blocks);
+    chip.disabled = n > ceiling;
+    chip.classList.toggle('is-on', n === chosen);
+    chip.setAttribute('aria-pressed', String(n === chosen));
+  }
+
+  const hint = row.parentElement?.querySelector('.hint');
+  if (hint) hint.textContent = blockSplitHint({ ...c, minutes, blocks: chosen });
+}
+
+function conditioningBlocksFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
+  const workout = generateConditioningWorkout(
     {
       minutes: c.minutes,
       format: c.format,
+      blocks: c.blocks || 1,
       kit: c.kit,
       complexity: c.complexity,
       lowImpact: c.lowImpact,
@@ -1592,13 +1681,17 @@ function conditioningBlockFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
     },
     state.catalog
   );
-  if (block.shortfall) {
+  if (workout.shortfall) {
     flash(t('cond.nothingFits'));
     return null;
   }
-  block.id = newId();
-  block.inputs = { ...c };
-  return block;
+  // The inputs ride on the first block, which is where the re-roll reads them
+  // from. Storing them per block would be four copies of one answer.
+  workout.blocks.forEach((b, i) => {
+    b.id = newId();
+    if (i === 0) b.inputs = { ...c };
+  });
+  return workout.blocks;
 }
 
 /**
@@ -1619,12 +1712,12 @@ function conditioningBlockFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
  * still needs no question, because there is nothing to collide with.
  */
 function runConditioning() {
-  const block = conditioningBlockFrom(condState());
-  if (!block) return;
+  const blocks = conditioningBlocksFrom(condState());
+  if (!blocks) return;
 
   const lifts = sessionExercises().length;
   if (!lifts) {
-    applyConditioning(block, true);
+    applyConditioning(blocks, true);
     return;
   }
 
@@ -1637,12 +1730,12 @@ function runConditioning() {
         label: t('cond.attachAlone'),
         sub: t('cond.attachAloneSub', { name }),
         primary: true,
-        onPick: () => applyConditioning(block, true),
+        onPick: () => applyConditioning(blocks, true),
       },
       {
         label: t('cond.attachFinisher', { name }),
         sub: t('cond.attachFinisherSub'),
-        onPick: () => applyConditioning(block, false),
+        onPick: () => applyConditioning(blocks, false),
       },
     ],
     cancelLabel: t('custom.cancel'),
@@ -1655,9 +1748,9 @@ function runConditioning() {
  * keeping its name, goal and budgets while losing its exercises is a workout
  * that no longer matches its own title.
  */
-function applyConditioning(block, standalone) {
+function applyConditioning(blocks, standalone) {
   if (standalone) state.session = blankSession();
-  state.session.conditioning = { blocks: [block] };
+  state.session.conditioning = { blocks };
   saveDraft();
 
   state.freshQuick = true;
@@ -1667,18 +1760,15 @@ function applyConditioning(block, standalone) {
   }, 1600);
 }
 
-/** Re-roll the conditioning block on the same inputs, in place. */
+/** Re-roll the whole conditioning workout on the same inputs. */
 function reshuffleConditioning() {
-  const existing = state.session.conditioning?.blocks?.[0];
-  if (!existing?.inputs) return;
+  const inputs = state.session.conditioning?.blocks?.[0]?.inputs;
+  if (!inputs) return;
 
-  const block = conditioningBlockFrom(existing.inputs);
-  if (!block) return;
+  const blocks = conditioningBlocksFrom(inputs);
+  if (!blocks) return;
 
-  // Keeps the old id: this is the same block re-rolled, not a new one, and
-  // anything holding a reference to it should still be pointing at it.
-  block.id = existing.id;
-  state.session.conditioning = { blocks: [block] };
+  state.session.conditioning = { blocks };
   saveDraft();
   render();
 }
@@ -2606,7 +2696,9 @@ function viewPlan() {
                 'span.goal-word',
                 exercises.length
                   ? goalLabel(state.session.goal)
-                  : t(`cond.format.${cond[0].format}`)
+                  : condFormat()
+                    ? t(`cond.format.${condFormat()}`)
+                    : tp('cond.blockCount', cond.length)
               )
             ),
             // Stays for the life of the session, not just the transition: a
@@ -2707,8 +2799,24 @@ function conditioningBlocks() {
   return state.session.conditioning?.blocks || [];
 }
 
+/**
+ * The one format a conditioning workout is, or null when it is several.
+ *
+ * A three-block workout of an EMOM, an AMRAP and a for-time is not an EMOM, and
+ * titling it after whichever block happens to be first describes two thirds of
+ * it wrongly. Where the blocks disagree the workout has no single shape, and
+ * both the title and the screen accent fall back to the mode itself.
+ */
+function condFormat() {
+  const formats = new Set(conditioningBlocks().map((b) => b.format));
+  return formats.size === 1 ? [...formats][0] : null;
+}
+
+/** Wall-clock for the conditioning, transitions between blocks included. */
 function condMinutes() {
-  return conditioningBlocks().reduce((sum, b) => sum + (b.minutes || 0), 0);
+  const blocks = conditioningBlocks();
+  const worked = blocks.reduce((sum, b) => sum + (b.minutes || 0), 0);
+  return worked + Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
 }
 
 /** "12 cal", "15", "400 m", "30 s" — the amount as it would be said aloud. */
@@ -2775,9 +2883,31 @@ function conditioningSection() {
     h(
       'div.phase-head',
       h('span.phase-name', hasLifts ? t('cond.finisher') : t('cond.block')),
-      h('span.phase-meta', t('cond.minutes', { n: condMinutes() }))
+      h(
+        'span.phase-meta',
+        blocks.length > 1
+          ? `${tp('cond.blockCount', blocks.length)} · ${t('cond.minutes', { n: condMinutes() })}`
+          : t('cond.minutes', { n: condMinutes() })
+      )
     ),
-    blocks.map((block, i) => condCard(block, i)),
+    // The breather between blocks is drawn, not just counted. It is two minutes
+    // of the workout's wall-clock and part of what makes the next block
+    // attackable, so a plan that jumped straight from one card to the next
+    // would be describing a harder session than the one it costed.
+    blocks.flatMap((block, i) =>
+      i === 0
+        ? [condCard(block, i)]
+        : [
+            h(
+              'div.cond-rest',
+              h('span.cond-rest-line'),
+              h('span.cond-rest-label', t('cond.between', { n: BLOCK_REST_MINUTES })),
+              h('span.cond-rest-line')
+            ),
+            condCard(block, i),
+          ]
+    ),
+    blocks[0]?.inputs && condActions(),
     // Said once, here, rather than as a disabled control people have to work
     // out for themselves. It is a real limitation and it belongs next to the
     // thing it limits.
@@ -2803,6 +2933,9 @@ function condCard(block, index = 0) {
   return h('div.cond-card', { class: fresh ? 'is-fresh' : '', style },
     h(
       'div.cond-head',
+      // Numbered only when there is more than one, since "1" on its own is a
+      // label for a sequence that does not exist.
+      conditioningBlocks().length > 1 && h('span.cond-index', String(index + 1)),
       h('span.cond-format', t(`cond.format.${block.format}`)),
       h('span.cond-meta', condMeta(block))
     ),
@@ -2831,27 +2964,37 @@ function condCard(block, index = 0) {
         t(`cond.partnerNote.${partner.mode}`, { n: partner.people })
       ),
 
-    block.inputs &&
-      h(
-        'div.cond-actions',
-        h(
-          'button.btn.btn-sm',
-          { onclick: reshuffleConditioning },
-          icon(ICONS.shuffle, { size: 13 }),
-          t('cond.reshuffle')
-        ),
-        h(
-          'button.btn.btn-sm',
-          {
-            onclick: () => {
-              delete state.session.conditioning;
-              saveDraft();
-              render();
-            },
-          },
-          t('cond.remove')
-        )
-      )
+  );
+}
+
+/**
+ * Re-roll and remove, once for the whole workout rather than once per card.
+ *
+ * They used to live inside the card, which was fine while there was only ever
+ * one. With three, a set of controls on each would read as "re-roll this block"
+ * — which is not what they do, and building that would mean a block could be
+ * re-rolled into a movement its neighbour already has.
+ */
+function condActions() {
+  return h(
+    'div.cond-actions',
+    h(
+      'button.btn.btn-sm',
+      { onclick: reshuffleConditioning },
+      icon(ICONS.shuffle, { size: 13 }),
+      t('cond.reshuffle')
+    ),
+    h(
+      'button.btn.btn-sm',
+      {
+        onclick: () => {
+          delete state.session.conditioning;
+          saveDraft();
+          render();
+        },
+      },
+      t('cond.remove')
+    )
   );
 }
 
@@ -5183,7 +5326,9 @@ function buildPrintSheet(session) {
   // described by its conditioning, and the goal is a lifting axis it does not
   // sit on. Without this the sheet printed a stale draft name over an EMOM.
   const blocks = session.conditioning?.blocks || [];
-  const condTotal = blocks.reduce((sum, b) => sum + (b.minutes || 0), 0);
+  const condTotal =
+    blocks.reduce((sum, b) => sum + (b.minutes || 0), 0) +
+    Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
   const liftless = exercises.length === 0 && blocks.length > 0;
 
   return h(
@@ -5269,12 +5414,15 @@ function buildPrintSheet(session) {
     // Same position as on screen: after the work, before the cool-down. A
     // printed sheet is the one place a conditioning block is genuinely usable
     // today, since it needs no clock the app has not built yet.
-    ...blocks.map((block) =>
+    ...blocks.map((block, i) =>
       section(
-        `${t(`cond.format.${block.format}`)} — ${block.minutes} ${t('units.min')}`,
+        // Numbered on the sheet for the same reason as on screen, and only when
+        // there is a sequence to number.
+        `${blocks.length > 1 ? `${i + 1}. ` : ''}${t(`cond.format.${block.format}`)} — ${block.minutes} ${t('units.min')}`,
         h(
           'div',
           h('p.print-how', condMeta(block)),
+          i > 0 && h('p.print-how', t('cond.betweenPrint', { n: BLOCK_REST_MINUTES })),
           h(
             'ol.print-list',
             block.movements.map((m) =>

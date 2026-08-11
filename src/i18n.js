@@ -286,6 +286,15 @@ const LOCALES = {
     'cond.kit': 'What have you got?',
     'cond.kitHint': 'Only movements you can actually do get picked.',
     'cond.kitNone': 'Pick at least one — there is nothing to choose from otherwise.',
+    'cond.blocks': 'How many blocks',
+    'cond.blocksOne':
+      'One block. The same movements all the way through — simple to run, and the same few muscles the whole time.',
+    'cond.blocksSplit':
+      '{n} blocks of {per} min, {rest} min between. Each block gets its own movements, so more of you gets worked.',
+    'cond.blockCount.one': '{n} block',
+    'cond.blockCount.other': '{n} blocks',
+    'cond.between': '{n} min — get your breath back',
+    'cond.betweenPrint': 'Take {n} min after the block before this one.',
     'cond.complexity': 'Technique',
     'cond.partner': 'Training with anyone?',
     'cond.people': 'How many of you',

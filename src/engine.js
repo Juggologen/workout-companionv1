@@ -610,7 +610,12 @@ function planFormat(format, minutes, rand) {
       // count is `2 x minutes / stations`. Capping stations at `minutes / 2`
       // keeps that at four or more: a four-minute AMRAP that yields two rounds
       // is not an AMRAP, it is two rounds, and the score stops meaning anything.
-      const ceiling = Math.max(2, Math.floor(minutes / 2));
+      // Round = stations x 30 s, so rounds = 2 x minutes / stations. The ceiling
+      // keeps that at three or more. It used to demand four, which was right for
+      // a workout that is one block and wrong once blocks are short by design --
+      // a five-minute AMRAP capped at two movements is half the body coverage
+      // the block could carry, to buy a fourth round nobody asked for.
+      const ceiling = Math.max(2, Math.round(minutes / 1.7));
       const stations = Math.min(2 + Math.floor(rand() * 3), ceiling); // 2-4
       // 30 s per movement rather than a fixed round length divided by however
       // many movements there are. A fixed 75 s round split four ways is 19 s
@@ -654,7 +659,13 @@ function planFormat(format, minutes, rand) {
     case 'fortime':
     default: {
       const rounds = [3, 4, 5][Math.floor(rand() * 3)];
-      const stations = 2 + Math.floor(rand() * 3); // 2-4
+      // Rounds multiply stations, so a short block divides its minutes twice
+      // over: five minutes at five rounds of four movements is twelve seconds a
+      // station, which prescribes two burpees. Capping stations at
+      // `minutes × 2 / rounds` keeps every station worth at least ~25 s, which
+      // is the floor below which an amount stops being worth writing down.
+      const ceiling = Math.max(2, Math.floor((minutes * 2) / rounds));
+      const stations = Math.min(2 + Math.floor(rand() * 3), ceiling); // 2-4
       // Sized so the whole thing lands near the budget rather than under it:
       // a for-time workout that takes four minutes of a fifteen-minute slot is
       // a warm-up. 85% leaves room for the clock to be beaten.
@@ -734,6 +745,8 @@ export function generateConditioning(options, catalog) {
     lowImpact = false,
     partner = null,
     seed = 1,
+    exclude = null,
+    excludeFormats = null,
   } = options;
 
   const rand = mulberry32(seed);
@@ -758,13 +771,25 @@ export function generateConditioning(options, catalog) {
     return { format: null, minutes: 0, movements: [], shortfall: true, seed };
   }
 
-  const picked =
-    format === 'any'
-      ? CONDITIONING_FORMATS[Math.floor(rand() * CONDITIONING_FORMATS.length)]
-      : format;
+  // With no format asked for, prefer one this workout has not used yet. An EMOM
+  // then an AMRAP then a for-time is three different relationships with the
+  // clock, and that is most of what makes a third block feel unlike the first.
+  let choices = options.formatPool || CONDITIONING_FORMATS;
+  if (excludeFormats) {
+    const unused = choices.filter((f) => !excludeFormats.has(f));
+    if (unused.length) choices = unused;
+  }
+  const picked = format === 'any' ? choices[Math.floor(rand() * choices.length)] : format;
 
   const plan = planFormat(picked, minutes, rand);
-  const movementRows = pickConditioningMovements(plan.stations, pool, rand);
+
+  // Movements already spent on earlier blocks of the same workout. Honoured
+  // where the pool can afford it and abandoned where it cannot: a bodyweight-only
+  // pool is twenty movements, and four blocks of four would rather repeat a
+  // burpee than hand back a block with two movements in it.
+  const fresh = exclude ? pool.filter((m) => !exclude.has(m.ex.id)) : pool;
+  const usable = fresh.length >= plan.stations ? fresh : pool;
+  const movementRows = pickConditioningMovements(plan.stations, usable, rand);
 
   if (!movementRows.length) {
     return { format: picked, minutes: 0, movements: [], shortfall: true, seed };
@@ -803,6 +828,116 @@ export function generateConditioning(options, catalog) {
       ? Math.max(1, Math.round((actualMinutes * 60) / roundSeconds))
       : null,
     seed,
+    shortfall: false,
+  };
+}
+
+/* ------------------------------------------------------- multi-block work */
+
+/**
+ * The smallest block worth calling a block, and the breather between two.
+ *
+ * Four minutes because that is Tabata's own unit and the shortest thing anyone
+ * writes down as a piece of a workout. Two minutes of transition because
+ * changing station, resetting a rower and getting your breath back is real time
+ * — leaving it out would make the estimate lie by the length of a whole block
+ * across a four-block session.
+ */
+export const BLOCK_MIN_MINUTES = 5;
+export const BLOCK_REST_MINUTES = 2;
+const BLOCK_CEILING = 4;
+
+/**
+ * Formats worth giving a block of a multi-block workout.
+ *
+ * Tabata is one movement per four minutes by protocol, and intervals are one or
+ * two. Spending a whole block on either costs the workout most of the coverage
+ * the split was supposed to buy: an early version handed back three blocks
+ * holding four distinct movements between them, which is fewer than a single
+ * long block would have. They are still there when asked for by name -- a
+ * Tabata is a Tabata and someone choosing one knows what they are getting.
+ */
+const MULTI_BLOCK_FORMATS = ['emom', 'amrap', 'fortime'];
+
+/**
+ * How many blocks the clock can afford.
+ *
+ * N blocks cost `N × min + (N-1) × rest`, so the answer falls straight out of
+ * that. Capped at four regardless: past that the blocks get short enough that
+ * the transitions cost more than the work, and a workout that is mostly walking
+ * between stations is not a conditioning workout.
+ */
+export function maxConditioningBlocks(minutes) {
+  const fit = Math.floor(
+    (minutes + BLOCK_REST_MINUTES) / (BLOCK_MIN_MINUTES + BLOCK_REST_MINUTES)
+  );
+  return Math.max(1, Math.min(BLOCK_CEILING, fit));
+}
+
+/**
+ * A conditioning workout: one block, or several with a breather between.
+ *
+ * One block of three movements over sixteen minutes is the same three movements
+ * five times each, which trains a narrow slice of you and is dull by minute ten.
+ * Three blocks over the same sixteen minutes is nine movements, each block short
+ * enough to be attacked rather than paced. That is how conditioning is actually
+ * programmed, and the data model already allowed for it -- `blocks` has been an
+ * array since the beginning and only ever had one thing in it.
+ *
+ * Two rules make the difference worth having:
+ *
+ *   Movements do not repeat across blocks while the pool can afford it, so a
+ *   three-block workout really is nine movements rather than the same three
+ *   dealt again.
+ *
+ *   Formats vary across blocks when none was asked for. An EMOM then an AMRAP
+ *   then a for-time is three different relationships with the clock, which is
+ *   most of what makes the second half feel unlike the first.
+ */
+export function generateConditioningWorkout(options, catalog) {
+  const { minutes = 12, blocks: requested = 1, seed = 1, format = 'any' } = options;
+
+  const count = Math.max(1, Math.min(maxConditioningBlocks(minutes), requested));
+  const restTotal = (count - 1) * BLOCK_REST_MINUTES;
+  const per = Math.floor((minutes - restTotal) / count);
+
+  const rand = mulberry32(seed);
+  const used = new Set();
+  const usedFormats = new Set();
+  const blocks = [];
+
+  for (let i = 0; i < count; i += 1) {
+    // The last block absorbs the rounding, so the workout adds up to the ask
+    // rather than losing a minute per block to the floor above.
+    const spare = i === count - 1 ? minutes - restTotal - per * count : 0;
+    const block = generateConditioning(
+      {
+        ...options,
+        minutes: per + spare,
+        format,
+        exclude: used,
+        excludeFormats: usedFormats,
+        formatPool: count > 1 ? MULTI_BLOCK_FORMATS : CONDITIONING_FORMATS,
+        seed: Math.floor(rand() * 2 ** 31),
+      },
+      catalog
+    );
+    if (block.shortfall) continue;
+    block.movements.forEach((m) => used.add(m.ref));
+    usedFormats.add(block.format);
+    blocks.push(block);
+  }
+
+  if (!blocks.length) return { blocks: [], minutes: 0, restBetween: 0, shortfall: true };
+
+  const worked = blocks.reduce((sum, b) => sum + b.minutes, 0);
+  return {
+    blocks,
+    /** Wall-clock for the whole thing, transitions included. */
+    minutes: worked + (blocks.length - 1) * BLOCK_REST_MINUTES,
+    restBetween: blocks.length > 1 ? BLOCK_REST_MINUTES : 0,
+    /** Distinct movements across the workout -- the number this feature exists for. */
+    distinctMovements: used.size,
     shortfall: false,
   };
 }

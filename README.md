@@ -351,6 +351,32 @@ tiers as everything else. An air bike is agony and still basic;
 double-unders are advanced because a beginner doing them tired mostly whips
 their own shins.
 
+### Blocks
+
+One block of three movements over twenty minutes is those three movements six
+times each — a narrow slice of you, and dull by minute ten. So a workout can be
+cut into up to **four blocks**, each with its own movements and its own shape,
+with two minutes between them.
+
+What that buys, measured over 300 seeds per cell — average distinct movements,
+and body regions of the five:
+
+| | 1 block | 2 | 3 | 4 |
+|---|---|---|---|---|
+| **20 min** | 2.8 mv / 2.7 roles | 5.9 / 3.9 | 7.2 / 4.0 | — |
+| **30 min** | 2.7 / 2.6 | 5.3 / 3.6 | 8.5 / 4.2 | **10.6 / 4.4** |
+
+The count scales with the clock — a block needs 5 minutes and the gaps cost 2, so
+you get 1 block under 10 minutes, 2 from 12, 3 from 19, 4 from 26. All four are
+always shown, with the unreachable ones disabled, because a control that grows
+and shrinks as you scroll the time strip is one you can't aim at.
+
+Movements never repeat across blocks unless the pool is genuinely too small, and
+the shapes vary — an EMOM then an AMRAP then a for-time is three different
+relationships with the clock, which is most of what makes the third block feel
+unlike the first. The two-minute transitions are drawn on the plan and counted in
+the total, because changing station and getting your breath back is real time.
+
 ### Formats
 
 Five, from one generator: **EMOM** (one movement a minute, rotating), **AMRAP**
@@ -381,8 +407,9 @@ reachable.
 
 ### Generating one
 
-**HIIT workout** on Home asks four things — how long (4–30 min), what shape,
-what kit is to hand, and whether anyone's doing it with you. Kit is asked each
+**HIIT workout** on Home asks five things — how long (4–30 min), **how many
+blocks**, what shape, what kit is to hand, and whether anyone's doing it with
+you. Kit is asked each
 time rather than kept as a setting, because the answer changes between the gym
 and the garage and a stale one silently prescribes a rower you can't reach.
 

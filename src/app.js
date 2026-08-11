@@ -1579,11 +1579,7 @@ function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick, colourOf 
  * session. Neither case needs a decision from the user, because the draft
  * already says which they meant.
  */
-function runConditioning() {
-  const c = condState();
-  const partner =
-    c.partnerMode === 'solo' ? null : { mode: c.partnerMode, people: c.people };
-
+function conditioningBlockFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
   const block = generateConditioning(
     {
       minutes: c.minutes,
@@ -1591,19 +1587,76 @@ function runConditioning() {
       kit: c.kit,
       complexity: c.complexity,
       lowImpact: c.lowImpact,
-      partner,
-      seed: Math.floor(Math.random() * 2 ** 31),
+      partner: c.partnerMode === 'solo' ? null : { mode: c.partnerMode, people: c.people },
+      seed,
     },
     state.catalog
   );
-
   if (block.shortfall) {
     flash(t('cond.nothingFits'));
+    return null;
+  }
+  block.id = newId();
+  block.inputs = { ...c };
+  return block;
+}
+
+/**
+ * Generate a conditioning block and decide what it is attached to.
+ *
+ * This used to attach the block to the draft unconditionally, on the reasoning
+ * that a draft with lifts means you wanted a finisher and an empty one means you
+ * wanted a conditioning session -- "the draft already says which you meant".
+ *
+ * It does not. The **entry point** says what you meant. Someone who taps HIIT
+ * workout on Home, picks a shape, picks their kit and presses Generate wants a
+ * HIIT workout; what they got was last week's Leg day in Strength orange with an
+ * EMOM stapled to the bottom, which reads as the app ignoring every answer they
+ * just gave.
+ *
+ * So a draft holding lifts is now a fork rather than an assumption, and the
+ * finisher survives as the thing you can explicitly ask for. An empty draft
+ * still needs no question, because there is nothing to collide with.
+ */
+function runConditioning() {
+  const block = conditioningBlockFrom(condState());
+  if (!block) return;
+
+  const lifts = sessionExercises().length;
+  if (!lifts) {
+    applyConditioning(block, true);
     return;
   }
 
-  block.id = newId();
-  block.inputs = { ...c };
+  const name = sessionTitle(state.session);
+  choiceSheet({
+    title: t('cond.attachTitle'),
+    body: tp('cond.attachBody', lifts, { name }),
+    choices: [
+      {
+        label: t('cond.attachAlone'),
+        sub: t('cond.attachAloneSub', { name }),
+        primary: true,
+        onPick: () => applyConditioning(block, true),
+      },
+      {
+        label: t('cond.attachFinisher', { name }),
+        sub: t('cond.attachFinisherSub'),
+        onPick: () => applyConditioning(block, false),
+      },
+    ],
+    cancelLabel: t('custom.cancel'),
+  });
+}
+
+/**
+ * `standalone` starts a fresh session rather than clearing the draft's lifts,
+ * so the old workout is replaced whole rather than half-emptied -- a session
+ * keeping its name, goal and budgets while losing its exercises is a workout
+ * that no longer matches its own title.
+ */
+function applyConditioning(block, standalone) {
+  if (standalone) state.session = blankSession();
   state.session.conditioning = { blocks: [block] };
   saveDraft();
 
@@ -1614,29 +1667,17 @@ function runConditioning() {
   }, 1600);
 }
 
-/** Re-roll the conditioning block on the same inputs. */
+/** Re-roll the conditioning block on the same inputs, in place. */
 function reshuffleConditioning() {
   const existing = state.session.conditioning?.blocks?.[0];
   if (!existing?.inputs) return;
-  const c = existing.inputs;
-  const block = generateConditioning(
-    {
-      minutes: c.minutes,
-      format: c.format,
-      kit: c.kit,
-      complexity: c.complexity,
-      lowImpact: c.lowImpact,
-      partner: c.partnerMode === 'solo' ? null : { mode: c.partnerMode, people: c.people },
-      seed: Math.floor(Math.random() * 2 ** 31),
-    },
-    state.catalog
-  );
-  if (block.shortfall) {
-    flash(t('cond.nothingFits'));
-    return;
-  }
+
+  const block = conditioningBlockFrom(existing.inputs);
+  if (!block) return;
+
+  // Keeps the old id: this is the same block re-rolled, not a new one, and
+  // anything holding a reference to it should still be pointing at it.
   block.id = existing.id;
-  block.inputs = c;
   state.session.conditioning = { blocks: [block] };
   saveDraft();
   render();
@@ -3283,6 +3324,49 @@ function rpeSheet({ title, body, onPick }) {
  * A modal confirmation. Built rather than using window.confirm so the question
  * can carry the actual numbers and match the rest of the app.
  */
+/**
+ * A sheet offering two ways forward rather than yes/no.
+ *
+ * `confirmSheet` is a question with an answer. This is a fork: both options are
+ * real things to do, so neither can be the one you get by declining. Each
+ * carries a second line, because the difference between them is the part that
+ * needs explaining and a button label has no room for it.
+ */
+function choiceSheet({ title, body, choices, cancelLabel }) {
+  const dialog = h(
+    'dialog.sheet',
+    { style: `--g:${screenAccent()}` },
+    h(
+      'div.sheet-body',
+      h('h2.sheet-title', title),
+      h('p.sheet-text', body),
+      h(
+        'div.stack',
+        { style: 'gap:8px' },
+        choices.map((choice) =>
+          h(
+            'button.btn.btn-block.choice-btn',
+            {
+              class: choice.primary ? 'btn-goal' : '',
+              onclick: () => {
+                dialog.close();
+                choice.onPick();
+              },
+            },
+            h('span.choice-label', choice.label),
+            choice.sub && h('span.choice-sub', choice.sub)
+          )
+        ),
+        h('button.btn-link', { onclick: () => dialog.close() }, cancelLabel)
+      )
+    )
+  );
+
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
 function confirmSheet({ title, body, confirmLabel, cancelLabel, onConfirm }) {
   const dialog = h(
     'dialog.sheet',

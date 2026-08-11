@@ -386,11 +386,12 @@ what kit is to hand, and whether anyone's doing it with you. Kit is asked each
 time rather than kept as a setting, because the answer changes between the gym
 and the garage and a stale one silently prescribes a rower you can't reach.
 
-The block attaches to the draft session, and because `session.conditioning` is
-an *optional* field that one behaviour covers both cases: an empty draft becomes
-a **conditioning session**, a draft with lifts gets a **finisher**. On the plan
-the block sits after the lifts and before the cool-down — a finisher is the last
-hard thing you do, and the cool-down is what brings you down from it.
+A HIIT workout normally stands on its own. If you happen to have a lifting draft
+open, it asks once whether you want the conditioning **on its own** or **as a
+finisher** on that session — rather than guessing from what the draft holds,
+which is leftover state and no indication of what you just asked for. On the
+plan a finisher sits after the lifts and before the cool-down: it's the last hard
+thing you do, and the cool-down is what brings you down from it.
 
 **Each shape has its own colour**, the way the four goals do, so a plan is
 recognisable as an EMOM or an AMRAP before it's read — and picking one repaints

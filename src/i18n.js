@@ -292,6 +292,15 @@ const LOCALES = {
     'cond.lowImpact': 'No jumping',
     'cond.lowImpactHint': 'Leaves out box jumps, skipping and burpees. Ergs and carries stay.',
     'cond.generate': 'Generate',
+    'cond.attachTitle': 'On its own, or after the lifting?',
+    'cond.attachBody.one':
+      'You have {name} on the go, with {n} lift in it.',
+    'cond.attachBody.other':
+      'You have {name} on the go, with {n} lifts in it.',
+    'cond.attachAlone': 'A workout on its own',
+    'cond.attachAloneSub': 'Just the conditioning. Replaces {name}.',
+    'cond.attachFinisher': 'Add it to {name}',
+    'cond.attachFinisherSub': 'As a finisher, after the lifting and before the cool-down.',
     'cond.nothingFits': 'Nothing fits that. Try more kit, or a higher technique level.',
 
     'cond.format.any': 'Surprise me',

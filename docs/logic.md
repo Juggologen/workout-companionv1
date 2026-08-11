@@ -1684,3 +1684,52 @@ since shapes are not goals and have no entry in `GOAL_COLOR`.
 finisher shows up in its shape's colour against a lifting session's goal colour.
 An EMOM should be recognisable as an EMOM wherever it appears — that is the point
 of giving shapes colours at all.
+
+---
+
+## 24. Generating a HIIT no longer hands you your lifting draft
+
+**The bug.** Tap HIIT workout on Home, pick a shape, pick your kit, press
+Generate — and land on *"Leg day / Strength"* in orange with two barbell lifts,
+the conditioning buried at the bottom as a finisher.
+
+**The cause was §22's reasoning, not a slip.** `session.conditioning` being
+optional lets one field express both "a conditioning session" and "a lifting
+session with a finisher", and I decided which by looking at the draft: lifts
+present meant finisher, empty meant standalone. The line was *"nothing has to
+choose, because the draft already says which was meant."*
+
+It does not. **The entry point says what was meant.** Someone who taps HIIT
+workout, answers four questions about a HIIT workout and presses Generate wants
+a HIIT workout. What the draft happens to hold is leftover state from whatever
+they were doing last, and letting it silently outvote four explicit answers
+reads as the app ignoring all of them.
+
+**The fix** is to stop inferring. An empty draft still needs no question — there
+is nothing to collide with. A draft holding lifts now asks, once:
+
+> **On its own, or after the lifting?**
+> You have Leg day on the go, with 2 lifts in it.
+> — **A workout on its own** · Just the conditioning. Replaces Leg day.
+> — **Add it to Leg day** · As a finisher, after the lifting and before the cool-down.
+> — Cancel
+
+That keeps the finisher — it is a genuinely useful thing and §22's ordering
+still applies — but as something you ask for rather than something you are given
+for having a draft open.
+
+`choiceSheet` is new alongside `confirmSheet`, because this is a fork rather
+than a yes/no: both options are real things to do, so neither can be the one you
+get by declining. Each carries a second line, since the difference between them
+is the part that needs explaining and a button label has no room for it. The way
+out is the quiet link underneath, not one of the two.
+
+Standalone starts a **fresh session** rather than clearing the draft's lifts: a
+session keeping its name, goal and budgets while losing its exercises is a
+workout that no longer matches its own title.
+
+Verified on all four paths — no lifts (no question asked, straight to a
+conditioning plan), on-its-own (`HIIT workout / Tabata`, 0 lift cards, format
+accent), finisher (`Leg day / Strength`, 2 lift cards, Warm-up → Main lifts →
+Finisher → Cool-down, goal accent on the screen and format accent on the card),
+and cancel (sheet closes, screen unchanged, draft byte-identical).

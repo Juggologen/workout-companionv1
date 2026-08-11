@@ -751,6 +751,40 @@ failing.
 
 ---
 
+## 16a. Naming the three phases
+
+One set of names — `phase.warmup`, `phase.main`, `phase.cooldown` — used by the
+plan, the live session and the print sheet, so all three say the same words.
+
+They did not before. The plan read `Warm-up · 15 min`, `Main · 36 min`,
+`Mobility · 9 min`, the live session said `Mobility`, and the print sheet said
+`Main session` and `Cool-down`. Three problems:
+
+- **"Main"** was the workbook's column heading, not something anyone says.
+  Main what? It is the lifting, so it is **Main lifts**.
+- **"Mobility"** named the contents rather than the phase, and disagreed with
+  both the code and the printed sheet. The phase is the **cool-down**;
+  mobility is what is in it.
+- **Minutes without a count** says how long but not how much. `5 drills · 15
+  min` answers both, and the pair is what tells you whether you have time.
+
+They were also set in `.section-label` — the same 11px uppercase letterspaced
+micro-type as every minor caption in the app — which made the largest divisions
+on the screen read as decoration. `.phase-head` is sentence case at 15.5px with
+the count and duration carried right, so they can be compared down the column.
+
+`phaseHead(..., { explain: true })` adds a line of plain English about what the
+phase is for. On the plan only: there you are reading and deciding, and during
+a session you already know what a warm-up is and want the list, not the lecture.
+
+The live session keeps its warm-up and cool-down as blocks rather than putting
+a phase header above them — a block already carries a title, a count and a
+tick, so a header would say the same thing twice. The lifts are the gap: they
+are one block each, so without a header for the group they simply began, with
+nothing marking that the warm-up was over.
+
+---
+
 ## 17. Screen transitions
 
 Navigation was a hard cut: `render()` replaces the whole subtree, so switching

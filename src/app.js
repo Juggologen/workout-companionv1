@@ -2176,7 +2176,9 @@ function viewPlan() {
         h(
           'div.stack',
           { style: 'gap:10px' },
-          h('div.section-label', t('plan.warmup', { n: built.warmup.minutes })),
+          phaseHead('warmup', tp('phase.drills', built.warmup.items.length), built.warmup.minutes, {
+            explain: true,
+          }),
           built.warmup.items.map((d) =>
             drillRow(d.phase.replace(/^\d+\s*/, ''), localized(d.name), d.minutes)
           )
@@ -2185,7 +2187,9 @@ function viewPlan() {
       h(
         'div.stack',
         { style: 'gap:10px' },
-        h('div.section-label', t('plan.main', { n: built.mainMinutes })),
+        phaseHead('main', tp('phase.lifts', built.main.length), built.mainMinutes, {
+          explain: true,
+        }),
         built.main.map((row, i) => planExerciseCard(row, i))
       ),
 
@@ -2193,7 +2197,9 @@ function viewPlan() {
         h(
           'div.stack',
           { style: 'gap:10px' },
-          h('div.section-label', t('plan.cooldown', { n: built.cooldown.minutes })),
+          phaseHead('cooldown', tp('phase.moves', built.cooldown.items.length), built.cooldown.minutes, {
+            explain: true,
+          }),
           built.cooldown.items.map((m) => drillRow(m.type, localized(m.name), m.minutes))
         ),
 
@@ -2247,6 +2253,45 @@ function shuffleQuick() {
   render();
   const changed = result.exerciseIds.filter((id) => !previous.includes(id)).length;
   flash(changed ? tp('quick.shuffled', changed) : t('quick.shuffledSame'));
+}
+
+/**
+ * The header for one phase of a session — warm-up, the lifts, the cool-down.
+ *
+ * These were `Warm-up · 15 min`, `Main · 36 min` and `Mobility · 9 min` in
+ * 11px uppercase micro-type. Three problems:
+ *
+ *   "Main" is the workbook's word for a column, not a thing anyone says. Main
+ *   what? It is the lifting, so it says so.
+ *
+ *   "Mobility" named the contents rather than the phase, and disagreed with
+ *   the print sheet and the code, which both call it the cool-down. The phase
+ *   is the cool-down; mobility is what is in it.
+ *
+ *   Minutes without a count says how long but not how much. "5 drills · 15
+ *   min" answers both, and the two together are what tells you whether you
+ *   have time for this.
+ *
+ * `explain` adds a line of plain English about what the phase is for. It is
+ * on for the plan, where you are reading and deciding, and off during a live
+ * session, where you already know and want the list.
+ */
+function phaseHead(key, count, minutes, { explain = false } = {}) {
+  return h(
+    'div.stack',
+    { style: 'gap:3px' },
+    h(
+      'div.phase-head',
+      h('span.phase-name', t(`phase.${key}`)),
+      h('span.phase-meta', phaseMeta(count, minutes))
+    ),
+    explain && h('p.phase-why', t(`phase.why.${key}`))
+  );
+}
+
+/** "5 drills · 15 min" — how much, and how long, in that order. */
+function phaseMeta(count, minutes) {
+  return `${count} · ${t('phase.mins', { n: minutes })}`;
 }
 
 function drillRow(kicker, name, minutes) {
@@ -2434,22 +2479,32 @@ function viewLive() {
         )
       ),
 
+      // The warm-up and cool-down blocks are their own headers -- they carry a
+      // title, a count and a tick already, so putting a phase header above
+      // them would say the same thing twice. The lifts are the gap: they are
+      // one block each, so without a header for the group they simply began,
+      // with nothing to mark that the warm-up was over and the work started.
       built.warmup.items.length > 0 &&
         block({
           key: 'warmup',
-          title: t('live.warmup'),
-          sub: `${built.warmup.minutes} ${t('units.min')}`,
+          title: t('phase.warmup'),
+          sub: phaseMeta(tp('phase.drills', built.warmup.items.length), built.warmup.minutes),
           keys: built.warmup.items.map((d) => `w${d.id}`),
           children: built.warmup.items.map((d) => checkRow(`w${d.id}`, localized(d.name), d.minutes)),
         }),
 
-      setBlocks,
+      h(
+        'div.stack',
+        { style: 'gap:9px' },
+        phaseHead('main', tp('phase.lifts', exercises.length), built.mainMinutes),
+        setBlocks
+      ),
 
       built.cooldown.items.length > 0 &&
         block({
           key: 'mobility',
-          title: t('live.cooldown'),
-          sub: `${built.cooldown.minutes} ${t('units.min')}`,
+          title: t('phase.cooldown'),
+          sub: phaseMeta(tp('phase.moves', built.cooldown.items.length), built.cooldown.minutes),
           keys: built.cooldown.items.map((m) => `c${m.id}`),
           children: built.cooldown.items.map((m) => checkRow(`c${m.id}`, localized(m.name), m.minutes)),
         }),
@@ -4431,7 +4486,7 @@ function buildPrintSheet(session) {
 
     built.warmup.items.length > 0 &&
       section(
-        `${t('print.warmup')} — ${built.warmup.minutes} ${t('units.min')}`,
+        `${t('phase.warmup')} — ${built.warmup.minutes} ${t('units.min')}`,
         h(
           'ol.print-list',
           built.warmup.items.map((d) =>
@@ -4447,7 +4502,7 @@ function buildPrintSheet(session) {
 
     built.main.length > 0 &&
       section(
-        `${t('print.main')} — ${built.mainMinutes} ${t('units.min')}`,
+        `${t('phase.main')} — ${built.mainMinutes} ${t('units.min')}`,
         h(
           'table.print-table',
           h(
@@ -4485,7 +4540,7 @@ function buildPrintSheet(session) {
 
     built.cooldown.items.length > 0 &&
       section(
-        `${t('print.cooldown')} — ${built.cooldown.minutes} ${t('units.min')}`,
+        `${t('phase.cooldown')} — ${built.cooldown.minutes} ${t('units.min')}`,
         h(
           'ol.print-list',
           built.cooldown.items.map((m) =>

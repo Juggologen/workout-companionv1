@@ -159,7 +159,7 @@ pushed from Home.
 | **Home** | The three ways to start — generate one, build one, or step onto a saved one — then the Monday-to-Sunday week with muscle coverage, and the goal balance. |
 | **Quick workout** | Muscle groups, time, focus and complexity in, a whole session out. Reached from Home. |
 | **Build** | Name it in the title, pick a goal from the same scroller Quick uses, choose lifts — each with its 1RM to hand — and set the budgets. |
-| **Plan** | The whole session laid out: warm-up, every lift with sets × reps and suggested load, mobility, and what it trains. Save, export a PDF, or start. |
+| **Plan** | The whole session laid out in three phases — warm-up, main lifts, cool-down — each with its item count, its duration and a line on what it is for. Save, export a PDF, or start. |
 | **Session** | Tick each set off as you do it, type or step the load, and the rest timer counts the prescribed rest. Finishing asks how hard it was and logs exactly what you ticked. |
 | **Log** | Goal balance over 30 days, perceived exertion over a week, month or year, sets per muscle group, history, per-exercise bests, and your data. |
 | **Library** | All 167 exercises plus any you write yourself. Search by name, filter by equipment, movement pattern, primary muscle and supporting muscle, read the cue, set your 1RMs — and pick lifts from here when building. |
@@ -175,9 +175,16 @@ entirely different one while it is in progress — the plan you are halfway
 through never moves under you, and finishing logs what that session actually
 prescribed.
 
-The session screen groups the warm-up, each exercise and the mobility work into
+The session screen groups the warm-up, each exercise and the cool-down into
 collapsible boxes with their own done counts, plus a select-all and a
 confirmation if you finish with steps still unmarked.
+
+**The three phases are named the same everywhere** — Warm-up, Main lifts,
+Cool-down — on the plan, in a live session and on the printed sheet. "Main" was
+the workbook's column heading rather than anything anyone says, and "Mobility"
+named the contents rather than the phase while disagreeing with the sheet and
+the code. Each header carries its item count as well as its duration, because
+minutes alone tell you how long but not how much.
 
 Weights are steppable in 2.5 kg or typable outright. Typing accepts any number;
 only the +/- buttons enforce the grid, snapping an off-grid weight onto it in

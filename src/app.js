@@ -36,6 +36,9 @@ import {
   RPE_MAX,
   generateQuickWorkout,
   COMPLEXITY_LEVELS,
+  generateConditioning,
+  CONDITIONING_FORMATS,
+  PARTNER_MODES,
 } from './engine.js';
 import { renderBodyMap, musclesWorked } from './muscles.js';
 
@@ -72,6 +75,7 @@ const SCREEN_DEPTH = {
   guide: 1,
   saved: 1,
   quick: 1,
+  cond: 1,
   plan: 2,
   live: 3,
 };
@@ -138,6 +142,23 @@ const QUICK_DEFAULTS = {
 
 /** 15 minutes to two hours, in five-minute steps. */
 const QUICK_TIMES = Array.from({ length: 22 }, (_, i) => 15 + i * 5);
+
+/**
+ * Conditioning runs short. 4 to 30 minutes, and the low end matters: a Tabata is
+ * four minutes by definition, and "I have six minutes" is a real ask that the
+ * lifting range cannot express.
+ */
+const COND_TIMES = [4, 6, 8, 10, 12, 14, 15, 16, 18, 20, 25, 30];
+
+const COND_DEFAULTS = {
+  minutes: 12,
+  format: 'any',
+  kit: ['floor'],
+  complexity: 'medium',
+  lowImpact: false,
+  partnerMode: 'solo',
+  people: 2,
+};
 
 const QUICK_PRESETS = {
   upper: ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps'],
@@ -284,6 +305,14 @@ function screenAccent() {
   // nothing followed it.
   if (state.screen === 'quick') {
     return GOAL_COLOR[quickState().goal] || GOAL_COLOR.Strength;
+  }
+  // Conditioning is its own mode, not one of the four goals, so it wears the
+  // fifth accent -- on its own screen, and on a plan whose only content is a
+  // conditioning block. A plan with lifts AND a finisher keeps the lifts' goal
+  // colour, because the lifting is still what the session is.
+  if (state.screen === 'cond') return 'var(--goal-conditioning)';
+  if (state.screen === 'plan' && conditioningBlocks().length && !sessionExercises().length) {
+    return 'var(--goal-conditioning)';
   }
   return GOAL_COLOR[state.session.goal];
 }
@@ -461,6 +490,8 @@ function screen() {
       return viewGuide();
     case 'quick':
       return viewQuick();
+    case 'cond':
+      return viewConditioning();
     default:
       return viewHome();
   }
@@ -477,7 +508,10 @@ function tabbar() {
   // Plan and Session are pushed from Build; Saved and the guide from Home.
   // Keep the parent tab lit so the bar never looks like nothing is selected.
   const parent =
-    state.screen === 'plan' || state.screen === 'live' || state.screen === 'quick'
+    state.screen === 'plan' ||
+    state.screen === 'live' ||
+    state.screen === 'quick' ||
+    state.screen === 'cond'
       ? 'build'
       : state.screen === 'saved' || state.screen === 'guide'
         ? 'home'
@@ -663,6 +697,16 @@ function startBlock() {
     'div.start-tiles',
     tile('quick', ICONS.spark, t('quick.title'), t('home.quickBlurb')),
     tile('build', ICONS.dumbbell, t('home.buildTitle'), t('home.buildBlurb')),
+    // Conditioning gets a full-width tile of its own rather than a third square,
+    // because it is a different kind of training rather than a third way to
+    // arrive at the same session -- and it carries its own accent to say so.
+    h(
+      'button.start-tile.tile-wide.tile-cond',
+      { onclick: () => go('cond') },
+      h('span.tile-icon', icon(ICONS.clock, { size: 17 })),
+      h('span.tile-title', t('cond.title')),
+      h('span.tile-blurb', t('cond.homeBlurb'))
+    ),
     savedPlatform()
   );
 }
@@ -1304,6 +1348,264 @@ function quickSection(label, body, hint) {
   );
 }
 
+/* ---------------------------------------------------------- conditioning
+
+   The same four-questions-and-a-button shape as Quick workout, because it is
+   the same kind of screen and there is nothing to gain from it being a
+   different one. What it asks is different: how long, what shape, what kit is
+   to hand, and whether anyone is doing it with you.
+
+   Kit is asked here rather than kept as a setting because the answer changes
+   between the gym and the garage, and a stale one silently prescribes a rower
+   you cannot reach.
+   ------------------------------------------------------------------------ */
+
+function condState() {
+  if (!state.cond) state.cond = { ...COND_DEFAULTS, ...(state.prefs.cond || {}) };
+  return state.cond;
+}
+
+function setCond(patch, { rerender = true } = {}) {
+  state.cond = { ...condState(), ...patch };
+  state.prefs = { ...state.prefs, cond: state.cond };
+  store.setPrefs(state.prefs);
+  if (rerender) render();
+}
+
+const COND_KITS = ['erg', 'run', 'floor', 'rig'];
+const COND_FORMAT_CHOICES = ['any', ...CONDITIONING_FORMATS];
+const COND_PARTNERS = ['solo', ...PARTNER_MODES];
+
+function viewConditioning() {
+  const c = condState();
+  const noKit = c.kit.length === 0;
+
+  return h(
+    'div.screen',
+    h(
+      'div.screen-inner',
+      { style: 'gap:24px' },
+      backLink(t('tab.home'), () => go('home')),
+      screenHead(t('cond.kicker'), t('cond.title')),
+      h('p.hint', { style: 'margin-top:-14px' }, t('cond.blurb')),
+
+      quickSection(
+        t('cond.time'),
+        timeScroller(c.minutes, COND_TIMES, (minutes) => setCond({ minutes }, { rerender: false }))
+      ),
+
+      // Shape gets the scrolling-card treatment the goals get, and for the same
+      // reason: "EMOM" and "AMRAP" are jargon that mean nothing until someone
+      // tells you, and this is the screen where they need telling.
+      // No accent pulse on these, unlike the goal cards: the pulse exists to
+      // announce that the theme colour changed, and this screen is conditioning
+      // cyan whichever shape you pick. A wave that recoloured nothing would be
+      // decoration pretending to be feedback.
+      quickSection(
+        t('cond.format'),
+        cardScroller(COND_FORMAT_CHOICES, c.format, 'cond.format', 'cond.formatWhy', (key) =>
+          setCond({ format: key })
+        )
+      ),
+
+      quickSection(
+        t('cond.kit'),
+        h(
+          'div.chips.chips-grid',
+          COND_KITS.map((k) => {
+            const on = c.kit.includes(k);
+            return h(
+              'button.chip.chip-stack',
+              {
+                class: on ? 'is-on' : '',
+                'aria-pressed': String(on),
+                onclick: () =>
+                  setCond({ kit: on ? c.kit.filter((x) => x !== k) : [...c.kit, k] }),
+              },
+              h('span.chip-name', t(`cond.kit.${k}`)),
+              h('span.chip-sub', t(`cond.kitWhy.${k}`))
+            );
+          })
+        ),
+        noKit ? t('cond.kitNone') : t('cond.kitHint')
+      ),
+
+      quickSection(
+        t('cond.partner'),
+        cardScroller(COND_PARTNERS, c.partnerMode, 'cond.partner', 'cond.partnerWhy', (key) =>
+          setCond({ partnerMode: key })
+        )
+      ),
+
+      c.partnerMode !== 'solo' &&
+        quickSection(
+          t('cond.people'),
+          h(
+            'div.chips',
+            [2, 3, 4].map((n) =>
+              h(
+                'button.chip',
+                {
+                  class: c.people === n ? 'is-on' : '',
+                  'aria-pressed': String(c.people === n),
+                  onclick: () => setCond({ people: n }),
+                },
+                String(n)
+              )
+            )
+          )
+        ),
+
+      quickSection(
+        t('cond.complexity'),
+        h(
+          'div.stack',
+          { style: 'gap:9px' },
+          h(
+            'div.chips',
+            COMPLEXITY_LEVELS.map((level) =>
+              h(
+                'button.chip',
+                {
+                  class: c.complexity === level ? 'is-on' : '',
+                  'aria-pressed': String(c.complexity === level),
+                  onclick: () => setCond({ complexity: level }),
+                },
+                t(`quick.level.${level}`)
+              )
+            )
+          ),
+          h('p.hint', t(`quick.levelHint.${c.complexity}`))
+        )
+      ),
+
+      quickSection(
+        t('cond.lowImpact'),
+        h(
+          'button.chip',
+          {
+            class: c.lowImpact ? 'is-on' : '',
+            'aria-pressed': String(c.lowImpact),
+            onclick: () => setCond({ lowImpact: !c.lowImpact }),
+          },
+          t('cond.lowImpact')
+        ),
+        t('cond.lowImpactHint')
+      )
+    ),
+    h(
+      'div.sticky-actions',
+      h(
+        'button.btn.btn-goal.btn-lg.btn-block',
+        { disabled: noKit, onclick: () => runConditioning() },
+        icon(ICONS.spark, { size: 16 }),
+        t('cond.generate')
+      )
+    )
+  );
+}
+
+/**
+ * A side-scrolling row of titled cards with a blurb, one of them chosen.
+ *
+ * Lifted out of `focusScroller` rather than copied: shape and partner mode are
+ * the same problem the goals had -- a word that means nothing until someone
+ * explains it -- and they deserve the same answer. The goals keep their own
+ * function because their cards also carry prescription numbers.
+ */
+function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick) {
+  return h(
+    'div.focus-scroller',
+    { role: 'radiogroup' },
+    keys.map((key) => {
+      const on = key === current;
+      return h(
+        'button.focus-card.card-plain',
+        {
+          class: on ? 'is-on' : '',
+          role: 'radio',
+          'aria-checked': String(on),
+          onclick: () => onPick(key),
+        },
+        h('span.focus-name', t(`${titlePrefix}.${key}`)),
+        h('span.focus-blurb', t(`${blurbPrefix}.${key}`))
+      );
+    })
+  );
+}
+
+/**
+ * Generate a conditioning block and hand it to Plan.
+ *
+ * The block is attached to the draft session rather than replacing it, which is
+ * the whole point of `session.conditioning` being an optional field: a draft
+ * with lifts in it gets a finisher, and an empty one gets a conditioning
+ * session. Neither case needs a decision from the user, because the draft
+ * already says which they meant.
+ */
+function runConditioning() {
+  const c = condState();
+  const partner =
+    c.partnerMode === 'solo' ? null : { mode: c.partnerMode, people: c.people };
+
+  const block = generateConditioning(
+    {
+      minutes: c.minutes,
+      format: c.format,
+      kit: c.kit,
+      complexity: c.complexity,
+      lowImpact: c.lowImpact,
+      partner,
+      seed: Math.floor(Math.random() * 2 ** 31),
+    },
+    state.catalog
+  );
+
+  if (block.shortfall) {
+    flash(t('cond.nothingFits'));
+    return;
+  }
+
+  block.id = newId();
+  block.inputs = { ...c };
+  state.session.conditioning = { blocks: [block] };
+  saveDraft();
+
+  state.freshQuick = true;
+  go('plan');
+  setTimeout(() => {
+    state.freshQuick = false;
+  }, 1600);
+}
+
+/** Re-roll the conditioning block on the same inputs. */
+function reshuffleConditioning() {
+  const existing = state.session.conditioning?.blocks?.[0];
+  if (!existing?.inputs) return;
+  const c = existing.inputs;
+  const block = generateConditioning(
+    {
+      minutes: c.minutes,
+      format: c.format,
+      kit: c.kit,
+      complexity: c.complexity,
+      lowImpact: c.lowImpact,
+      partner: c.partnerMode === 'solo' ? null : { mode: c.partnerMode, people: c.people },
+      seed: Math.floor(Math.random() * 2 ** 31),
+    },
+    state.catalog
+  );
+  if (block.shortfall) {
+    flash(t('cond.nothingFits'));
+    return;
+  }
+  block.id = existing.id;
+  block.inputs = c;
+  state.session.conditioning = { blocks: [block] };
+  saveDraft();
+  render();
+}
+
 /**
  * The four goals as cards you scroll through, not four small pills.
  *
@@ -1562,11 +1864,20 @@ const samePreset = (a, b) => a.length === b.length && b.every((m) => a.includes(
  * re-rendering mid-scroll would replace the element being scrolled and the
  * momentum would die under the user's thumb.
  */
-function timeScroller(current) {
+/**
+ * The scrolling minute strip.
+ *
+ * `values` and `onSettle` are parameters rather than the hard-wired quick-workout
+ * ones, because conditioning asks the same question over a much shorter range --
+ * nobody does a ninety-minute AMRAP -- and reimplementing scroll-snap, the
+ * centre-detection and the settle timer for a second range would be two copies
+ * of the fiddliest control in the app.
+ */
+function timeScroller(current, values = QUICK_TIMES, onSettle = null) {
   const readout = h('div.time-readout', h('span.time-value', String(current)), h('span.time-unit', t('units.min')));
   const strip = h('div.time-strip', { role: 'group', 'aria-label': t('quick.time') });
 
-  const items = QUICK_TIMES.map((value) =>
+  const items = values.map((value) =>
     h(
       'button.time-tick',
       {
@@ -1593,6 +1904,10 @@ function timeScroller(current) {
       item.setAttribute('aria-pressed', String(on));
     }
     // Written straight through without a re-render, for the reason above.
+    if (onSettle) {
+      onSettle(value);
+      return;
+    }
     setQuick({ minutes: value }, { rerender: false });
     updateSplit(value);
   }
@@ -1855,9 +2170,18 @@ function viewBuild() {
       'div.sticky-actions',
       h(
         'button.btn.btn-goal.btn-lg.btn-block',
-        { disabled: !exercises.length, onclick: () => go('plan') },
+        // A draft holding only a conditioning block is a real plan, so the
+        // button opens rather than sitting disabled on an empty lift list.
+        {
+          disabled: !exercises.length && !conditioningBlocks().length,
+          onclick: () => go('plan'),
+        },
         t('build.generate'),
-        h('span', { style: 'opacity:.65;font-weight:400' }, ` ≈ ${formatMinutes(built.totalMinutes)}`)
+        h(
+          'span',
+          { style: 'opacity:.65;font-weight:400' },
+          ` ≈ ${formatMinutes(built.totalMinutes + condMinutes())}`
+        )
       )
     )
   );
@@ -2129,7 +2453,12 @@ function viewPlan() {
   const exercises = sessionExercises();
   const built = buildSession(state.session, state.catalog, state.oneRm);
 
-  if (!exercises.length) {
+  // A session with no lifts but a conditioning block is not an empty session --
+  // it is a conditioning session, which is exactly what the optional field is
+  // for. Only a plan with nothing at all in it is empty.
+  const cond = conditioningBlocks();
+
+  if (!exercises.length && !cond.length) {
     return h(
       'div.screen',
       h(
@@ -2155,9 +2484,19 @@ function viewPlan() {
             'div.plan-heading',
             h(
               'h1',
-              sessionTitle(),
+              // A session with no lifts is named by its conditioning, not by
+              // whatever the draft was called before. Carrying "Lower body /
+              // Strength" over an AMRAP would describe a workout that is not
+              // there -- and the goal word is a prescription axis conditioning
+              // does not sit on, so the format takes its place.
+              exercises.length ? sessionTitle() : t('cond.title'),
               h('br'),
-              h('span.goal-word', goalLabel(state.session.goal))
+              h(
+                'span.goal-word',
+                exercises.length
+                  ? goalLabel(state.session.goal)
+                  : t(`cond.format.${cond[0].format}`)
+              )
             ),
             // Stays for the life of the session, not just the transition: a
             // week later, in the saved list, "did I choose these or did it?"
@@ -2167,7 +2506,7 @@ function viewPlan() {
           ),
           h(
             'div.plan-total',
-            h('div.plan-total-value', formatMinutes(built.totalMinutes)),
+            h('div.plan-total-value', formatMinutes(built.totalMinutes + condMinutes())),
             h('div', { style: 'font-size:11px;color:var(--t-45)' }, t('plan.tolerance'))
           )
         )
@@ -2185,14 +2524,21 @@ function viewPlan() {
           )
         ),
 
-      h(
-        'div.stack',
-        { style: 'gap:10px' },
-        phaseHead('main', tp('phase.lifts', built.main.length), built.mainMinutes, {
-          explain: true,
-        }),
-        built.main.map((row, i) => planExerciseCard(row, i))
-      ),
+      exercises.length > 0 &&
+        h(
+          'div.stack',
+          { style: 'gap:10px' },
+          phaseHead('main', tp('phase.lifts', built.main.length), built.mainMinutes, {
+            explain: true,
+          }),
+          built.main.map((row, i) => planExerciseCard(row, i))
+        ),
+
+      // Before the cool-down, not after it. A finisher is the last hard thing
+      // you do, and the cool-down is what brings you down from it -- putting
+      // fifteen minutes of EMOM after the mobility work would undo the only
+      // job the cool-down has.
+      conditioningSection(),
 
       built.cooldown.items.length > 0 &&
         h(
@@ -2204,7 +2550,10 @@ function viewPlan() {
           built.cooldown.items.map((m) => drillRow(m.type, localized(m.name), m.minutes))
         ),
 
-      bodyMapSection(exercises)
+      // The map reads muscles off the lifts. With none there is nothing to
+      // shade, and an empty silhouette under "What this trains" answers the
+      // question with a blank.
+      exercises.length > 0 && bodyMapSection(exercises)
     ),
     h(
       'div.sticky-actions',
@@ -2227,8 +2576,165 @@ function viewPlan() {
         { style: 'flex:none;width:56px', onclick: () => printWorkout(state.session), 'aria-label': t('plan.export'), title: t('plan.export') },
         icon(ICONS.print, { size: 17 })
       ),
-      h('button.btn.btn-goal.btn-lg', { style: 'flex:1', onclick: startSession }, t('plan.start'))
+      // The live session runs sets and ticks; it cannot run a clock yet. A plan
+      // with lifts still starts normally and simply does not carry the finisher
+      // into the session screen, but a conditioning-only plan would start into
+      // a session with nothing in it -- so it says so rather than offering a
+      // button that goes nowhere.
+      h(
+        'button.btn.btn-goal.btn-lg',
+        { style: 'flex:1', disabled: !exercises.length, onclick: startSession },
+        exercises.length ? t('plan.start') : t('cond.notLive')
+      )
     )
+  );
+}
+
+/* --------------------------------------------------- conditioning on plan */
+
+function conditioningBlocks() {
+  return state.session.conditioning?.blocks || [];
+}
+
+function condMinutes() {
+  return conditioningBlocks().reduce((sum, b) => sum + (b.minutes || 0), 0);
+}
+
+/** "12 cal", "15", "400 m", "30 s" — the amount as it would be said aloud. */
+function condAmount(m) {
+  const suffix =
+    m.unit === 'calories' ? ' cal' : m.unit === 'metres' ? ' m' : m.unit === 'seconds' ? ' s' : '';
+  return `${m.amount}${suffix}`;
+}
+
+/**
+ * The one line that says what this block IS.
+ *
+ * Each format is a different sentence because each format is a different
+ * promise about the clock, and a generic "12 min · 3 movements" would tell you
+ * none of what you need: whether the time is a limit or a target, whether the
+ * rounds are counted for you or by you, and where the rest comes from.
+ */
+function condMeta(block) {
+  switch (block.format) {
+    case 'emom':
+      return t('cond.emomMeta', { rounds: block.rounds });
+    case 'amrap':
+      return t('cond.amrapMeta', { n: block.minutes });
+    case 'intervals':
+      return t('cond.intervalMeta', { rounds: block.rounds, work: block.work, rest: block.rest });
+    case 'tabata':
+      return t('cond.tabataMeta', { n: block.movements.length });
+    default:
+      return t('cond.fortimeMeta', { rounds: block.rounds, n: block.minutes });
+  }
+}
+
+/** What the list underneath the header is a list OF. */
+function condListLabel(block) {
+  if (block.format === 'emom') return t('cond.eachMinute');
+  if (block.format === 'intervals') return t('cond.eachInterval');
+  if (block.format === 'tabata') return t('cond.tabataEach');
+  return t('cond.roundIs');
+}
+
+/**
+ * The conditioning block, on the plan.
+ *
+ * Deliberately not an `.ex-card` per movement. A lift card carries sets, reps,
+ * a load and a body map because each lift is a thing you do on its own; a
+ * conditioning movement means nothing apart from the round it sits in, and
+ * giving each one a card would break up the only unit that matters. So the
+ * block is one card and the movements are a list inside it -- which is also how
+ * it would be written on a whiteboard, and that is not a coincidence.
+ *
+ * The header carries the format's own sentence rather than a generic count,
+ * because "12 min" means something different in an AMRAP (a limit) than in a
+ * for-time (a cap you hope not to reach).
+ */
+function conditioningSection() {
+  const blocks = conditioningBlocks();
+  if (!blocks.length) return null;
+
+  const hasLifts = sessionExercises().length > 0;
+
+  return h(
+    'div.stack',
+    { style: 'gap:10px' },
+    h(
+      'div.phase-head',
+      h('span.phase-name', hasLifts ? t('cond.finisher') : t('cond.block')),
+      h('span.phase-meta', t('cond.minutes', { n: condMinutes() }))
+    ),
+    blocks.map((block, i) => condCard(block, i)),
+    // Said once, here, rather than as a disabled control people have to work
+    // out for themselves. It is a real limitation and it belongs next to the
+    // thing it limits.
+    h('p.hint', hasLifts ? t('cond.finisherNote') : t('cond.notLiveHint'))
+  );
+}
+
+function condCard(block, index = 0) {
+  const fresh = state.freshQuick;
+  const partner = block.partner;
+
+  return h(
+    'div.cond-card',
+    {
+      class: fresh ? 'is-fresh' : '',
+      style: fresh ? `animation-delay:${index * 55}ms` : null,
+    },
+    h(
+      'div.cond-head',
+      h('span.cond-format', t(`cond.format.${block.format}`)),
+      h('span.cond-meta', condMeta(block))
+    ),
+
+    // An AMRAP with no idea how many rounds is a workout you cannot pace. The
+    // estimate is explicitly a guess, and says so.
+    block.estimatedRounds &&
+      h('p.cond-est', t('cond.amrapEst', { n: block.estimatedRounds })),
+
+    h('div.cond-list-label', condListLabel(block)),
+    h(
+      'ol.cond-list',
+      block.movements.map((m) =>
+        h(
+          'li.cond-move',
+          h('span.cond-amount', condAmount(m)),
+          h('span.cond-name', localized(state.catalog.byId.get(m.ref)?.name) || '—')
+        )
+      )
+    ),
+
+    partner &&
+      h(
+        'p.cond-partner',
+        icon(ICONS.checkAll, { size: 12 }),
+        t(`cond.partnerNote.${partner.mode}`, { n: partner.people })
+      ),
+
+    block.inputs &&
+      h(
+        'div.cond-actions',
+        h(
+          'button.btn.btn-sm',
+          { onclick: reshuffleConditioning },
+          icon(ICONS.shuffle, { size: 13 }),
+          t('cond.reshuffle')
+        ),
+        h(
+          'button.btn.btn-sm',
+          {
+            onclick: () => {
+              delete state.session.conditioning;
+              saveDraft();
+              render();
+            },
+          },
+          t('cond.remove')
+        )
+      )
   );
 }
 
@@ -4513,18 +5019,27 @@ function buildPrintSheet(session) {
   const section = (title, ...children) =>
     h('section.print-section', h('h2.print-h2', title), children);
 
+  // Same reasoning as the plan heading: a session with no lifts is named and
+  // described by its conditioning, and the goal is a lifting axis it does not
+  // sit on. Without this the sheet printed a stale draft name over an EMOM.
+  const blocks = session.conditioning?.blocks || [];
+  const condTotal = blocks.reduce((sum, b) => sum + (b.minutes || 0), 0);
+  const liftless = exercises.length === 0 && blocks.length > 0;
+
   return h(
     'div.print-sheet',
     h(
       'header.print-head',
-      h('h1.print-h1', session.name || sessionTitle(session)),
+      h('h1.print-h1', liftless ? t('cond.title') : session.name || sessionTitle(session)),
       h(
         'p.print-meta',
         [
           session.date,
-          `${t('print.goal')}: ${goalLabel(session.goal)}`,
-          `${t('print.estimate')}: ${formatMinutes(built.totalMinutes)}`,
-        ].join('  ·  ')
+          liftless ? null : `${t('print.goal')}: ${goalLabel(session.goal)}`,
+          `${t('print.estimate')}: ${formatMinutes(built.totalMinutes + condTotal)}`,
+        ]
+          .filter(Boolean)
+          .join('  ·  ')
       )
     ),
 
@@ -4590,6 +5105,31 @@ function buildPrintSheet(session) {
           )
         )
       ),
+
+    // Same position as on screen: after the work, before the cool-down. A
+    // printed sheet is the one place a conditioning block is genuinely usable
+    // today, since it needs no clock the app has not built yet.
+    ...blocks.map((block) =>
+      section(
+        `${t(`cond.format.${block.format}`)} — ${block.minutes} ${t('units.min')}`,
+        h(
+          'div',
+          h('p.print-how', condMeta(block)),
+          h(
+            'ol.print-list',
+            block.movements.map((m) =>
+              h(
+                'li',
+                h('strong', condAmount(m)),
+                ` · ${localized(state.catalog.byId.get(m.ref)?.name) || '—'}`
+              )
+            )
+          ),
+          block.partner &&
+            h('p.print-how', t(`cond.partnerNote.${block.partner.mode}`, { n: block.partner.people }))
+        )
+      )
+    ),
 
     built.cooldown.items.length > 0 &&
       section(

@@ -596,14 +596,22 @@ function planFormat(format, minutes, rand) {
       // One movement per minute, rotating. Stations that divide the duration
       // evenly mean every movement comes up the same number of times, which is
       // both fairer and easier to read off a plan.
-      const options = [2, 3, 4].filter((n) => minutes % n === 0);
+      // Capped so every movement comes round at least twice. A four-minute EMOM
+      // with four stations is not an EMOM, it is four unrelated minutes.
+      const ceiling = Math.max(2, Math.floor(minutes / 2));
+      const options = [2, 3, 4].filter((n) => n <= ceiling && minutes % n === 0);
       const stations = options.length
         ? options[Math.floor(rand() * options.length)]
-        : 3;
+        : Math.min(3, ceiling);
       return { work: 60, rest: 0, rounds: minutes, stations, perStation: 40, openEnded: false };
     }
     case 'amrap': {
-      const stations = 2 + Math.floor(rand() * 3); // 2-4
+      // At 30 s a movement, a round is `stations x 30` seconds, so the round
+      // count is `2 x minutes / stations`. Capping stations at `minutes / 2`
+      // keeps that at four or more: a four-minute AMRAP that yields two rounds
+      // is not an AMRAP, it is two rounds, and the score stops meaning anything.
+      const ceiling = Math.max(2, Math.floor(minutes / 2));
+      const stations = Math.min(2 + Math.floor(rand() * 3), ceiling); // 2-4
       // 30 s per movement rather than a fixed round length divided by however
       // many movements there are. A fixed 75 s round split four ways is 19 s
       // each, which prescribes three calories of ski erg -- an amount too small

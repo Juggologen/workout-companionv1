@@ -1518,3 +1518,89 @@ Sweeps against the real catalog, not inspection:
 | Time-budget fill | median 1.00, worst 0.64 (Tabata capped at 4 movements) |
 | Window fill | median 0.90, p95 1.00 |
 | Movements reachable | 58 / 58, hit counts 142–219 |
+
+---
+
+## 22. Conditioning on the plan
+
+### Where it attaches
+
+`session.conditioning.blocks` is optional, and that single fact delivers both
+halves of what was asked for: a draft with no `exerciseIds` and one block is a
+**conditioning session**; a draft with both is a **lifting session with a
+finisher**. Nothing has to choose between them, because the draft already says
+which was meant.
+
+On the plan the block sits **after the lifts and before the cool-down**. A
+finisher is the last hard thing you do and the cool-down is what brings you down
+from it — fifteen minutes of EMOM after the mobility work would undo the only
+job the cool-down has.
+
+### One card, not one per movement
+
+A lift gets an `.ex-card` with sets, reps, a load and a body map, because a lift
+is a thing you do on its own. A conditioning movement means nothing apart from
+the round it sits in, so giving each one a card would break up the only unit
+that matters. The block is one card and the movements are a list inside it —
+which is also how it would go on a whiteboard, and that is not a coincidence.
+
+The header carries **each format's own sentence** rather than a generic count,
+because the same "12 min" means different things: a limit in an AMRAP, a cap you
+hope not to reach in a for-time, a duration in an EMOM.
+
+| Format | Header reads | List is labelled |
+|---|---|---|
+| EMOM | `15 min · one movement a minute` | The minutes rotate |
+| AMRAP | `As many rounds as possible in 12 min` | Each round |
+| Intervals | `6 × 60s on, 60s off` | Each work period |
+| Tabata | `3 × 8 rounds of 20s on, 10s off` | Four minutes each, in this order |
+| For time | `4 rounds for time · 12 min cap` | Each round |
+
+An AMRAP also prints its estimated round count, hedged (`about 8 rounds, if it
+goes well`) because it is a guess — but an AMRAP with no idea how many rounds is
+a workout you cannot pace.
+
+### What a liftless plan is called
+
+A session with no lifts is titled by its conditioning and its format, not by
+whatever the draft was called before. Without this the plan printed **"Leg body /
+Strength"** over an AMRAP — a name for a workout that was not there, and a goal
+word naming a prescription axis conditioning does not sit on. The same fix
+applies to the print sheet's header, which had the same bug.
+
+The body map is hidden too: it reads muscles off the lifts, and an empty
+silhouette under "What this trains" answers the question with a blank.
+
+### Accent
+
+Conditioning wears the fifth accent on its own screen, and on a plan whose
+**only** content is a block. A plan with lifts *and* a finisher keeps the lifts'
+goal colour, because the lifting is still what the session is.
+
+The format and partner cards get **no accent pulse**, unlike the goal cards. The
+pulse exists to announce that the theme colour changed, and this screen is
+conditioning cyan whichever shape you pick — a wave that recoloured nothing would
+be decoration pretending to be feedback.
+
+### Generation guards found by looking at output
+
+Two format rules exist only because a four-minute block exposed them:
+
+- **AMRAP stations are capped at `minutes / 2`.** A round is `stations × 30`
+  seconds, so the round count is `2 × minutes / stations`. A four-minute AMRAP
+  with four movements yields two rounds — which is not an AMRAP, it is two
+  rounds, and the score stops meaning anything.
+- **EMOM stations are capped the same way**, so every movement comes round at
+  least twice. A four-minute EMOM with four stations is four unrelated minutes.
+
+Verified across 6,400 blocks at durations 4–25: zero AMRAPs under four rounds,
+zero EMOMs over their station ceiling, zero empty blocks.
+
+### Not yet live
+
+The session screen runs sets and ticks, not a clock. A conditioning-only plan
+therefore says **"Timer coming soon"** on a disabled Start rather than starting
+into a session with nothing in it, and a plan with lifts starts normally with a
+line saying the finisher is not carried through. The print sheet **does** carry
+the block, which makes it the one place a conditioning workout is genuinely
+usable today — it needs no clock the app has not built.

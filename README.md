@@ -376,9 +376,32 @@ configurations, **zero** over budget, **zero** prescriptions exceeding their wor
 window, zero duplicate movements or tripled roles, and all 58 movements
 reachable.
 
-Not built yet: the UI. The equipment prompt, the countdown screen with its audio
-cues, the round counter and score history are still to come — see
-[docs/logic.md](docs/logic.md) §20–21.
+### Generating one
+
+**HIIT workout** on Home asks four things — how long (4–30 min), what shape,
+what kit is to hand, and whether anyone's doing it with you. Kit is asked each
+time rather than kept as a setting, because the answer changes between the gym
+and the garage and a stale one silently prescribes a rower you can't reach.
+
+The block attaches to the draft session, and because `session.conditioning` is
+an *optional* field that one behaviour covers both cases: an empty draft becomes
+a **conditioning session**, a draft with lifts gets a **finisher**. On the plan
+the block sits after the lifts and before the cool-down — a finisher is the last
+hard thing you do, and the cool-down is what brings you down from it.
+
+It renders as **one card with a list inside**, not a card per movement. A lift
+card carries sets, reps and a load because a lift is a thing you do on its own;
+a conditioning movement means nothing apart from the round it sits in. A
+whiteboard writes it the same way, for the same reason. The header carries each
+format's own sentence rather than a generic count, because "12 min" is a limit
+in an AMRAP and a cap you hope not to reach in a for-time.
+
+**Not live yet.** The session screen runs sets and ticks, not a clock, so a
+conditioning-only plan says *Timer coming soon* on a disabled Start rather than
+starting into an empty session. The **print sheet does carry the block**, which
+makes it the one place a HIIT workout is genuinely usable today. The countdown
+screen with its audio cues, the round counter and score history are next — see
+[docs/logic.md](docs/logic.md) §20–22.
 
 ## Perceived exertion
 

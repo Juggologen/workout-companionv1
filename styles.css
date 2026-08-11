@@ -2154,3 +2154,118 @@ details > summary::-webkit-details-marker { display: none; }
     color: #777;
   }
 }
+
+/* ---------------------------------------------------------- conditioning
+
+   The fifth mode. Its accent is set on `.app` by screenAccent() like any
+   other, so everything below inherits `--g` and follows the pulse.
+   ------------------------------------------------------------------------ */
+
+/* Home's third door. Full width under the two squares rather than a third
+   square, because it is a different kind of training and not a third route to
+   the same session. Its own accent, regardless of the draft's goal. */
+.tile-wide { grid-column: 1 / -1; }
+.tile-cond { --g: var(--goal-conditioning); }
+
+/* A card scroller with no per-item colour: shape and partner mode are choices
+   without a goal behind them, so the selected one takes the screen accent. */
+.focus-card.card-plain.is-on {
+  border-color: var(--g);
+  background: color-mix(in srgb, var(--g) 12%, transparent);
+}
+.focus-card.card-plain.is-on .focus-name { color: var(--g); }
+
+/* Four two-line chips across a 375px phone gives each 79px, which wraps
+   "Something to hang from" onto three lines and makes a 91px-tall chip out of
+   a one-line answer. Two by two instead: the second line is the whole reason
+   these chips exist, so the room has to come from somewhere. */
+.chips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+/* A two-line chip: the kit groups need both a name and what counts as that
+   kit, and "Ergs" alone is not a question anyone can answer confidently. */
+.chip-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  height: auto;
+  padding: 9px 11px;
+  text-align: left;
+}
+.chip-name { font: 500 12.5px var(--font-heading); }
+.chip-sub { font-size: 10.5px; font-weight: 400; line-height: 1.25; opacity: 0.7; }
+
+/* ---- the block, on the plan ----
+
+   One card for the whole block, not one per movement. A lift card carries
+   sets, reps, a load and a body map because a lift is a thing you do on its
+   own; a conditioning movement means nothing apart from the round it sits in,
+   so breaking the round into cards would destroy the only unit that matters.
+   A whiteboard writes it this way for the same reason. */
+.cond-card {
+  border: 1px solid color-mix(in srgb, var(--g) 40%, var(--color-divider));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--g) 5%, transparent);
+  padding: 15px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.cond-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cond-format {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--g);
+}
+.cond-meta {
+  flex: 1;
+  text-align: right;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--t-55);
+  font-variant-numeric: tabular-nums;
+}
+.cond-est { margin: -6px 0 0; font-size: 11.5px; color: var(--t-45); font-style: italic; }
+
+.cond-list-label {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t-45);
+}
+
+/* Numbers in their own column, right-aligned, so the round scans as a column
+   of amounts rather than a paragraph of prose. Tabular figures keep the column
+   straight when 5 sits above 100. */
+.cond-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.cond-move { display: flex; align-items: baseline; gap: 11px; }
+.cond-amount {
+  flex: none;
+  min-width: 56px;
+  text-align: right;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.cond-name { font-size: 14px; color: var(--t-78); }
+
+.cond-partner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-divider);
+  font-size: 11.5px;
+  color: var(--t-55);
+}
+.cond-partner svg { flex: none; color: var(--g); }
+
+.cond-actions { display: flex; gap: 7px; padding-top: 2px; }
+.cond-actions .btn { flex: 1; }
+
+/* Deals itself in with the exercise cards after a generate, same as `.ex-card`. */
+.cond-card.is-fresh { animation: card-in 0.34s ease both; }

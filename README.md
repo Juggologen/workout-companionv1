@@ -348,10 +348,37 @@ three complexity tiers as everything else. An air bike is agony and still basic;
 double-unders are advanced because a beginner doing them tired mostly whips
 their own shins.
 
-Not built yet: the formats themselves (EMOM, AMRAP, Tabata, intervals, for
-time), the generator, the equipment prompt, the countdown screen, partner modes
-and score history. See [docs/logic.md](docs/logic.md) §20 for the shape they
-attach to.
+### Formats
+
+Five, from one generator: **EMOM** (one movement a minute, rotating), **AMRAP**
+(fixed round, count the rounds), **intervals** (30/30 through 90/60), **Tabata**
+(8 × 20/10) and **for time** (3–5 rounds against a cap).
+
+The distinction that runs through all of it is whether the clock says *how much
+work fits* (EMOM, intervals, Tabata) or *how long the work takes* (AMRAP, for
+time). It decides the partner maths, which way amounts round, and whether a
+round count even exists.
+
+**Partner work** comes in the three modes you'd actually use. *You go, I go*
+alternates turns — in an AMRAP that earns a 1.3× bonus because a full turn of
+rest means you can go harder, but in an EMOM it earns nothing, because a minute
+is sixty seconds whatever you do. *Shared* and *relay* put everyone against one
+target, so the number is the combined figure and scales with the group.
+
+Amounts snap to numbers people actually write — 15 burpees, not 17.33 — rounding
+**down** inside a timed window, because work that doesn't fit eats the rest it
+was sized to leave. Selection spreads across movement roles (mono / upper /
+lower / core) so a round doesn't stack three leg movements and stop for muscular
+reasons rather than cardiovascular ones.
+
+Verified by sweeping the real catalog: 3,000 blocks across six partner
+configurations, **zero** over budget, **zero** prescriptions exceeding their work
+window, zero duplicate movements or tripled roles, and all 58 movements
+reachable.
+
+Not built yet: the UI. The equipment prompt, the countdown screen with its audio
+cues, the round counter and score history are still to come — see
+[docs/logic.md](docs/logic.md) §20–21.
 
 ## Perceived exertion
 

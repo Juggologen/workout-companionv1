@@ -1419,3 +1419,102 @@ session.conditioning = { blocks: [ {
 Optional field, which is what makes a HIIT block able to be either a session of
 its own (no `exerciseIds`) or a finisher on a lifting session (both present).
 One field, both answers.
+
+---
+
+## 21. Conditioning formats and generation
+
+Five formats, one generator, and the only thing that makes that possible is
+`pace` (§20). Sizing a station is `pace × seconds / 60`; everything else is the
+shape of the clock around it.
+
+### The split that runs through everything: window-driven vs amount-driven
+
+| | Formats | The clock says |
+|---|---|---|
+| **Window-driven** | EMOM, intervals, Tabata | how much work fits |
+| **Amount-driven** | AMRAP, for time | how long the work takes |
+
+This distinction decides three separate things — partner scaling, rounding
+direction, and whether a round count exists — so it is worth naming once.
+
+### Format shapes
+
+| Format | Shape | Stations |
+|---|---|---|
+| **EMOM** | one movement per minute, rotating; 40 s of work in each | 2–4, chosen to divide the duration evenly |
+| **AMRAP** | fixed round, count the rounds | 2–4, 30 s of work each |
+| **Intervals** | 30/30, 40/20, 45/15, 60/60 or 90/60 | 1–2, alternating |
+| **Tabata** | 8 × 20/10 = 4 min, per movement | 1–4, duration derived |
+| **For time** | 3–5 rounds against a cap | 2–4 |
+
+EMOM stations divide the duration where possible, so every movement comes up the
+same number of times — fairer and easier to read off a plan.
+
+AMRAP rounds are **30 s per movement**, not a fixed round length divided by the
+movement count. A fixed 75 s round split four ways is 19 s each, which prescribes
+three calories of ski erg — an amount too small to be worth walking to the
+machine for. Real four-part AMRAP rounds are two-minute rounds.
+
+Tabata's duration is derived and **floors**: ten minutes asked for gives eight of
+Tabata, not twelve. Under-filling a budget is time the user can spend elsewhere;
+overrunning one is the app deciding how long their evening is. Intervals filter
+their shape list to those fitting four rounds in the budget for the same reason —
+forcing a four-round minimum onto a 90/60 shape pushed an eight-minute ask to ten.
+
+### Partner maths
+
+The user asked for three modes, and they scale in two different ways:
+
+- **`alternating`** (you go, I go) — one person works at a time, so each gets
+  half the turns. In an **amount-driven** format that buys a **1.3× rest bonus**:
+  a full turn off means you can go harder than a pace assuming continuous work.
+  In a **window-driven** format it buys **nothing**, because a minute is sixty
+  seconds whatever you do. An early version applied the bonus everywhere and
+  prescribed *50 seconds of work inside a 60-second minute* — not a harder
+  workout, just an impossible one. Alternating in an EMOM is simply the same
+  prescription taking turns, which is how anyone actually runs it.
+- **`shared`** and **`relay`** — everyone against one target, so the amount is
+  the **combined** figure and scales with `people`. Correct in both families: a
+  combined 80 s inside a 60 s minute is 40 s each, because both are working.
+
+### Rounding direction
+
+`niceAmount` snaps to a ladder of numbers workouts are actually written in — 15
+burpees, not 17.33. Window-driven formats snap **down** (`fit`), amount-driven
+ones snap to the **nearest**. In an EMOM, work that does not fit eats the rest it
+was sized to leave, every single round; landing a rep light is free, landing a
+rep heavy compounds.
+
+When nothing on the ladder fits the window, the window wins: a 20-second Tabata
+on a rower is four calories whatever the ladder's opinion of small numbers. That
+one line is the difference between 46 impossible prescriptions and none.
+
+### Movement selection
+
+Weighted-random from the pool, filtered by kit, tier and impact, with two
+constraints:
+
+- **No repeated `pattern|primary` shape** inside a block.
+- **Role diversity** — `mono`, `upper`, `lower`, `core`, `full` — with a
+  **cubic** penalty on a used role. Linear was not enough: `lower` has far more
+  candidates than any other role, so a quarter weight still produced
+  `mono, lower, lower`, which is a leg workout wearing a conditioning workout's
+  clothes. Cubed, a used role drops to an eighth.
+
+### Measured
+
+Sweeps against the real catalog, not inspection:
+
+| | |
+|---|---|
+| Blocks generated | 3,000 across 6 partner configurations |
+| Shortfalls | 0 |
+| Duplicate movement in a block | 0 / 500 |
+| Three of one role in a block | 0 / 500 (was the failure the cubic penalty fixed) |
+| Prescriptions exceeding their work window | 0 / 4,626 |
+| Blocks over the time budget | 0 / 600 |
+| Amounts too small to prescribe | 0 |
+| Time-budget fill | median 1.00, worst 0.64 (Tabata capped at 4 movements) |
+| Window fill | median 0.90, p95 1.00 |
+| Movements reachable | 58 / 58, hit counts 142–219 |

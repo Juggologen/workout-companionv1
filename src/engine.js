@@ -477,6 +477,321 @@ export function generateQuickWorkout(options, catalog, oneRmById = {}) {
   };
 }
 
+/* --------------------------------------------------------- conditioning */
+
+export const CONDITIONING_FORMATS = ['emom', 'amrap', 'intervals', 'tabata', 'fortime'];
+export const PARTNER_MODES = ['alternating', 'shared', 'relay'];
+
+/**
+ * What part of you a conditioning movement taxes first.
+ *
+ * The single most common way a generated conditioning workout goes wrong is
+ * stacking three movements that share a role -- three lower-body movements in a
+ * round means the legs quit long before the lungs do, which is a leg workout
+ * wearing a conditioning workout's clothes. Selection spreads across these.
+ */
+const ROLE_LOWER = new Set(['Quads', 'Glutes', 'Hamstrings', 'Calves', 'Adductors']);
+const ROLE_UPPER = new Set(['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Traps', 'Forearms']);
+
+function conditioningRole(ex) {
+  if (ex.pattern === 'Monostructural') return 'mono';
+  if (ex.primary === 'Core') return 'core';
+  if (ROLE_LOWER.has(ex.primary)) return 'lower';
+  if (ROLE_UPPER.has(ex.primary)) return 'upper';
+  return 'full';
+}
+
+/**
+ * Numbers workouts are actually written in.
+ *
+ * `pace × seconds / 60` produces things like 17.33 burpees, and a prescription
+ * nobody would write by hand reads as a machine talking. Snapping to a ladder
+ * costs a few percent of accuracy against a pace figure that is a ballpark
+ * anyway, and buys "15 burpees" instead of "17".
+ */
+const NICE_AMOUNTS = {
+  reps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 24, 25, 30, 35, 40, 45, 50, 60, 75, 100],
+  // Starts at 5: below that the erg's counter barely moves before you are told
+  // to stop, and "3 calories" is not a thing anyone writes on a whiteboard.
+  calories: [5, 6, 7, 8, 9, 10, 12, 15, 18, 20, 25, 30, 35, 40, 50, 60],
+  metres: [10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000],
+};
+
+/**
+ * `fit` rounds down to the ladder instead of to the nearest rung.
+ *
+ * It is for the time-boxed formats. A minute is sixty seconds whatever the
+ * ladder says, so rounding 6.67 burpees up to 7 prescribes work that does not
+ * fit the window it was sized for -- and in an EMOM, work that does not fit is
+ * work that eats the rest you were supposed to get, every single round. Landing
+ * a rep light is free; landing a rep heavy compounds.
+ */
+function niceAmount(raw, unit, mode = 'nearest') {
+  // Seconds are the one unit that must not be snapped to a ladder: the amount
+  // IS the work window, so a 20 s Tabata plank has to read 20 s and not 18.
+  if (unit === 'seconds') {
+    const step = mode === 'fit' ? Math.floor(raw / 5) * 5 : Math.round(raw / 5) * 5;
+    return Math.max(5, step);
+  }
+  const ladder = NICE_AMOUNTS[unit] || NICE_AMOUNTS.reps;
+  if (mode === 'fit') {
+    const under = ladder.filter((v) => v <= raw);
+    if (under.length) return under[under.length - 1];
+    // Nothing on the ladder fits. The ladder is a readability aid and the
+    // window is a fact, so the window wins: a 20-second Tabata on a rower is
+    // four calories, whatever the ladder's opinion of small numbers.
+    return Math.max(1, Math.floor(raw));
+  }
+  return ladder.reduce((best, v) => (Math.abs(v - raw) < Math.abs(best - raw) ? v : best), ladder[0]);
+}
+
+/**
+ * How partner work changes the numbers.
+ *
+ * Three modes, and they scale in two different ways:
+ *
+ *   `alternating` -- you go, I go. Only one of you works at a time, so within a
+ *   fixed wall-clock each person gets half the turns. That is not a bug to
+ *   correct: a full turn of rest between efforts is exactly what makes this
+ *   format worth doing, and it means you can go harder than the pace assumes.
+ *   So the work per turn goes UP rather than the duration going up.
+ *
+ *   `shared` and `relay` -- everyone working against one target. The prescribed
+ *   amount is the combined figure, so it scales with the number of people or
+ *   the pair finishes in half the time and calls it a workout.
+ *
+ * The rest bonus applies to amount-driven formats only, and the distinction is
+ * the whole of it: in an AMRAP or a for-time the amount decides the duration,
+ * so being fresher can be expressed as more work. In an EMOM, an interval or a
+ * Tabata the duration decides the amount -- the window is 60 seconds whatever
+ * you do -- and a bonus there prescribed 50 seconds of work inside a 60-second
+ * minute, which is not a harder workout, just an impossible one. Alternating in
+ * a window-driven format is simply the same prescription taking turns, which is
+ * exactly how anyone actually runs it.
+ *
+ * Scaling by `people` stays correct in both: in a window-driven format everyone
+ * works at once, so a combined 80 seconds inside a 60-second minute is 40
+ * seconds each.
+ */
+const PARTNER_REST_BONUS = 1.3;
+
+function partnerScale(partner, windowDriven) {
+  if (!partner) return 1;
+  const people = Math.max(2, partner.people || 2);
+  if (partner.mode !== 'alternating') return people;
+  return windowDriven ? 1 : PARTNER_REST_BONUS;
+}
+
+/**
+ * The shape of each format, before any movement is chosen.
+ *
+ * `work`/`rest` are seconds and `rounds` is a count; `perStation` is how many
+ * seconds of actual effort one movement should be sized to fill. `stations` is
+ * how many movements the format wants. AMRAP alone has no round count -- the
+ * count is the score.
+ */
+function planFormat(format, minutes, rand) {
+  switch (format) {
+    case 'emom': {
+      // One movement per minute, rotating. Stations that divide the duration
+      // evenly mean every movement comes up the same number of times, which is
+      // both fairer and easier to read off a plan.
+      const options = [2, 3, 4].filter((n) => minutes % n === 0);
+      const stations = options.length
+        ? options[Math.floor(rand() * options.length)]
+        : 3;
+      return { work: 60, rest: 0, rounds: minutes, stations, perStation: 40, openEnded: false };
+    }
+    case 'amrap': {
+      const stations = 2 + Math.floor(rand() * 3); // 2-4
+      // 30 s per movement rather than a fixed round length divided by however
+      // many movements there are. A fixed 75 s round split four ways is 19 s
+      // each, which prescribes three calories of ski erg -- an amount too small
+      // to be worth walking to the machine for. Rounds therefore grow with the
+      // movement count, which is also how real AMRAPs are written: a four-part
+      // round is a two-minute round.
+      return { work: null, rest: 0, rounds: null, stations, perStation: 30, openEnded: true };
+    }
+    case 'intervals': {
+      const shapes = [
+        { work: 30, rest: 30 },
+        { work: 40, rest: 20 },
+        { work: 45, rest: 15 },
+        { work: 60, rest: 60 },
+        { work: 90, rest: 60 },
+      ];
+      // Only shapes that fit at least four rounds inside the budget. Forcing a
+      // four-round minimum onto whichever shape was drawn is what used to push
+      // a 90/60 interval to ten minutes when eight were asked for -- the cost
+      // of a long work period has to come out of the shape choice, not out of
+      // the user's evening.
+      const budget = minutes * 60;
+      const fits = shapes.filter((s) => (s.work + s.rest) * 4 <= budget);
+      const usable = fits.length ? fits : [shapes[0]];
+      const shape = usable[Math.floor(rand() * usable.length)];
+      const rounds = Math.max(4, Math.floor(budget / (shape.work + shape.rest)));
+      const stations = 1 + Math.floor(rand() * 2); // 1-2, alternating
+      return { ...shape, rounds, stations, perStation: shape.work, openEnded: false };
+    }
+    case 'tabata': {
+      // Tabata is a fixed protocol, not a parameter: 8 x 20/10 is four minutes.
+      // The duration is therefore derived from how many movements fit the ask,
+      // never the other way round -- and it floors rather than rounds, because
+      // ten minutes asked for should give eight of Tabata and not twelve.
+      // Under-filling a time budget is a choice the user can spend elsewhere;
+      // overrunning one is the app deciding how long their evening is.
+      const stations = Math.max(1, Math.min(4, Math.floor(minutes / 4)));
+      return { work: 20, rest: 10, rounds: 8, stations, perStation: 20, openEnded: false };
+    }
+    case 'fortime':
+    default: {
+      const rounds = [3, 4, 5][Math.floor(rand() * 3)];
+      const stations = 2 + Math.floor(rand() * 3); // 2-4
+      // Sized so the whole thing lands near the budget rather than under it:
+      // a for-time workout that takes four minutes of a fifteen-minute slot is
+      // a warm-up. 85% leaves room for the clock to be beaten.
+      const perRound = (minutes * 60 * 0.85) / rounds;
+      return { work: null, rest: 0, rounds, stations, perStation: perRound / stations, openEnded: false };
+    }
+  }
+}
+
+/**
+ * Pick movements that do not tread on each other.
+ *
+ * Weighted-random rather than best-first, for the same reason quick workout is:
+ * the same inputs on a different seed have to give a genuinely different
+ * workout. The weighting pushes towards role diversity without hard-blocking
+ * it, so a pool that only has lower-body movements in it still returns a
+ * workout rather than nothing.
+ *
+ * The penalty is cubic, and it has to be. A linear one left a used role on a
+ * quarter weight, which sounds decisive until you notice `lower` has far more
+ * candidates than any other role -- a quarter of a pool that large still wins
+ * often enough to produce `mono, lower, lower`, which is the exact thing roles
+ * exist to prevent. Cubed, a used role drops to an eighth and a twice-used one
+ * to a twenty-seventh.
+ */
+function pickConditioningMovements(count, pool, rand) {
+  const chosen = [];
+  const usedShapes = new Set();
+  const usedRoles = new Map();
+  let remaining = pool.slice();
+
+  while (chosen.length < count && remaining.length) {
+    const candidates = remaining
+      .filter((m) => !usedShapes.has(m.shape))
+      .map((m) => ({ ...m, weight: 1 / (1 + (usedRoles.get(m.role) || 0)) ** 3 }));
+    if (!candidates.length) break;
+
+    const pick = weightedPick(candidates, rand);
+    if (!pick) break;
+
+    chosen.push(pick);
+    usedShapes.add(pick.shape);
+    usedRoles.set(pick.role, (usedRoles.get(pick.role) || 0) + 1);
+    remaining = remaining.filter((m) => m.ex.id !== pick.ex.id);
+  }
+
+  return chosen;
+}
+
+/** Seconds of effort a prescribed amount represents, at its movement's pace. */
+export function movementSeconds(movement) {
+  if (!movement?.pace) return 0;
+  return (movement.amount / movement.pace) * 60;
+}
+
+/**
+ * Generate one conditioning block.
+ *
+ * Four inputs the user gives -- how long, which format, what kit is to hand,
+ * and whether anyone is doing it with them -- and one they gave earlier, the
+ * complexity tier. Everything else falls out of `pace`, which is the only
+ * number that makes a movement comparable to any other: units per minute at a
+ * hard but repeatable effort. Sizing a station is `pace × seconds / 60`, and
+ * that one line is what lets a single generator serve five formats that have
+ * nothing structurally in common.
+ *
+ * `format: 'any'` picks one, which is the interesting default -- most people
+ * asking for a hard fifteen minutes do not have a preference between an EMOM
+ * and an AMRAP, and being handed one is more useful than being asked.
+ */
+export function generateConditioning(options, catalog) {
+  const {
+    minutes = 12,
+    format = 'any',
+    kit = ['erg', 'run', 'floor', 'rig'],
+    complexity = 'medium',
+    lowImpact = false,
+    partner = null,
+    seed = 1,
+  } = options;
+
+  const rand = mulberry32(seed);
+  const allowedKit = new Set(kit);
+
+  const pool = (catalog.conditioningPool || [])
+    .filter((ex) => !ex.archived)
+    .map((ex) => ({ ex, ...catalog.conditioningOf(ex) }))
+    .filter((m) => m && allowedKit.has(m.kit))
+    .filter((m) => tierAllows(complexity, m.tier))
+    .filter((m) => !lowImpact || m.impact === 'low')
+    .map((m) => ({ ...m, role: conditioningRole(m.ex), shape: `${m.ex.pattern}|${m.ex.primary}` }));
+
+  if (!pool.length) {
+    return { format: null, minutes: 0, movements: [], shortfall: true, seed };
+  }
+
+  const picked =
+    format === 'any'
+      ? CONDITIONING_FORMATS[Math.floor(rand() * CONDITIONING_FORMATS.length)]
+      : format;
+
+  const plan = planFormat(picked, minutes, rand);
+  const movementRows = pickConditioningMovements(plan.stations, pool, rand);
+
+  if (!movementRows.length) {
+    return { format: picked, minutes: 0, movements: [], shortfall: true, seed };
+  }
+
+  // Window-driven: the clock decides how much work fits. Amount-driven: the
+  // work decides how long it takes. Partner maths differs between the two.
+  const windowDriven = picked === 'emom' || picked === 'intervals' || picked === 'tabata';
+  const scale = partnerScale(partner, windowDriven);
+  const movements = movementRows.map((m) => {
+    const raw = (m.pace * plan.perStation * scale) / 60;
+    const amount = niceAmount(raw, m.unit, windowDriven ? 'fit' : 'nearest');
+    return { ref: m.ex.id, amount, unit: m.unit, pace: m.pace, role: m.role };
+  });
+
+  // Tabata's duration is dictated by the protocol, so it reports what it will
+  // actually take rather than what was asked for. Everything else fills the ask.
+  const actualMinutes =
+    picked === 'tabata' ? movements.length * 4 : minutes;
+
+  const roundSeconds = movements.reduce((sum, m) => sum + movementSeconds(m), 0);
+
+  return {
+    format: picked,
+    minutes: actualMinutes,
+    work: plan.work,
+    rest: plan.rest,
+    rounds: plan.rounds,
+    openEnded: plan.openEnded,
+    movements,
+    partner: partner ? { mode: partner.mode, people: Math.max(2, partner.people || 2) } : null,
+    /** One time through every movement, in seconds. The AMRAP round estimate. */
+    roundSeconds: Math.round(roundSeconds),
+    /** What an AMRAP is likely to score, so the plan can say something useful. */
+    estimatedRounds: plan.openEnded && roundSeconds > 0
+      ? Math.max(1, Math.round((actualMinutes * 60) / roundSeconds))
+      : null,
+    seed,
+    shortfall: false,
+  };
+}
+
 /* -------------------------------------------------------------------- log */
 
 /** Epley. Reliable to about 10 reps, optimistic beyond that. */

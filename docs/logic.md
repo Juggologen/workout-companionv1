@@ -783,6 +783,33 @@ tick, so a header would say the same thing twice. The lifts are the gap: they
 are one block each, so without a header for the group they simply began, with
 nothing marking that the warm-up was over.
 
+### How to do the movement
+
+Every warm-up drill and every mobility move in the workbook carries a `how`
+string — a sentence or two on performing it. Until now it appeared only on the
+print sheet, which is no use to someone standing in the gym holding a phone,
+and the cool-down is exactly where you meet a movement you have never done.
+
+`checkRow` takes it as a fourth argument and grows the affordance a set row
+already has: the row itself is the action, and an `i` button beside it opens a
+panel underneath. Same shape, same position, same gesture as the pencil that
+opens the weight stepper — one thing to learn, not two. Rows with nothing to
+say get no button rather than one that opens an empty panel.
+
+It expands in place. The text is a sentence or two; a modal mid-session would
+cover the list, lose the scroll position, and have to be dismissed before you
+could tick anything off.
+
+One open at a time, held in `live.howOpen` the way `live.editing` holds the
+open weight stepper — opening the next closes the last, so the list cannot
+quietly grow to twice its height while you read. It survives ticking the row it
+belongs to: a finished drill dims, the note does not, because you may still be
+reading it when you tick.
+
+The plan screen does not offer this. There the drills are a flat three-column
+list you are skimming to decide whether the session fits; the instructions
+belong where the movement is performed.
+
 ---
 
 ## 17. Screen transitions

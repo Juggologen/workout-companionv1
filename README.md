@@ -186,6 +186,13 @@ named the contents rather than the phase while disagreeing with the sheet and
 the code. Each header carries its item count as well as its duration, because
 minutes alone tell you how long but not how much.
 
+**Every warm-up drill and mobility move can tell you how to do it.** An `i`
+beside the row opens a sentence or two underneath — the same gesture as the
+pencil that opens the weight stepper, one row up. The instructions were in the
+workbook all along but only ever reached the printed sheet, which is no use in
+a gym; the cool-down is exactly where you meet a movement you have never done.
+One opens at a time, and it stays open when you tick the row off.
+
 Weights are steppable in 2.5 kg or typable outright. Typing accepts any number;
 only the +/- buttons enforce the grid, snapping an off-grid weight onto it in
 the direction pressed (183 → + → 185). The same control sets a 1RM, and it is

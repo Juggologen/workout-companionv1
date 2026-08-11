@@ -286,6 +286,7 @@ const LOCALES = {
     'live.bodyweight': 'Bodyweight',
     'live.addWeight': 'Add weight',
     'live.adjust': 'Adjust load',
+    'live.how': 'How to do it',
     'live.finish.one': 'Finish and log {n} set',
     'live.finish.other': 'Finish and log {n} sets',
     'live.finishEmpty': 'Finish workout',

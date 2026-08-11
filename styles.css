@@ -1477,6 +1477,29 @@ input, select, textarea { font: inherit; color: inherit; }
 .check-row.is-done .check-row-name { opacity: 0.45; }
 .check-row-min { font-size: 11.5px; color: color-mix(in srgb, var(--color-text) 42%, transparent); }
 
+/* Row plus its "how" button, laid out exactly like `.set-line` and its pencil
+   -- the two are the same idea and should not need learning twice. The button
+   stretches to the row's height instead of the 48px it takes elsewhere, so a
+   drill row stays the height of a drill row. */
+.check-line { display: flex; align-items: stretch; gap: 9px; }
+.check-line > .icon-btn { height: auto; }
+.check-line > .icon-btn.is-on { color: var(--g); border-color: color-mix(in srgb, var(--g) 45%, var(--color-divider)); }
+
+/* The instructions. Indented under the row it belongs to and marked with an
+   accent rule down the side: read as a note attached to that movement, not as
+   another row you are meant to tick. */
+.how-note {
+  margin: 0 0 0 6px;
+  padding: 9px 12px;
+  border-left: 2px solid color-mix(in srgb, var(--g) 55%, transparent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: rgba(233, 233, 237, 0.04);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--t-65);
+  text-wrap: pretty;
+}
+
 /*
    Each exercise, the warm-up and the mobility work get their own box with a
    header that collapses. A long session is a list of separate things to get

@@ -172,6 +172,7 @@ function blankLive(session) {
     weights: {},
     collapsed: {},
     editing: null,
+    howOpen: null,
     restEndsAt: 0,
     restTotal: 0,
     restLabel: '',
@@ -2490,7 +2491,7 @@ function viewLive() {
           title: t('phase.warmup'),
           sub: phaseMeta(tp('phase.drills', built.warmup.items.length), built.warmup.minutes),
           keys: built.warmup.items.map((d) => `w${d.id}`),
-          children: built.warmup.items.map((d) => checkRow(`w${d.id}`, localized(d.name), d.minutes)),
+          children: built.warmup.items.map((d) => checkRow(`w${d.id}`, localized(d.name), d.minutes, d.how)),
         }),
 
       h(
@@ -2506,7 +2507,7 @@ function viewLive() {
           title: t('phase.cooldown'),
           sub: phaseMeta(tp('phase.moves', built.cooldown.items.length), built.cooldown.minutes),
           keys: built.cooldown.items.map((m) => `c${m.id}`),
-          children: built.cooldown.items.map((m) => checkRow(`c${m.id}`, localized(m.name), m.minutes)),
+          children: built.cooldown.items.map((m) => checkRow(`c${m.id}`, localized(m.name), m.minutes, m.how)),
         }),
 
       h(
@@ -2733,22 +2734,69 @@ function confirmSheet({ title, body, confirmLabel, cancelLabel, onConfirm }) {
   dialog.showModal();
 }
 
-function checkRow(key, name, minutes) {
-  const on = !!state.live.checked[key];
+/**
+ * A warm-up drill or a mobility move: tick it off, or ask how it is done.
+ *
+ * The instructions were only ever on the print sheet, which is no use to
+ * someone standing in the gym holding a phone — and the cool-down is exactly
+ * where you meet a movement you have never done before. So the row grows the
+ * same affordance a set row already has: the row itself is the action, and a
+ * quiet icon button beside it opens a panel underneath. Same shape, same
+ * place, same gesture as the pencil that opens the weight stepper, so it is
+ * one thing to learn rather than two.
+ *
+ * It expands in place rather than opening a sheet. The text is a sentence or
+ * two, and a modal mid-session would cover the list, lose your scroll position
+ * and have to be dismissed before you could tick anything off.
+ *
+ * One open at a time, like `live.editing`: opening the next closes the last,
+ * so the list cannot silently grow to twice its height while you read.
+ */
+function checkRow(key, name, minutes, how = '') {
+  const live = state.live;
+  const on = !!live.checked[key];
+  const note = localized(how);
+  const open = live.howOpen === key;
+
   return h(
-    'button.check-row',
-    {
-      class: on ? 'is-done' : '',
-      'aria-pressed': String(on),
-      onclick: () => {
-        state.live.checked[key] = !on;
-        saveLive();
-        render();
-      },
-    },
-    h('span.tick', { class: on ? 'is-on' : '' }, icon(ICONS.check, { size: 11, stroke: '#161826' })),
-    h('span.check-row-name', name),
-    h('span.check-row-min', `${minutes} ${t('units.min')}`)
+    'div.stack',
+    { style: 'gap:9px' },
+    h(
+      'div.check-line',
+      h(
+        'button.check-row',
+        {
+          class: on ? 'is-done' : '',
+          'aria-pressed': String(on),
+          onclick: () => {
+            live.checked[key] = !on;
+            saveLive();
+            render();
+          },
+        },
+        h('span.tick', { class: on ? 'is-on' : '' }, icon(ICONS.check, { size: 11, stroke: '#161826' })),
+        h('span.check-row-name', name),
+        h('span.check-row-min', `${minutes} ${t('units.min')}`)
+      ),
+      // No button at all when there is nothing to say, rather than one that
+      // opens an empty panel.
+      note &&
+        h(
+          'button.icon-btn',
+          {
+            class: open ? 'is-on' : '',
+            'aria-label': t('live.how'),
+            'aria-expanded': String(open),
+            onclick: () => {
+              live.howOpen = open ? null : key;
+              saveLive();
+              render();
+            },
+          },
+          icon(ICONS.info, { size: 15 })
+        )
+    ),
+    open && note && h('p.how-note', note)
   );
 }
 

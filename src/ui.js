@@ -130,6 +130,10 @@ export const ICONS = {
   // single <path>. The dot is a zero-length segment relying on the round line
   // cap, the same trick as `list` above.
   help: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM9.5 9.3a2.6 2.6 0 0 1 5 .8c0 1.7-2.5 2.2-2.5 3.9M12 17.3h.01',
+  // Same ring-stem-dot construction as `help` on purpose: the two live a few
+  // rows apart in the app and should read as one family. A question mark asks
+  // "what is this?"; an "i" says "there is more here" — which is the offer.
+  info: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 11.2v5.4M12 7.6h.01',
   save: 'M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2ZM7 3v6h8M7 21v-8h10v8',
   clock: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Zm0-14v5l3 2',
   spark: 'M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z',

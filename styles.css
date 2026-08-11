@@ -2352,3 +2352,132 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .cond-head { align-items: center; }
 .cond-format { flex: none; }
+
+/* ------------------------------------------------------ conditioning timer
+
+   Read from arm's length with your hands busy, so everything is bigger than it
+   would otherwise be and there are only ever two controls. The screen wears the
+   running block's format colour, which is how you know which block you are in
+   without reading anything. */
+
+.tmr { display: flex; flex-direction: column; }
+.tmr-inner {
+  flex: 1;
+  gap: 18px;
+  justify-content: space-between;
+  padding-bottom: 18px;
+}
+
+.tmr-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tmr-progress { font-size: 11.5px; color: var(--t-45); font-variant-numeric: tabular-nums; }
+
+.tmr-head { display: flex; flex-direction: column; gap: 5px; text-align: center; }
+.tmr-kicker {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--g);
+}
+/* Clamped rather than shrunk to fit: two lines of a movement name is fine, and
+   a name that scales down to suit its container is a name you cannot read from
+   the rower it is telling you to get on. */
+.tmr-name {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.tmr-turn {
+  align-self: center;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 15%, transparent);
+}
+
+/* The dial. A ring rather than a bar because a ring shows how much of the
+   window is left at any angle, including upside down on the floor. */
+.tmr-dial { position: relative; display: grid; place-items: center; margin: 2px 0; }
+.tmr-ring { width: min(62vw, 260px); height: min(62vw, 260px); transform: rotate(-90deg); }
+.tmr-ring-track { fill: none; stroke: rgba(233, 233, 237, 0.09); stroke-width: 6; }
+.tmr-ring-fill {
+  fill: none;
+  stroke: var(--g);
+  stroke-width: 6;
+  stroke-linecap: round;
+  /* No transition: the tick sets this four times a second and an easing curve
+     would leave the ring lagging the digits it is supposed to agree with. */
+}
+.tmr-dial.is-rest .tmr-ring-fill { stroke: var(--t-45); }
+
+.tmr-readout { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tmr-clock {
+  font-size: 54px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.tmr-phase { font-size: 12px; color: var(--t-55); }
+
+.tmr-list {
+  list-style: none;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* The counter IS the score of an AMRAP, so it gets the largest target on the
+   screen and sits low, where a thumb already is. */
+.tmr-count { display: flex; align-items: stretch; gap: 8px; }
+.tmr-count-btn {
+  flex: none;
+  width: 54px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--t-55);
+  font-size: 22px;
+  font-family: inherit;
+}
+.tmr-count-btn:disabled { opacity: 0.3; }
+.tmr-count-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 12px;
+  border: 1px solid var(--g);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--g) 12%, transparent);
+  font-family: inherit;
+  color: inherit;
+}
+.tmr-count-main:active { background: color-mix(in srgb, var(--g) 24%, transparent); }
+.tmr-count-n { font-size: 30px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: var(--g); }
+.tmr-count-label { font-size: 11px; color: var(--t-55); }
+
+.tmr-actions { display: flex; gap: 9px; }
+
+.tmr-summary { display: flex; flex-direction: column; gap: 8px; }
+.tmr-sum-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--g) 40%, var(--color-divider));
+  border-left-width: 3px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--g) 5%, transparent);
+}
+.tmr-sum-fmt { font-size: 15px; font-weight: 600; color: var(--g); }
+.tmr-sum-score { font-size: 13px; color: var(--t-65); font-variant-numeric: tabular-nums; }

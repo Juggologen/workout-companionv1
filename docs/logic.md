@@ -1840,3 +1840,96 @@ let a block be re-rolled into a movement its neighbour already has.
 | Repeated movement, ergs+running (pool of 6) | 5% at 2 blocks, 97% at 4 |
 | Repeated format, 1–3 blocks | **0%** |
 | Repeated format, 4 blocks | 100% — unavoidable against 3 formats |
+
+---
+
+## 26. The conditioning timer
+
+The clock that turns a plan into a workout. Three decisions shape all of it, and
+all three come from the screen being read at arm's length with your hands busy.
+
+### The clock is derived, never counted
+
+State holds the epoch millisecond the current step ends; remaining time is
+`endsAt - now`. A counter incremented by `setInterval` drifts, stops when the tab
+is backgrounded, and cannot survive the reload a phone performs when it reclaims
+memory mid-workout. An end timestamp survives all three, and `catchUpTimer` walks
+forward through however many steps expired while the page was gone.
+
+**A step begins when the one before it ended**, not when the tick noticed.
+Starting from `now` donates the tick's lateness to every round, so a
+twelve-minute EMOM quietly runs thirteen. Skipping is the exception: the user
+ended that step, so the next starts when they said. Verified by arming a stored
+clock 125 s in the past — it resumes on step 3 with 55 s left, exactly where it
+would have been.
+
+Catching up is **silent**. Three beeps for three rounds that already happened is
+noise about the past, so a multi-step overshoot takes the quiet path and only a
+single-step arrival gets a cue.
+
+### One step list, five formats
+
+`blockSteps` flattens a block into `{kind, seconds, movement, round}`. Three of
+the formats are a list of timed windows; the other two are one open window with a
+counter. That is the same trick `pace` pulled for generation — get the shape into
+one form and everything downstream stops caring which format it came from.
+
+| kind | |
+|---|---|
+| `work` / `rest` | fixed window, counts down, moves on |
+| `amrap` | one open window; the round counter is the score |
+| `fortime` | one window counting **up** to a cap |
+| `between` | the transition between blocks, a step like any other |
+
+Tabata runs eight rounds of one movement *then* eight of the next, rather than
+rotating within a round — that is the protocol, and it is why it costs four
+minutes per movement. Intervals drop their trailing rest: the block is over, and
+making someone wait out a rest to be told so is just wrong.
+
+**This exposed a lie in the plan.** Intervals declared twelve minutes and their
+steps totalled nine, because `rounds = floor(budget / (work + rest))` wasted up
+to a whole round. The count now solves `N × (work + rest) − rest ≤ budget`, and
+every window-driven block derives its stated `minutes` from the same step list
+the timer walks — so the plan and the clock agree by construction rather than by
+two functions staying in step. Measured across 16,000 blocks: worst drift 30 s
+(whole-minute rounding), zero blocks over the ask.
+
+### Rendering is surgical
+
+`render()` rebuilds the screen, which would fight a tap on the round counter four
+times a second — the same reason `tickRest` edits two nodes and nothing else. The
+tick writes the digits and the ring; only a step boundary re-renders. It runs at
+250 ms rather than 1 s because the ring is a continuous sweep and a one-second
+step makes it stutter.
+
+The tick runs **wherever you are**. A clock that only advances while you are
+looking at it is not a clock, and off-screen the resume bubble carries the time.
+Finishing navigates to the summary from any screen: the workout is over, nothing
+is written down yet, and the numbers exist only there until you answer.
+
+### It is audible
+
+Every transition beeps and buzzes, with a three-note count-in on windows longer
+than twelve seconds — a ten-second rest that beeps for three of them is noise.
+The tones are synthesised WebAudio, not files: this app ships no binary assets
+and a beep is four lines. The first Start press doubles as the gesture that
+unlocks audio. Wake Lock holds the screen on where the browser allows it.
+
+### The log
+
+One entry per block, not per set — the block is the unit performed and there is
+no per-set weight. `goal: 'Conditioning'` is written so the balance chart can
+account for it, which needed `REPORT_GOALS`: `vocabulary.goals` drives the goal
+picker and the prescription lookup, and reading the log against *that* list filed
+a whole HIIT workout under "Not recorded". Two lists, two jobs.
+
+### A note on a self-inflicted wound
+
+Renaming a shadowed variable with a PowerShell round-trip re-encoded every
+non-ASCII character in `app.js`, and the botched reversal then dropped twelve
+lines. Recovered by matching each damaged line against `git show HEAD` with the
+damaged regions wildcarded, then finding the four session-only casualties by
+symptom — an undefined `RING_LEN`, a movement name reading `window.name`, a
+missing list element and a missing button label. Every special character now
+reconciles against HEAD exactly. **Use the Edit tool for source files;
+`Get-Content`/`Set-Content` on PowerShell 5.1 is not UTF-8 safe.**

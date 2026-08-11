@@ -15,6 +15,7 @@ const KEYS = {
   oneRm: `${PREFIX}one-rm`,
   prefs: `${PREFIX}prefs`,
   customExercises: `${PREFIX}custom-exercises`,
+  timer: `${PREFIX}timer`,
 };
 
 function read(key, fallback) {
@@ -59,6 +60,21 @@ export const store = {
   setLive: (v) => write(KEYS.live, v),
   clearLive: () => localStorage.removeItem(KEYS.live),
 
+  /**
+   * A conditioning workout being run: which step, how much of it is left, and
+   * what has been counted so far. Separate from `live` because the two run
+   * completely different machinery -- one ticks off sets, the other walks a
+   * clock -- and because a session can hold both, with the finisher's timer
+   * outliving the lifting it followed.
+   *
+   * Written on every step change rather than every tick: the clock is derived
+   * from an end timestamp, so a reload mid-round resumes at the right second
+   * without storing the seconds.
+   */
+  getTimer: () => read(KEYS.timer, null),
+  setTimer: (v) => write(KEYS.timer, v),
+  clearTimer: () => localStorage.removeItem(KEYS.timer),
+
   getLog: () => read(KEYS.log, []),
   setLog: (v) => write(KEYS.log, v),
 
@@ -86,6 +102,7 @@ export const store = {
       sessions: this.getSessions(),
       draft: this.getDraft(),
       live: this.getLive(),
+      timer: this.getTimer(),
       log: this.getLog(),
       oneRm: this.getOneRm(),
       prefs: this.getPrefs(),
@@ -100,6 +117,7 @@ export const store = {
     if (payload.sessions) this.setSessions(payload.sessions);
     if (payload.draft) this.setDraft(payload.draft);
     if (payload.live) this.setLive(payload.live);
+    if (payload.timer) this.setTimer(payload.timer);
     if (payload.log) this.setLog(payload.log);
     if (payload.oneRm) this.setOneRm(payload.oneRm);
     if (payload.prefs) this.setPrefs(payload.prefs);

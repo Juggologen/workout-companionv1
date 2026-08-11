@@ -642,7 +642,15 @@ function planFormat(format, minutes, rand) {
       const fits = shapes.filter((s) => (s.work + s.rest) * 4 <= budget);
       const usable = fits.length ? fits : [shapes[0]];
       const shape = usable[Math.floor(rand() * usable.length)];
-      const rounds = Math.max(4, Math.floor(budget / (shape.work + shape.rest)));
+      // The last rest is never served -- the block is over -- so the true cost
+      // of N rounds is `N × (work + rest) − rest`, and the round count solves
+      // that rather than the naive division. Flooring the naive one wasted up
+      // to a whole round: a 90/60 shape in twelve minutes ran four rounds and
+      // nine minutes against a twelve-minute ask.
+      const rounds = Math.max(
+        4,
+        Math.floor((budget + shape.rest) / (shape.work + shape.rest))
+      );
       const stations = 1 + Math.floor(rand() * 2); // 1-2, alternating
       return { ...shape, rounds, stations, perStation: shape.work, openEnded: false };
     }
@@ -805,10 +813,16 @@ export function generateConditioning(options, catalog) {
     return { ref: m.ex.id, amount, unit: m.unit, pace: m.pace, role: m.role };
   });
 
-  // Tabata's duration is dictated by the protocol, so it reports what it will
-  // actually take rather than what was asked for. Everything else fills the ask.
-  const actualMinutes =
-    picked === 'tabata' ? movements.length * 4 : minutes;
+  // A window-driven block reports what its own steps will actually take, not
+  // what was asked for. The two are not the same -- a protocol has its own
+  // arithmetic, and rounds do not divide a budget evenly -- and the plan
+  // claiming twelve minutes for a block the clock runs in nine is the plan
+  // being wrong. Deriving it from the same step list the timer walks makes them
+  // agree by construction rather than by two functions staying in step.
+  const shape = { format: picked, rounds: plan.rounds, work: plan.work, rest: plan.rest, movements };
+  const actualMinutes = windowDriven
+    ? Math.max(1, Math.round(stepsSeconds(blockSteps(shape)) / 60))
+    : minutes;
 
   const roundSeconds = movements.reduce((sum, m) => sum + movementSeconds(m), 0);
 
@@ -940,6 +954,108 @@ export function generateConditioningWorkout(options, catalog) {
     distinctMovements: used.size,
     shortfall: false,
   };
+}
+
+/* ------------------------------------------------------- running the clock */
+
+/**
+ * A block, flattened into the steps a clock can walk.
+ *
+ * The five formats have nothing structurally in common on paper, and the timer
+ * would need five state machines to run them -- except that three of them are
+ * just a list of timed windows, and the other two are one open window with a
+ * counter. Flattening to a step list here is the same trick `pace` pulled for
+ * generation: get the shape into one form and everything downstream stops
+ * caring which format it came from.
+ *
+ * Each step is `{ kind, seconds, movement, round, label }`:
+ *
+ *   `work` / `rest`  a fixed window. The clock counts it down and moves on.
+ *   `amrap`          one open window; the round counter is the score.
+ *   `fortime`        one window counting UP to a cap; elapsed is the score.
+ */
+export function blockSteps(block) {
+  const mv = block.movements || [];
+  if (!mv.length) return [];
+
+  switch (block.format) {
+    case 'emom': {
+      // One movement per minute, rotating. The whole minute is the step: what
+      // is left after the work is the rest, which is the format's entire idea.
+      return Array.from({ length: block.rounds }, (_, i) => ({
+        kind: 'work',
+        seconds: 60,
+        movement: mv[i % mv.length],
+        round: i + 1,
+        rounds: block.rounds,
+      }));
+    }
+    case 'intervals': {
+      const steps = [];
+      for (let r = 0; r < block.rounds; r += 1) {
+        steps.push({
+          kind: 'work',
+          seconds: block.work,
+          movement: mv[r % mv.length],
+          round: r + 1,
+          rounds: block.rounds,
+        });
+        // No trailing rest: the block is over, and a timer that makes you wait
+        // out a rest period before telling you so is just wrong.
+        if (block.rest > 0 && r < block.rounds - 1) {
+          steps.push({ kind: 'rest', seconds: block.rest, round: r + 1, rounds: block.rounds });
+        }
+      }
+      return steps;
+    }
+    case 'tabata': {
+      // Eight rounds of one movement, then eight of the next -- not the
+      // movements rotating within a round. That is the protocol, and it is why
+      // Tabata costs four minutes per movement.
+      const steps = [];
+      mv.forEach((movement, m) => {
+        for (let r = 0; r < block.rounds; r += 1) {
+          steps.push({
+            kind: 'work',
+            seconds: block.work,
+            movement,
+            round: r + 1,
+            rounds: block.rounds,
+            group: m + 1,
+            groups: mv.length,
+          });
+          const last = m === mv.length - 1 && r === block.rounds - 1;
+          if (!last) steps.push({ kind: 'rest', seconds: block.rest, round: r + 1, rounds: block.rounds });
+        }
+      });
+      return steps;
+    }
+    case 'amrap':
+      return [{ kind: 'amrap', seconds: block.minutes * 60, movements: mv }];
+    default:
+      return [{ kind: 'fortime', seconds: block.minutes * 60, movements: mv, countUp: true, rounds: block.rounds }];
+  }
+}
+
+/**
+ * The whole workout as one sequence: every block's steps, with the transition
+ * between blocks sitting in the list as a step of its own rather than as a
+ * special case the clock has to remember.
+ */
+export function workoutSteps(blocks, restMinutes = BLOCK_REST_MINUTES) {
+  const out = [];
+  blocks.forEach((block, i) => {
+    if (i > 0 && restMinutes > 0) {
+      out.push({ kind: 'between', seconds: restMinutes * 60, block: i, nextBlock: block });
+    }
+    for (const step of blockSteps(block)) out.push({ ...step, block: i });
+  });
+  return out;
+}
+
+/** Total seconds the sequence will take, transitions included. */
+export function stepsSeconds(steps) {
+  return steps.reduce((sum, s) => sum + s.seconds, 0);
 }
 
 /* -------------------------------------------------------------------- log */

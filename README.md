@@ -434,12 +434,32 @@ whiteboard writes it the same way, for the same reason. The header carries each
 format's own sentence rather than a generic count, because "12 min" is a limit
 in an AMRAP and a cap you hope not to reach in a for-time.
 
-**Not live yet.** The session screen runs sets and ticks, not a clock, so a
-conditioning-only plan says *Timer coming soon* on a disabled Start rather than
-starting into an empty session. The **print sheet does carry the block**, which
-makes it the one place a HIIT workout is genuinely usable today. The countdown
-screen with its audio cues, the round counter and score history are next — see
-[docs/logic.md](docs/logic.md) §20–22.
+### Running it
+
+**Start the clock** runs the workout. One screen, two controls, everything sized
+to be read from across the room with your hands busy.
+
+The clock counts each step down inside a ring, names the movement and its amount,
+and moves itself on. Rests show what's coming *next*, because a rest is only
+useful if you know what to set up for. An AMRAP gets the biggest control on the
+screen for its round counter — the count is the score. A for-time counts up. On a
+"you go, I go" partner workout it says whose turn it is.
+
+**It beeps.** You can't watch a phone mid-burpee, so every transition sounds,
+with a three-note count-in before it. The tones are synthesised on the spot —
+this app still ships no binary assets. It keeps the screen awake where the
+browser allows, and it runs whether or not you're looking at it: switch to the
+Log and a bubble carries the time back.
+
+**It survives a reload**, which is exactly what a phone does when it reclaims
+memory mid-workout. Nothing counts seconds — state holds the instant the current
+step ends, so coming back late means walking forward to wherever the clock
+actually is, silently.
+
+Finishing shows what you did and writes nothing until you say so. A rating, and
+it lands in the log as one entry per block under a Conditioning heading.
+
+See [docs/logic.md](docs/logic.md) §20–26.
 
 ## Perceived exertion
 

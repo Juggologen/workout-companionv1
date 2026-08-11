@@ -39,6 +39,8 @@ import {
   generateConditioning,
   generateConditioningWorkout,
   maxConditioningBlocks,
+  workoutSteps,
+  stepsSeconds,
   BLOCK_REST_MINUTES,
   CONDITIONING_FORMATS,
   PARTNER_MODES,
@@ -52,7 +54,22 @@ const GOAL_COLOR = {
   Strength: 'var(--goal-strength)',
   Hypertrophy: 'var(--goal-hypertrophy)',
   'Muscular endurance': 'var(--goal-endurance)',
+  // Never chosen on the Build screen -- see the note on `REPORT_GOALS` -- but
+  // it reaches the log, and the balance chart needs a colour for it.
+  Conditioning: 'var(--goal-conditioning)',
 };
+
+/**
+ * The goals the training log can contain, which is not the goals you can pick.
+ *
+ * `vocabulary.goals` drives the goal picker and the prescription lookup, and
+ * Conditioning belongs in neither: `getPrescription(profile, 'Conditioning')`
+ * has no row for any lifting profile. But conditioning entries are written with
+ * `goal: 'Conditioning'` so the balance chart can account for them, and reading
+ * the log against the picker's list filed a whole HIIT workout under "Not
+ * recorded". The two lists do different jobs; this is the reporting one.
+ */
+const REPORT_GOALS = (goals) => [...goals, 'Conditioning'];
 
 /** The prescription profile used to preview a goal before lifts are chosen. */
 const REPRESENTATIVE_PROFILE = 'Heavy compound';
@@ -81,6 +98,7 @@ const SCREEN_DEPTH = {
   cond: 1,
   plan: 2,
   live: 3,
+  timer: 3,
 };
 
 /**
@@ -235,7 +253,17 @@ async function init() {
   state.oneRm = store.getOneRm();
   state.prefs = store.getPrefs();
   state.live = store.getLive();
+  state.timer = store.getTimer();
   state.customExercises = store.getCustomExercises();
+  // A reload is what a phone does when it reclaims memory mid-workout, and the
+  // clock kept running while the page was gone. Catch it up before the first
+  // render so it comes back where it actually is, not where it was left.
+  if (state.timer?.running) catchUpTimer();
+
+  // Sound and haptics default on: this screen is used with the phone on the
+  // floor, and a silent interval timer is not an interval timer.
+  if (state.prefs.sound === undefined) state.prefs.sound = true;
+  if (state.prefs.haptics === undefined) state.prefs.haptics = true;
   refreshCatalog();
 
   const draft = store.getDraft();
@@ -253,6 +281,21 @@ async function init() {
   // through render(). A full re-render every second replaces every element,
   // including a weight field the user is part-way through typing into.
   setInterval(tickRest, 1000);
+
+  // Four times a second rather than once: the ring is a continuous sweep, and a
+  // one-second step makes it stutter in a way a progress ring never should. The
+  // digits only change when the second does, so this costs nothing extra.
+  setInterval(tickTimer, 250);
+
+  // A backgrounded tab has its timers throttled, so the clock can come back
+  // seconds or minutes behind. Everything is derived from `endsAt`, so one tick
+  // on return is enough to catch up -- including running straight past any steps
+  // that expired while the screen was off.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !state.timer?.running) return;
+    catchUpTimer();
+    if (state.screen === 'timer') render();
+  });
 
   render();
 }
@@ -323,6 +366,12 @@ function screenAccent() {
   // screen or the wave from the press point arrives somewhere that looks the
   // same as where it left.
   if (state.screen === 'cond') return formatColor(condState().format);
+  // While the clock runs, the whole app wears the block being run -- tab bar
+  // included -- so which block you are in is answerable without reading.
+  if (state.screen === 'timer' && state.timer) {
+    const step = timerStep();
+    return formatColor(state.timer.blocks[step?.block ?? 0]?.format);
+  }
   if (state.screen === 'plan' && conditioningBlocks().length && !sessionExercises().length) {
     // Mixed shapes have no one colour, so the screen wears the mode's own and
     // lets each card carry its block's. Painting the whole screen in the first
@@ -366,6 +415,12 @@ function render() {
   const scrollY = window.scrollY;
   const sameScreen = root.dataset.screen === state.screen;
   const resume = state.live && state.screen !== 'live';
+  // A running clock needs the same way back as a running session, and needs it
+  // more: a reload mid-workout is exactly what a phone does when it reclaims
+  // memory, and a timer you cannot get back to is a workout lost.
+  // Including a finished one: a summary nobody has answered yet is unfinished
+  // business, and losing the way back to it would lose the workout.
+  const resumeTimer = state.timer && state.screen !== 'timer';
 
   // Record the move on the render that actually changes screen, then keep it
   // for a moment (see NAV_MS) so a follow-up render does not cut the
@@ -383,7 +438,7 @@ function render() {
     {
       class: [
         NEUTRAL_SCREENS.has(state.screen) && 'is-neutral',
-        resume && 'has-resume',
+        (resume || resumeTimer) && 'has-resume',
         navClass,
       ]
         .filter(Boolean)
@@ -392,6 +447,7 @@ function render() {
     },
     screen(),
     resume && resumeBubble(),
+    !resume && resumeTimer && timerBubble(),
     tabbar()
   );
 
@@ -446,6 +502,41 @@ function go(screen) {
  * The floating bubble back into a running session. Present on every screen
  * while a session is live, gone the moment it is finished.
  */
+/**
+ * The way back into a running clock.
+ *
+ * Same bubble as a live session's, in the running block's colour, and it says
+ * the time left rather than a step count -- when a clock is running, how long
+ * is the only question worth answering from another screen.
+ */
+function timerBubble() {
+  const tm = state.timer;
+  const step = timerStep();
+  const block = tm.blocks[step?.block ?? 0];
+
+  return h(
+    'div.bubble-wrap',
+    h(
+      'button.bubble',
+      {
+        style: `--gs:${formatColor(block?.format)}`,
+        onclick: () => go('timer'),
+        'aria-label': t('cond.resumePill', { name: tm.sessionName }),
+      },
+      h('span.bubble-pulse'),
+      h(
+        'span.bubble-main',
+        h('span.bubble-name', block ? t(`cond.format.${block.format}`) : tm.sessionName),
+        h(
+          'span.bubble-meta',
+          tm.done ? t('cond.doneTitle') : tm.running ? restClock(timerRemaining()) : t('cond.paused')
+        )
+      ),
+      h('span.bubble-action', t('nav.resumeAction'))
+    )
+  );
+}
+
 function resumeBubble() {
   const session = liveSession();
   const built = buildSession(session, state.catalog, state.oneRm);
@@ -508,6 +599,12 @@ function screen() {
       return viewQuick();
     case 'cond':
       return viewConditioning();
+    case 'timer':
+      if (!state.timer) {
+        state.screen = 'home';
+        return viewHome();
+      }
+      return viewTimer();
     default:
       return viewHome();
   }
@@ -527,7 +624,8 @@ function tabbar() {
     state.screen === 'plan' ||
     state.screen === 'live' ||
     state.screen === 'quick' ||
-    state.screen === 'cond'
+    state.screen === 'cond' ||
+    state.screen === 'timer'
       ? 'build'
       : state.screen === 'saved' || state.screen === 'guide'
         ? 'home'
@@ -625,7 +723,10 @@ function empty(title, hint) {
    ------------------------------------------------------------------------ */
 
 function viewHome() {
-  const mix = goalMixFromLog(withinDays(state.log, WINDOW_DAYS, today()), state.catalog.vocabulary.goals);
+  const mix = goalMixFromLog(
+    withinDays(state.log, WINDOW_DAYS, today()),
+    REPORT_GOALS(state.catalog.vocabulary.goals)
+  );
 
   return h(
     'div.screen',
@@ -2779,15 +2880,16 @@ function viewPlan() {
         { style: 'flex:none;width:56px', onclick: () => printWorkout(state.session), 'aria-label': t('plan.export'), title: t('plan.export') },
         icon(ICONS.print, { size: 17 })
       ),
-      // The live session runs sets and ticks; it cannot run a clock yet. A plan
-      // with lifts still starts normally and simply does not carry the finisher
-      // into the session screen, but a conditioning-only plan would start into
-      // a session with nothing in it -- so it says so rather than offering a
-      // button that goes nowhere.
+      // Two different runners, because they are two different activities: the
+      // session screen ticks off sets, the timer walks a clock. A plan with
+      // lifts starts the session; a conditioning-only plan starts the clock.
       h(
         'button.btn.btn-goal.btn-lg',
-        { style: 'flex:1', disabled: !exercises.length, onclick: startSession },
-        exercises.length ? t('plan.start') : t('cond.notLive')
+        {
+          style: 'flex:1',
+          onclick: exercises.length ? startSession : () => startConditioning(),
+        },
+        exercises.length ? t('plan.start') : t('cond.start')
       )
     )
   );
@@ -2908,10 +3010,9 @@ function conditioningSection() {
           ]
     ),
     blocks[0]?.inputs && condActions(),
-    // Said once, here, rather than as a disabled control people have to work
-    // out for themselves. It is a real limitation and it belongs next to the
-    // thing it limits.
-    h('p.hint', hasLifts ? t('cond.finisherNote') : t('cond.notLiveHint'))
+    // The finisher still is not carried into the lifting session screen, which
+    // runs sets rather than a clock. Said here, where the thing it limits is.
+    hasLifts && h('p.hint', t('cond.finisherNote'))
   );
 }
 
@@ -3736,6 +3837,667 @@ function weightStepper(label, value, onSet, onStep) {
 const restClock = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
+/* ------------------------------------------------------ conditioning timer
+
+   The clock that turns a conditioning plan into a workout.
+
+   Three things shape the whole design, and all three come from the fact that
+   this screen is used from six feet away with your hands on a rower:
+
+     The clock is derived, never counted. State holds the epoch millisecond the
+     current step ends; remaining time is `endsAt - now`. A counter incremented
+     by a `setInterval` drifts, stops when the tab is backgrounded, and cannot
+     survive the reload a phone performs when it reclaims memory mid-workout.
+     An end timestamp survives all three.
+
+     Rendering is surgical. `render()` rebuilds the screen, which would fight a
+     tap on the round counter four times a second -- the same reason `tickRest`
+     edits two nodes and nothing else. The tick here writes the digits, the ring
+     and the label, and calls `render()` only when the step actually changes.
+
+     It is audible. You cannot watch a phone mid-burpee, so every transition
+     beeps and buzzes, with a three-note count-in before it arrives. The tones
+     are synthesised rather than loaded: this app ships no binary assets and a
+     beep is four lines of WebAudio.
+   ------------------------------------------------------------------------ */
+
+/** Reused across the session; created on the first gesture so autoplay allows it. */
+let audioCtx = null;
+
+function beep(frequency, ms = 90, gain = 0.14) {
+  if (!state.prefs.sound) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const vol = audioCtx.createGain();
+    osc.frequency.value = frequency;
+    osc.type = 'sine';
+    // A short ramp rather than a hard stop: an abrupt gate on a sine wave
+    // clicks, and a click is what a broken speaker sounds like.
+    vol.gain.setValueAtTime(gain, audioCtx.currentTime);
+    vol.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + ms / 1000);
+    osc.connect(vol).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + ms / 1000);
+  } catch {
+    // No audio is a worse workout, not a broken one.
+  }
+}
+
+function buzz(pattern) {
+  if (!state.prefs.haptics) return;
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* not everywhere, and not important enough to guard beyond this */
+  }
+}
+
+/** The three-note count-in, then the transition itself. Different notes so the
+ *  one that means "go" is not the one that means "nearly". */
+const cueTick = () => {
+  beep(880, 70, 0.1);
+  buzz(30);
+};
+const cueGo = () => {
+  beep(1320, 200, 0.18);
+  buzz([60, 40, 60]);
+};
+const cueRest = () => {
+  beep(520, 220, 0.14);
+  buzz(80);
+};
+const cueDone = () => {
+  beep(660, 160);
+  setTimeout(() => beep(880, 160), 170);
+  setTimeout(() => beep(1180, 340), 340);
+  buzz([80, 60, 80, 60, 160]);
+};
+
+/** Keep the screen awake while a clock is running, if the browser allows it. */
+let wakeLock = null;
+async function holdWakeLock() {
+  try {
+    wakeLock = (await navigator.wakeLock?.request('screen')) || null;
+  } catch {
+    /* denied or unsupported; the workout still runs */
+  }
+}
+function releaseWakeLock() {
+  try {
+    wakeLock?.release();
+  } catch {
+    /* already gone */
+  }
+  wakeLock = null;
+}
+
+function saveTimer() {
+  if (state.timer) store.setTimer(state.timer);
+}
+
+/**
+ * Begin a conditioning workout.
+ *
+ * The steps are derived from the blocks rather than stored with them: they are
+ * a pure function of the plan, and storing both would be two copies of one
+ * truth that could disagree after an edit.
+ */
+function startConditioning(session = state.session) {
+  const blocks = session.conditioning?.blocks || [];
+  if (!blocks.length) return;
+
+  state.timer = {
+    sessionId: session.id,
+    sessionName: sessionTitle(session),
+    date: today(),
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    index: 0,
+    running: false,
+    endsAt: 0,
+    // Seconds left in the current step while paused, and on the ready screen
+    // the full step, so the clock shows what is coming rather than zero.
+    remaining: null,
+    /** Per block: `{ rounds, reps, seconds }`. Only the relevant ones are set. */
+    scores: {},
+    startedAt: null,
+  };
+
+  saveTimer();
+  go('timer');
+}
+
+function timerSteps() {
+  return state.timer ? workoutSteps(state.timer.blocks) : [];
+}
+
+function timerStep() {
+  const steps = timerSteps();
+  return steps[state.timer?.index] || null;
+}
+
+/** Seconds left in the current step. The single source for every clock on screen. */
+function timerRemaining() {
+  const tm = state.timer;
+  if (!tm) return 0;
+  const step = timerStep();
+  if (!step) return 0;
+  if (!tm.running) return tm.remaining ?? step.seconds;
+  return Math.max(0, Math.ceil((tm.endsAt - Date.now()) / 1000));
+}
+
+function timerStart() {
+  const tm = state.timer;
+  const step = timerStep();
+  if (!tm || !step) return;
+  const left = tm.remaining ?? step.seconds;
+  tm.running = true;
+  tm.endsAt = Date.now() + left * 1000;
+  tm.remaining = null;
+  if (!tm.startedAt) tm.startedAt = Date.now();
+  // The first press is also what unlocks audio, so a cue here is both a signal
+  // and the gesture that lets every later cue play.
+  cueGo();
+  holdWakeLock();
+  saveTimer();
+  render();
+}
+
+function timerPause() {
+  const tm = state.timer;
+  if (!tm?.running) return;
+  tm.remaining = timerRemaining();
+  tm.running = false;
+  releaseWakeLock();
+  saveTimer();
+  render();
+}
+
+/**
+ * Move to the next step, or finish.
+ *
+ * `auto` distinguishes the clock arriving from a user skipping, which matters
+ * only for the cue: skipping should not sound like a round starting when you
+ * are the one who ended it.
+ */
+function timerAdvance(auto = true) {
+  const tm = state.timer;
+  if (!tm) return;
+
+  const steps = timerSteps();
+  const next = tm.index + 1;
+
+  if (next >= steps.length) {
+    timerFinish();
+    return;
+  }
+
+  const previousEnd = tm.endsAt;
+  tm.index = next;
+  tm.remaining = null;
+  const step = steps[next];
+  // A step begins when the one before it ended, not when the tick noticed. The
+  // tick can be late -- 250 ms normally, minutes if the tab was backgrounded --
+  // and starting from `now` would donate that lateness to every round, so a
+  // twelve-minute EMOM would quietly run thirteen. Skipping is different: the
+  // user ended the step, so the next one starts when they said.
+  tm.endsAt = (auto ? previousEnd : Date.now()) + step.seconds * 1000;
+
+  // An open step is the score, so it does not start itself: you decide when an
+  // AMRAP begins, and the count-in is part of the format.
+  if (step.kind === 'amrap' || step.kind === 'fortime') {
+    tm.running = false;
+    tm.remaining = step.seconds;
+  }
+
+  if (auto) (step.kind === 'rest' || step.kind === 'between' ? cueRest : cueGo)();
+  saveTimer();
+  render();
+}
+
+/** Count a round of the open-ended formats. The number IS the score. */
+function timerCount(delta) {
+  const tm = state.timer;
+  const step = timerStep();
+  if (!tm || !step) return;
+  const block = step.block ?? 0;
+  const score = tm.scores[block] || { rounds: 0, reps: 0 };
+  score.rounds = Math.max(0, (score.rounds || 0) + delta);
+  tm.scores[block] = score;
+  if (delta > 0) {
+    beep(1046, 60, 0.09);
+    buzz(25);
+  }
+  saveTimer();
+  render();
+}
+
+/**
+ * Stop the clock and write the log.
+ *
+ * A conditioning entry is one row per block rather than one per set: the block
+ * is the unit that was performed, and there is no per-set weight to record. The
+ * `goal` is written as `Conditioning` so the weekly summary and the goal mix can
+ * report it -- the one place the word is used as a goal, which is why it never
+ * had to become a fifth entry in the prescription table.
+ */
+function timerFinish() {
+  const tm = state.timer;
+  if (!tm) return;
+
+  cueDone();
+  releaseWakeLock();
+
+  const entries = tm.blocks.map((block, i) => {
+    const score = tm.scores[i] || {};
+    return {
+      id: newId(),
+      date: tm.date,
+      sessionId: tm.sessionId,
+      sessionName: tm.sessionName,
+      kind: 'conditioning',
+      format: block.format,
+      blockMinutes: block.minutes,
+      movementIds: block.movements.map((m) => m.ref),
+      rounds: score.rounds || null,
+      seconds: score.seconds || null,
+      exerciseId: null,
+      goal: 'Conditioning',
+      weight: null,
+      reps: null,
+      rpe: null,
+      auto: true,
+    };
+  });
+
+  state.timer = { ...tm, done: true, running: false, entries };
+  saveTimer();
+  // The clock runs wherever you are, so it can finish while you are on the Log.
+  // Coming to the summary is the one interruption this app should make: the
+  // workout is over, nothing is written down yet, and the numbers only exist
+  // here until you say what to do with them.
+  go('timer');
+}
+
+/**
+ * Rate it, write it, and go home.
+ *
+ * The RPE question is the same one the lifting session asks, for the same
+ * reason: a session rating is a judgement about the whole thing, and a
+ * conditioning workout is exactly the kind where it carries the most.
+ */
+function timerLogAndExit() {
+  const tm = state.timer;
+  if (!tm?.entries) return;
+
+  rpeSheet({
+    title: t('rpe.title'),
+    body: t('cond.rpeBody'),
+    onPick: (rpe) => {
+      const entries = tm.entries.map((e) => ({ ...e, rpe }));
+      state.log = [...entries, ...state.log];
+      store.setLog(state.log);
+
+      const session = state.sessions.find((s) => s.id === tm.sessionId);
+      if (session) {
+        session.completions = [...(session.completions || []), { date: tm.date, sets: entries.length, rpe }];
+        store.setSessions(state.sessions);
+      }
+
+      state.timer = null;
+      store.clearTimer();
+      go('home');
+      flash(tp('cond.logged', entries.length));
+    },
+  });
+}
+
+function timerDiscard() {
+  confirmSheet({
+    title: t('cond.discardTitle'),
+    body: t('cond.discardBody'),
+    confirmLabel: t('cond.discard'),
+    cancelLabel: t('live.confirmKeepGoing'),
+    onConfirm: () => {
+      releaseWakeLock();
+      state.timer = null;
+      store.clearTimer();
+      go('plan');
+    },
+  });
+}
+
+/**
+ * Advance the clock without re-rendering.
+ *
+ * Writes the three things that change and nothing else, for the reason
+ * `tickRest` does: going through `render()` four times a second would tear down
+ * the round counter between every tap. A step boundary is the one thing that
+ * does re-render, because the whole screen changes.
+ */
+function tickTimer() {
+  const tm = state.timer;
+  if (!tm || tm.done) return;
+
+  const step = timerStep();
+  if (!step) return;
+
+  const countUp = step.kind === 'fortime';
+  const remaining = timerRemaining();
+  const shown = countUp ? step.seconds - remaining : remaining;
+
+  // The digits and the ring only exist while the screen is up. Everything below
+  // runs wherever you are: a clock that only advances while you are looking at
+  // it is not a clock, and the beep that says the round changed is worth more
+  // when you have wandered off to the Log than when you are staring at it.
+  if (state.screen === 'timer') {
+    const digits = document.querySelector('.tmr-clock');
+    if (digits) digits.textContent = restClock(Math.max(0, shown));
+
+    const ring = document.querySelector('.tmr-ring-fill');
+    if (ring) {
+      const done = step.seconds ? 1 - remaining / step.seconds : 0;
+      ring.style.strokeDashoffset = String(Math.round(RING_LEN * (1 - done)));
+    }
+  } else {
+    // Off-screen, the bubble carries the clock. One text node, once a second.
+    const meta = document.querySelector('.bubble-meta');
+    if (meta && tm.running) meta.textContent = restClock(Math.max(0, remaining));
+  }
+
+  if (!tm.running) return;
+
+  // The count-in. Only on windows long enough for it to mean something -- a ten
+  // second rest that beeps for three of them is just noise.
+  if (step.seconds > 12 && remaining > 0 && remaining <= 3 && tm.lastCue !== remaining) {
+    tm.lastCue = remaining;
+    cueTick();
+  }
+
+  if (remaining <= 0) {
+    tm.lastCue = null;
+    // More than a whole step late means the tab was asleep, not that the tick
+    // was slow. Catching up silently in one pass beats advancing a step every
+    // 250 ms and firing a beep for each of the rounds that already went by.
+    if (Date.now() - tm.endsAt > step.seconds * 1000) {
+      catchUpTimer();
+      render();
+      return;
+    }
+    timerAdvance(true);
+  }
+}
+
+/**
+ * Walk forward through every step that expired while the tab was hidden.
+ *
+ * A backgrounded tab has its intervals throttled to once a minute or stopped
+ * entirely, so coming back to a three-step-old clock is normal rather than
+ * exceptional. Because remaining time is derived from `endsAt`, catching up is
+ * just consuming steps until one of them has time left -- and each consumed
+ * step pushes the next one's `endsAt` forward by its own length, so the
+ * sequence lands exactly where it would have without the interruption.
+ *
+ * No cues while catching up: three beeps for three missed rounds would be
+ * noise about something that already happened.
+ */
+function catchUpTimer() {
+  const tm = state.timer;
+  if (!tm?.running || tm.done) return;
+
+  const steps = timerSteps();
+  let guard = 0;
+
+  while (tm.running && Date.now() >= tm.endsAt && guard < 500) {
+    guard += 1;
+    const next = tm.index + 1;
+    if (next >= steps.length) {
+      timerFinish();
+      return;
+    }
+    tm.index = next;
+    const step = steps[next];
+    if (step.kind === 'amrap' || step.kind === 'fortime') {
+      tm.running = false;
+      tm.remaining = step.seconds;
+      break;
+    }
+    tm.endsAt += step.seconds * 1000;
+  }
+
+  tm.lastCue = null;
+  saveTimer();
+}
+
+/** Circumference of the ring below: 2·pi·r for r = 52. */
+const RING_LEN = 326;
+
+/**
+ * The countdown ring. `fraction` is how much of the window is still to come.
+ *
+ * Built with createElementNS rather than `h`, which uses createElement and
+ * would produce an HTMLUnknownElement named "svg" -- in the document, matched
+ * by the stylesheet, and drawing absolutely nothing.
+ */
+function progressRing(fraction) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 120 120');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('class', 'tmr-ring');
+
+  const circle = (cls, style) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', '60');
+    c.setAttribute('cy', '60');
+    c.setAttribute('r', '52');
+    c.setAttribute('class', cls);
+    if (style) c.setAttribute('style', style);
+    svg.appendChild(c);
+  };
+
+  const left = Math.max(0, Math.min(1, fraction));
+  circle('tmr-ring-track');
+  circle(
+    'tmr-ring-fill',
+    `stroke-dasharray:${RING_LEN};stroke-dashoffset:${Math.round(RING_LEN * (1 - left))}`
+  );
+  return svg;
+}
+
+/** Everything on this screen has to be legible from arm's length and further. */
+function viewTimer() {
+  const tm = state.timer;
+  if (!tm) {
+    state.screen = 'home';
+    return viewHome();
+  }
+  if (tm.done) return timerSummary(tm);
+
+  const steps = timerSteps();
+  const step = timerStep();
+  if (!step) return timerSummary(tm);
+
+  const block = tm.blocks[step.block ?? 0];
+  const colour = formatColor(block?.format);
+  const remaining = timerRemaining();
+  const countUp = step.kind === 'fortime';
+  const shown = countUp ? step.seconds - remaining : remaining;
+  const open = step.kind === 'amrap' || step.kind === 'fortime';
+  const resting = step.kind === 'rest' || step.kind === 'between';
+  const score = tm.scores[step.block ?? 0] || { rounds: 0 };
+
+  // Whose turn it is, on a format that alternates. Blocks with no partner say
+  // nothing rather than saying "you".
+  const partner = block?.partner;
+  const turn =
+    partner?.mode === 'alternating' && step.round
+      ? ((step.round - 1) % partner.people) + 1
+      : null;
+
+  return h(
+    'div.screen.tmr',
+    { style: `--g:${colour}` },
+    h(
+      'div.screen-inner.tmr-inner',
+      h(
+        'div.tmr-top',
+        h('button.back', { onclick: timerDiscard }, icon(ICONS.close, { size: 13 }), t('cond.stop')),
+        h(
+          'span.tmr-progress',
+          t('cond.stepOf', { n: tm.index + 1, total: steps.length })
+        )
+      ),
+
+      // What you are doing, said once and large. During a rest it is what comes
+      // next, because a rest is only useful if you know what to set up for.
+      h(
+        'div.tmr-head',
+        h('span.tmr-kicker', resting ? t('cond.next') : t(`cond.format.${block.format}`)),
+        h(
+          'h1.tmr-name',
+          resting ? nextMovementName(steps, tm.index) : stepName(step)
+        ),
+        turn && h('span.tmr-turn', t('cond.turn', { n: turn }))
+      ),
+
+      h(
+        'div.tmr-dial',
+        { class: resting ? 'is-rest' : '' },
+        // Built with createElementNS rather than `h`, which uses createElement
+        // and would produce an HTMLUnknownElement called "svg" -- present in the
+        // DOM, styled by the stylesheet, and drawing absolutely nothing.
+        progressRing(remaining / (step.seconds || 1)),
+        h(
+          'div.tmr-readout',
+          h('div.tmr-clock', restClock(Math.max(0, shown))),
+          h('div.tmr-phase', phaseWord(step, resting))
+        )
+      ),
+
+      // The round list for the open formats: what one round is, so you know
+      // what you are repeating without leaving the screen.
+      open &&
+        h(
+          'ol.tmr-list',
+          step.movements.map((m) =>
+            h(
+              'li.cond-move',
+              h('span.cond-amount', condAmount(m)),
+              h('span.cond-name', localized(state.catalog.byId.get(m.ref)?.name) || '—')
+            )
+          )
+        ),
+
+      // The counter is the score, so it is the biggest control on the screen
+      // and sits under the thumb rather than beside the clock.
+      step.kind === 'amrap' &&
+        h(
+          'div.tmr-count',
+          h(
+            'button.tmr-count-btn',
+            { onclick: () => timerCount(-1), 'aria-label': t('cond.roundMinus'), disabled: !score.rounds },
+            '−'
+          ),
+          h(
+            'button.tmr-count-main',
+            { onclick: () => timerCount(1) },
+            h('span.tmr-count-n', String(score.rounds || 0)),
+            h('span.tmr-count-label', tp('cond.roundsDone', score.rounds || 0))
+          ),
+          h('button.tmr-count-btn', { onclick: () => timerCount(1), 'aria-label': t('cond.roundPlus') }, '+')
+        ),
+
+      h(
+        'div.tmr-actions',
+        tm.running
+          ? h('button.btn.btn-lg.btn-block', { onclick: timerPause }, t('cond.pause'))
+          : h(
+              'button.btn.btn-goal.btn-lg.btn-block',
+              { onclick: timerStart },
+              tm.startedAt ? t('cond.resume') : t('cond.begin')
+            ),
+        h(
+          'button.btn.btn-lg',
+          { style: 'flex:none;width:96px', onclick: () => timerAdvance(false) },
+          step.kind === 'fortime' || step.kind === 'amrap' ? t('cond.doneStep') : t('live.skip')
+        )
+      )
+    )
+  );
+}
+
+/** The movement a rest is preparing you for. */
+function nextMovementName(steps, index) {
+  for (let i = index + 1; i < steps.length; i += 1) {
+    const s = steps[i];
+    if (s.kind === 'rest' || s.kind === 'between') continue;
+    return stepName(s);
+  }
+  return t('cond.lastOne');
+}
+
+function stepName(step) {
+  if (step.kind === 'amrap' || step.kind === 'fortime') {
+    return tp('cond.movementCount', step.movements.length);
+  }
+  if (!step.movement) return t('cond.rest');
+  const name = localized(state.catalog.byId.get(step.movement.ref)?.name) || '—';
+  return `${condAmount(step.movement)} ${name}`;
+}
+
+/** The small word under the digits: what this window is, in one word. */
+function phaseWord(step, resting) {
+  if (step.kind === 'between') return t('cond.betweenBlocks');
+  if (resting) return t('cond.rest');
+  if (step.kind === 'fortime') return t('cond.elapsed');
+  if (step.kind === 'amrap') return t('cond.left');
+  if (step.round && step.rounds) {
+    return step.group
+      ? t('cond.roundOfGroup', { n: step.round, total: step.rounds, g: step.group, groups: step.groups })
+      : t('cond.roundOf', { n: step.round, total: step.rounds });
+  }
+  return t('cond.work');
+}
+
+/** What you did, before it is written down. */
+function timerSummary(tm) {
+  const elapsed = tm.startedAt ? Math.round((Date.now() - tm.startedAt) / 1000) : 0;
+
+  return h(
+    'div.screen',
+    h(
+      'div.screen-inner',
+      { style: 'gap:22px' },
+      screenHead(tm.sessionName, t('cond.doneTitle')),
+      h(
+        'div.tmr-summary',
+        tm.blocks.map((block, i) => {
+          const score = tm.scores[i] || {};
+          return h(
+            'div.tmr-sum-row',
+            { style: `--g:${formatColor(block.format)}` },
+            h('span.tmr-sum-fmt', t(`cond.format.${block.format}`)),
+            h(
+              'span.tmr-sum-score',
+              score.rounds
+                ? tp('cond.roundsDone', score.rounds)
+                : t('cond.minutes', { n: block.minutes })
+            )
+          );
+        })
+      ),
+      h('p.hint', t('cond.doneHint', { n: Math.round(elapsed / 60) }))
+    ),
+    h(
+      'div.sticky-actions',
+      h('button.btn.btn-lg', { style: 'flex:none;width:96px', onclick: timerDiscard }, t('cond.discard')),
+      h('button.btn.btn-goal.btn-lg', { style: 'flex:1', onclick: timerLogAndExit }, t('cond.logIt'))
+    )
+  );
+}
+
 const restPercent = (remaining) =>
   state.live?.restTotal ? Math.round((remaining / state.live.restTotal) * 100) : 0;
 
@@ -4097,7 +4859,7 @@ function logWholeSession(session, date, rpe = null) {
 
 function viewLog() {
   const window30 = withinDays(state.log, WINDOW_DAYS, today());
-  const mix = goalMixFromLog(window30, state.catalog.vocabulary.goals);
+  const mix = goalMixFromLog(window30, REPORT_GOALS(state.catalog.vocabulary.goals));
   const muscles = musclesetsFromLog(window30, state.catalog.byId);
 
   return h(
@@ -5479,3 +6241,4 @@ function printWorkout(session) {
 }
 
 init();
+

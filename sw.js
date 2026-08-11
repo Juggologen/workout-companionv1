@@ -14,7 +14,7 @@
  * purges the old cache. Bump it when the file list below changes.
  */
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `workout-companion-${VERSION}`;
 
 const PRECACHE = [

@@ -1604,3 +1604,83 @@ into a session with nothing in it, and a plan with lifts starts normally with a
 line saying the finisher is not carried through. The print sheet **does** carry
 the block, which makes it the one place a conditioning workout is genuinely
 usable today — it needs no clock the app has not built.
+
+---
+
+## 23. Three fixes to the HIIT planner
+
+### The rows stopped jumping — and the goal row had the same bug
+
+`focusScroller` already held its position across a re-render in `state.focusScroll`.
+The conditioning screen has **two** card rows, and they were sharing that one
+number — so picking a shape also yanked the partner row.
+
+`holdScroll(scroller, key, selection)` is that logic lifted out and keyed. Two
+things had to change beyond the key:
+
+- **Position is per row.** `state.scrollPos[key]`.
+- **The nudge only fires when *that row's* selection changed.** Every render
+  rebuilds every scroller on the screen, so the "bring the chosen card into
+  view if it is mostly hidden" rule was re-running on the partner row every
+  time a shape was picked — which is the jumping the whole function exists to
+  stop, one row over. `state.scrollSel[key]` remembers what was selected last
+  time so an untouched row is left alone.
+
+Measured: picking a visible card leaves both rows at exactly the position they
+were scrolled to (436 → 436, 218 → 218), while picking a card that is off screen
+still brings it fully into view. The Quick workout goal row benefits from the
+same fix — it had the latent version of this bug from any unrelated re-render.
+
+### Bodyweight is its own kit group
+
+`floor` used to mean "open floor plus whatever kit lives on it", which was no use
+to someone in a hotel room. `bodyweight` is now a fifth group meaning you and the
+ground and nothing else: **20 movements**, enough to generate every format.
+
+**Choosing `floor` admits `bodyweight` too**, in the engine rather than the data.
+Anyone with a box and a kettlebell also has a floor, and being denied burpees for
+ticking the box with more equipment in it would be a nonsense. The reverse does
+not hold — bodyweight alone means alone, which is the entire point of the option.
+
+It is listed first, because it is the answer that is always true and someone with
+no equipment should not have to read past three things they do not have.
+
+Verified across all 31 kit combinations × 40 seeds: zero shortfalls, zero
+movements from a group that was not asked for.
+
+### A colour per shape
+
+The five formats get their own accents, the way the four goals do, so a plan is
+recognisable as an EMOM or an AMRAP before it is read.
+
+**"Surprise me" is not one of them** — it is the absence of a choice, so it keeps
+`--goal-conditioning`. That is not tidiness, it is what made the set possible.
+Eleven colours now share one hue circle (four goals, Home's yellow,
+conditioning's cyan, five formats), and searching for **six** format colours
+under all three constraints at once — distinct from each other, distinct under
+colourblindness, distinct from the six that already exist — returned nothing
+usable in 250,000 candidates. The best had two purples and two teals at ΔE 11.
+Dropping "Surprise me" from the set freed exactly enough room.
+
+| | Colour | |
+|---|---|---|
+| EMOM | `#6abbf2` | sky |
+| AMRAP | `#e99096` | rose |
+| Intervals | `#0ecaad` | turquoise |
+| Tabata | `#977dba` | violet |
+| For time | `#9a9654` | olive |
+
+ΔE 25.3 between them in normal vision, 10.6 under protanopia, 12.3 under
+deuteranopia, and no closer than 12.7 to any accent that already existed. Both
+dichromat figures clear the 10.5 the four goals already sit at among themselves
+— and unlike the goals, every one of these cards carries its name in 17px type,
+so colour here is the second channel rather than the only one.
+
+Picking a shape repaints the screen with the same wave from the press point that
+picking a goal does. `pickGoal` now delegates to `pickAccent(event, colour, apply)`,
+since shapes are not goals and have no entry in `GOAL_COLOR`.
+
+**The block card sets its own accent** rather than inheriting the screen's, so a
+finisher shows up in its shape's colour against a lifting session's goal colour.
+An EMOM should be recognisable as an EMOM wherever it appears — that is the point
+of giving shapes colours at all.

@@ -17,7 +17,9 @@
       "seconds": "Time under tension or effort. Pace is always 60 for these -- a minute of work per minute -- so the amount IS the duration."
     },
 
-    "kit": "Which of the four availability groups a movement needs, so the generator can be asked what is actually to hand: `erg` (rower, ski, bike), `run` (space or a treadmill), `floor` (open floor, plus whatever kit lives on it -- rope, box, ball, kettlebell, barbell, sled), `rig` (something to hang from).",
+    "kit": "Which availability group a movement needs, so the generator can be asked what is actually to hand: `bodyweight` (you and the ground, nothing else), `erg` (rower, ski, bike), `run` (space or a treadmill), `floor` (open floor plus whatever kit lives on it -- rope, box, ball, kettlebell, barbell, sled), `rig` (something to hang from).",
+
+    "bodyweightIsImplied": "Choosing `floor` admits `bodyweight` too, in the engine rather than here. Anyone with a box and a kettlebell also has a floor and their own bodyweight, and being denied burpees because they ticked the box with more equipment in it would be a nonsense. The reverse does not hold: `bodyweight` alone means alone.",
 
     "impact": "How much pounding the joints take. Not a difficulty rating -- a burpee is `high` and basic, a ski erg is `low` and basic. It exists so a session can be generated without jumping when that is what someone needs.",
 
@@ -25,7 +27,7 @@
   },
 
   "unitList": ["reps", "calories", "metres", "seconds"],
-  "kitList": ["erg", "run", "floor", "rig"],
+  "kitList": ["bodyweight", "erg", "run", "floor", "rig"],
 
   "movements": [
     {
@@ -146,7 +148,7 @@
       "id": "c7",
       "name": { "en": "Burpee", "sv": "Burpee" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Full body",
       "primary": "Full body",
       "secondary": ["Chest", "Quads", "Core"],
@@ -279,7 +281,7 @@
       "id": "c14",
       "name": { "en": "Sit-Up", "sv": "Situps" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Core/Anti-movement",
       "primary": "Core",
       "secondary": [],
@@ -298,7 +300,7 @@
       "id": "c15",
       "name": { "en": "Mountain Climber", "sv": "Bergsklättrare" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Core/Anti-movement",
       "primary": "Core",
       "secondary": ["Shoulders", "Quads"],
@@ -317,7 +319,7 @@
       "id": "c16",
       "name": { "en": "Jumping Jack", "sv": "Sprattelgubbe" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Monostructural",
       "primary": "Full body",
       "secondary": ["Shoulders", "Calves"],
@@ -336,7 +338,7 @@
       "id": "c17",
       "name": { "en": "High Knees", "sv": "Höga knän" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Monostructural",
       "primary": "Quads",
       "secondary": ["Core", "Calves"],
@@ -393,7 +395,7 @@
       "id": "c20",
       "name": { "en": "Skater Hop", "sv": "Skridskohopp" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Lunge/Single-leg",
       "primary": "Glutes",
       "secondary": ["Quads", "Adductors", "Calves"],
@@ -412,7 +414,7 @@
       "id": "c21",
       "name": { "en": "Tuck Jump", "sv": "Tuckhopp" },
       "equipment": "Bodyweight",
-      "kit": "floor",
+      "kit": "bodyweight",
       "pattern": "Plyometric",
       "primary": "Quads",
       "secondary": ["Glutes", "Calves", "Core"],
@@ -451,17 +453,17 @@
   "paces": {
     "comment": "Exercises already in exercises.json that work in a conditioning context. Keyed on the English name. `pace` and `unit` are the same idea as in `movements`; `kit` says what has to be available. Anything not listed here is simply never picked for a conditioning block -- which is the right default, since most of the compendium is loaded barbell work that has no business in an AMRAP.",
 
-    "Bodyweight Squat": { "unit": "reps", "pace": 25, "kit": "floor", "impact": "low" },
-    "Jump Squat": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "high" },
+    "Bodyweight Squat": { "unit": "reps", "pace": 25, "kit": "bodyweight", "impact": "low" },
+    "Jump Squat": { "unit": "reps", "pace": 22, "kit": "bodyweight", "impact": "high" },
     "Goblet Squat": { "unit": "reps", "pace": 16, "kit": "floor", "impact": "low" },
-    "Walking Lunge": { "unit": "reps", "pace": 24, "kit": "floor", "impact": "low" },
-    "Reverse Lunge": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "low" },
+    "Walking Lunge": { "unit": "reps", "pace": 24, "kit": "bodyweight", "impact": "low" },
+    "Reverse Lunge": { "unit": "reps", "pace": 22, "kit": "bodyweight", "impact": "low" },
     "Box Jump": { "unit": "reps", "pace": 15, "kit": "floor", "impact": "high" },
-    "Broad Jump": { "unit": "reps", "pace": 14, "kit": "floor", "impact": "high" },
+    "Broad Jump": { "unit": "reps", "pace": 14, "kit": "bodyweight", "impact": "high" },
 
-    "Push-Up": { "unit": "reps", "pace": 20, "kit": "floor", "impact": "low" },
+    "Push-Up": { "unit": "reps", "pace": 20, "kit": "bodyweight", "impact": "low" },
     "Ring Push-Up": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
-    "Handstand Push-Up": { "unit": "reps", "pace": 8, "kit": "floor", "impact": "low" },
+    "Handstand Push-Up": { "unit": "reps", "pace": 8, "kit": "bodyweight", "impact": "low" },
     "Dip": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
     "Pull-Up": { "unit": "reps", "pace": 12, "kit": "rig", "impact": "low" },
     "Band-Assisted Pull-Up": { "unit": "reps", "pace": 15, "kit": "rig", "impact": "low" },
@@ -469,12 +471,12 @@
     "Inverted Row": { "unit": "reps", "pace": 18, "kit": "rig", "impact": "low" },
     "Hanging Leg Raise": { "unit": "reps", "pace": 14, "kit": "rig", "impact": "low" },
 
-    "Plank": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
-    "Side Plank": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
-    "Hollow Body Hold": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
-    "Wall Sit": { "unit": "seconds", "pace": 60, "kit": "floor", "impact": "low" },
-    "Russian Twist": { "unit": "reps", "pace": 30, "kit": "floor", "impact": "low" },
-    "Bear Crawl": { "unit": "metres", "pace": 25, "kit": "floor", "impact": "low" },
+    "Plank": { "unit": "seconds", "pace": 60, "kit": "bodyweight", "impact": "low" },
+    "Side Plank": { "unit": "seconds", "pace": 60, "kit": "bodyweight", "impact": "low" },
+    "Hollow Body Hold": { "unit": "seconds", "pace": 60, "kit": "bodyweight", "impact": "low" },
+    "Wall Sit": { "unit": "seconds", "pace": 60, "kit": "bodyweight", "impact": "low" },
+    "Russian Twist": { "unit": "reps", "pace": 30, "kit": "bodyweight", "impact": "low" },
+    "Bear Crawl": { "unit": "metres", "pace": 25, "kit": "bodyweight", "impact": "low" },
 
     "Kettlebell Swing": { "unit": "reps", "pace": 22, "kit": "floor", "impact": "low" },
     "Kettlebell Snatch": { "unit": "reps", "pace": 14, "kit": "floor", "impact": "low" },

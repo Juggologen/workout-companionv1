@@ -84,6 +84,34 @@
      is meant to be the hard one. */
   --goal-conditioning: #43b8c4;
 
+  /* ---- conditioning formats ----
+     The five shapes get their own colours, the way the four goals do, so a
+     plan is recognisable as an EMOM or an AMRAP before it is read. "Surprise
+     me" keeps `--goal-conditioning` above: it is not a shape, it is the
+     absence of a choice, so it wears the mode's own colour.
+
+     That five-not-six is the whole reason this set works. Eleven colours now
+     have to share one hue circle -- four goals, Home's yellow, conditioning's
+     cyan, and these -- and searching for six formats under all three
+     constraints at once (distinct from each other, distinct under
+     colourblindness, distinct from the six that already exist) returned
+     nothing usable in 250k candidates: the best had two purples and two teals
+     at ΔE 11 apart. Dropping "Surprise me" from the set freed exactly enough
+     room.
+
+     Chosen by the same sweep as the accents above, keeping the candidate whose
+     worst CIEDE2000 distance was largest. Lands at ΔE 25.3 in normal vision,
+     10.6 under protanopia, 12.3 under deuteranopia, and no closer than 12.7 to
+     any accent that already existed. Both dichromat figures clear the 10.5 the
+     four goals already sit at among themselves -- and unlike the goals, every
+     one of these cards carries its name in 17px type, so colour here is the
+     second channel rather than the only one. */
+  --fmt-emom: #6abbf2;
+  --fmt-amrap: #e99096;
+  --fmt-intervals: #0ecaad;
+  --fmt-tabata: #977dba;
+  --fmt-fortime: #9a9654;
+
   /* Home is not a training mode, so it does not take a goal colour. This
      yellow sits at least ΔE 23.4 from every colour it can share a screen with
      — the three goals, both muscle tokens, and Nocturne's accent — with

@@ -729,7 +729,7 @@ export function generateConditioning(options, catalog) {
   const {
     minutes = 12,
     format = 'any',
-    kit = ['erg', 'run', 'floor', 'rig'],
+    kit = ['bodyweight', 'erg', 'run', 'floor', 'rig'],
     complexity = 'medium',
     lowImpact = false,
     partner = null,
@@ -737,7 +737,14 @@ export function generateConditioning(options, catalog) {
   } = options;
 
   const rand = mulberry32(seed);
+
+  // Having kit implies having a floor and a body. Anyone who ticked "floor &
+  // kit" owns a box and a kettlebell, and denying them burpees because they
+  // chose the box with more equipment in it would be a nonsense. The reverse
+  // does not hold -- bodyweight alone means alone, which is the entire point of
+  // the option.
   const allowedKit = new Set(kit);
+  if (allowedKit.has('floor')) allowedKit.add('bodyweight');
 
   const pool = (catalog.conditioningPool || [])
     .filter((ex) => !ex.archived)

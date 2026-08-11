@@ -342,9 +342,12 @@ for-time estimate is total units ÷ pace. Get the pace right and every format
 sizes itself: measured across all 58, EMOM chunks land at 39–41 s against a 40 s
 target and three-movement rounds at 59–78 s, nothing out of band.
 
-Movements carry a `kit` group — erg, run, floor, rig — because "do you have a
-ski erg" is a real question in a way it never was for lifting, and the same
-three complexity tiers as everything else. An air bike is agony and still basic;
+Movements carry a `kit` group — **bodyweight**, erg, run, floor, rig — because
+"do you have a ski erg" is a real question in a way it never was for lifting.
+Bodyweight means you and the ground and nothing else, which is 20 movements and
+enough for every format; choosing "floor & kit" admits it too, since anyone with
+a box and a kettlebell also has a floor. They carry the same three complexity
+tiers as everything else. An air bike is agony and still basic;
 double-unders are advanced because a beginner doing them tired mostly whips
 their own shins.
 
@@ -388,6 +391,13 @@ an *optional* field that one behaviour covers both cases: an empty draft becomes
 a **conditioning session**, a draft with lifts gets a **finisher**. On the plan
 the block sits after the lifts and before the cool-down — a finisher is the last
 hard thing you do, and the cool-down is what brings you down from it.
+
+**Each shape has its own colour**, the way the four goals do, so a plan is
+recognisable as an EMOM or an AMRAP before it's read — and picking one repaints
+the screen with the same wave from the press point. "Surprise me" keeps the
+generic conditioning cyan, because it isn't a shape, it's the absence of a
+choice. The block card carries its shape's colour even inside a lifting session,
+so a finisher stands out from the workout it's attached to.
 
 It renders as **one card with a list inside**, not a card per movement. A lift
 card carries sets, reps and a load because a lift is a thing you do on its own;

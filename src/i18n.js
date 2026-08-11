@@ -319,10 +319,12 @@ const LOCALES = {
     'cond.partnerWhy.shared': 'One target. Split the reps how you like.',
     'cond.partnerWhy.relay': 'A fixed total, worked through together.',
 
+    'cond.kit.bodyweight': 'Just me',
     'cond.kit.erg': 'Ergs',
     'cond.kit.run': 'Running',
     'cond.kit.floor': 'Floor & kit',
     'cond.kit.rig': 'Pull-up bar',
+    'cond.kitWhy.bodyweight': 'No equipment at all',
     'cond.kitWhy.erg': 'Rower, ski, bike',
     'cond.kitWhy.run': 'Space or a treadmill',
     'cond.kitWhy.floor': 'Rope, box, ball, bells',

@@ -125,8 +125,10 @@ const state = {
   weekOffset: 0,
   /** Quick workout's inputs. Seeded from prefs so it remembers your usual. */
   quick: null,
-  /** Where the focus row is scrolled to, held across re-renders. */
-  focusScroll: 0,
+  /** Conditioning's inputs. Seeded from prefs, like `quick`. */
+  cond: null,
+  /** Where each card row is scrolled to, by key, held across re-renders. */
+  scrollPos: {},
   /** The last navigation: `{ dir, at }`. Drives the screen transition. */
   nav: null,
   flash: null,
@@ -153,7 +155,7 @@ const COND_TIMES = [4, 6, 8, 10, 12, 14, 15, 16, 18, 20, 25, 30];
 const COND_DEFAULTS = {
   minutes: 12,
   format: 'any',
-  kit: ['floor'],
+  kit: ['bodyweight'],
   complexity: 'medium',
   lowImpact: false,
   partnerMode: 'solo',
@@ -310,9 +312,12 @@ function screenAccent() {
   // fifth accent -- on its own screen, and on a plan whose only content is a
   // conditioning block. A plan with lifts AND a finisher keeps the lifts' goal
   // colour, because the lifting is still what the session is.
-  if (state.screen === 'cond') return 'var(--goal-conditioning)';
+  // The shape being chosen, not the mode: picking AMRAP has to recolour the
+  // screen or the wave from the press point arrives somewhere that looks the
+  // same as where it left.
+  if (state.screen === 'cond') return formatColor(condState().format);
   if (state.screen === 'plan' && conditioningBlocks().length && !sessionExercises().length) {
-    return 'var(--goal-conditioning)';
+    return formatColor(conditioningBlocks()[0].format);
   }
   return GOAL_COLOR[state.session.goal];
 }
@@ -1372,8 +1377,32 @@ function setCond(patch, { rerender = true } = {}) {
   if (rerender) render();
 }
 
-const COND_KITS = ['erg', 'run', 'floor', 'rig'];
+// Bodyweight first: it is the answer that needs nothing, so it is the one that
+// is always true, and someone in a hotel room should not have to read past the
+// three they do not have to find it.
+const COND_KITS = ['bodyweight', 'floor', 'erg', 'run', 'rig'];
 const COND_FORMAT_CHOICES = ['any', ...CONDITIONING_FORMATS];
+
+/**
+ * A colour per shape, so a plan is recognisable as an EMOM or an AMRAP before
+ * it is read -- the same job the goal accents do for the lifting side.
+ *
+ * `any` is not a shape, it is the absence of a choice, so it wears the mode's
+ * own cyan rather than a sixth colour. That is also what made the set possible:
+ * eleven colours now share one hue circle, and six formats could not be
+ * separated from each other, from each other under colourblindness, and from
+ * the six accents that already exist, all at once.
+ */
+const FORMAT_COLOR = {
+  any: 'var(--goal-conditioning)',
+  emom: 'var(--fmt-emom)',
+  amrap: 'var(--fmt-amrap)',
+  intervals: 'var(--fmt-intervals)',
+  tabata: 'var(--fmt-tabata)',
+  fortime: 'var(--fmt-fortime)',
+};
+
+const formatColor = (key) => FORMAT_COLOR[key] || 'var(--goal-conditioning)';
 const COND_PARTNERS = ['solo', ...PARTNER_MODES];
 
 function viewConditioning() {
@@ -1397,14 +1426,17 @@ function viewConditioning() {
       // Shape gets the scrolling-card treatment the goals get, and for the same
       // reason: "EMOM" and "AMRAP" are jargon that mean nothing until someone
       // tells you, and this is the screen where they need telling.
-      // No accent pulse on these, unlike the goal cards: the pulse exists to
-      // announce that the theme colour changed, and this screen is conditioning
-      // cyan whichever shape you pick. A wave that recoloured nothing would be
-      // decoration pretending to be feedback.
+      // Shapes carry their own colour and repaint the screen when picked, the
+      // same as the goals do -- so they get the same wave from the press point.
       quickSection(
         t('cond.format'),
-        cardScroller(COND_FORMAT_CHOICES, c.format, 'cond.format', 'cond.formatWhy', (key) =>
-          setCond({ format: key })
+        cardScroller(
+          COND_FORMAT_CHOICES,
+          c.format,
+          'cond.format',
+          'cond.formatWhy',
+          (key, e) => pickAccent(e, formatColor(key), () => setCond({ format: key })),
+          formatColor
         )
       ),
 
@@ -1513,25 +1545,29 @@ function viewConditioning() {
  * explains it -- and they deserve the same answer. The goals keep their own
  * function because their cards also carry prescription numbers.
  */
-function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick) {
-  return h(
+function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick, colourOf = null) {
+  const scroller = h(
     'div.focus-scroller',
     { role: 'radiogroup' },
     keys.map((key) => {
       const on = key === current;
+      const colour = colourOf ? colourOf(key) : null;
       return h(
-        'button.focus-card.card-plain',
+        'button.focus-card',
         {
-          class: on ? 'is-on' : '',
+          class: [on ? 'is-on' : '', colour ? '' : 'card-plain'].filter(Boolean).join(' '),
+          style: colour ? `--gc:${colour}` : null,
           role: 'radio',
           'aria-checked': String(on),
-          onclick: () => onPick(key),
+          onclick: (e) => onPick(key, e),
         },
         h('span.focus-name', t(`${titlePrefix}.${key}`)),
         h('span.focus-blurb', t(`${blurbPrefix}.${key}`))
       );
     })
   );
+
+  return holdScroll(scroller, titlePrefix, current);
 }
 
 /**
@@ -1655,23 +1691,47 @@ function focusScroller(current, onPick) {
     })
   );
 
-  // Choosing a card re-renders, which builds a fresh scroller parked at the
-  // start -- so tapping Endurance sent the row snapping back to Explosive and
-  // the card you just picked out of sight. The position is held in state and
-  // put back on the frame after the new element is in the document, since
-  // scrollLeft does nothing on a node that is not laid out yet.
+  return holdScroll(scroller, 'goal', current);
+}
+
+/**
+ * Keep a card row where the user left it across a re-render.
+ *
+ * Choosing a card re-renders, which builds a fresh scroller parked at the start
+ * -- so tapping Endurance sent the row snapping back to Explosive and the card
+ * you just picked out of sight. The position is held in state and put back on
+ * the frame after the new element is in the document, since `scrollLeft` does
+ * nothing on a node that is not laid out yet.
+ *
+ * Keyed, because this screen has two of these rows and one shared position sent
+ * the partner row jumping whenever a shape was picked. Every scroller needs its
+ * own memory or they fight over one.
+ */
+function holdScroll(scroller, key, selection = null) {
+  state.scrollPos = state.scrollPos || {};
+  state.scrollSel = state.scrollSel || {};
+
+  // Whether this row's own selection changed on this render. Every render
+  // rebuilds every scroller on the screen, so without this the partner row got
+  // re-examined -- and re-nudged -- each time a shape was picked, which is the
+  // jumping this whole function exists to stop, just one row over.
+  const changed = selection !== null && state.scrollSel[key] !== selection;
+  state.scrollSel[key] = selection;
+
   scroller.addEventListener('scroll', () => {
-    state.focusScroll = scroller.scrollLeft;
+    state.scrollPos[key] = scroller.scrollLeft;
   });
 
   requestAnimationFrame(() => {
-    scroller.scrollLeft = state.focusScroll || 0;
+    scroller.scrollLeft = state.scrollPos[key] || 0;
 
-    // ...but arriving on a screen unable to see which goal is selected is its
-    // own problem. If the chosen card is mostly out of view, bring it in. The
-    // test is generous on purpose: nudging a card that is merely clipped at
-    // the edge would reintroduce the jump this position-holding exists to
-    // stop, so only a card that is genuinely not on screen moves.
+    // ...but arriving unable to see which card is selected is its own problem.
+    // If the chosen card is mostly out of view, bring it in -- on arrival, or
+    // when this row's selection actually moved. The visibility test is generous
+    // on purpose: nudging a card that is merely clipped at the edge would
+    // reintroduce the jump, so only a card genuinely off screen moves.
+    if (selection !== null && !changed) return;
+
     const chosen = scroller.querySelector('.focus-card.is-on');
     if (!chosen) return;
 
@@ -1681,7 +1741,7 @@ function focusScroller(current, onPick) {
 
     if (visible < card.width * 0.6) {
       chosen.scrollIntoView({ inline: 'center', block: 'nearest' });
-      state.focusScroll = scroller.scrollLeft;
+      state.scrollPos[key] = scroller.scrollLeft;
     }
   });
 
@@ -1757,8 +1817,18 @@ function pressPoint(event) {
  * the element with it.
  */
 function pickGoal(event, goal, apply) {
+  return pickAccent(event, GOAL_COLOR[goal], apply);
+}
+
+/**
+ * The same wave, driven by a colour rather than a goal.
+ *
+ * Conditioning shapes repaint the screen exactly as goals do but are not goals
+ * and have no entry in `GOAL_COLOR`, so the colour is the parameter and the
+ * goal lookup moves out to the one caller that needs it.
+ */
+function pickAccent(event, colour, apply) {
   const from = pressPoint(event);
-  const colour = GOAL_COLOR[goal];
   const before = document.querySelector('.app')?.style.getPropertyValue('--g');
 
   apply();
@@ -2678,12 +2748,18 @@ function condCard(block, index = 0) {
   const fresh = state.freshQuick;
   const partner = block.partner;
 
-  return h(
-    'div.cond-card',
-    {
-      class: fresh ? 'is-fresh' : '',
-      style: fresh ? `animation-delay:${index * 55}ms` : null,
-    },
+  // The card sets its own accent rather than inheriting the screen's, so a
+  // finisher shows up in its shape's colour against a lifting session's goal
+  // colour. That is the point of giving shapes colours at all: an EMOM should
+  // be recognisable as an EMOM wherever it appears.
+  const style = [
+    `--g:${formatColor(block.format)}`,
+    fresh ? `animation-delay:${index * 55}ms` : null,
+  ]
+    .filter(Boolean)
+    .join(';');
+
+  return h('div.cond-card', { class: fresh ? 'is-fresh' : '', style },
     h(
       'div.cond-head',
       h('span.cond-format', t(`cond.format.${block.format}`)),

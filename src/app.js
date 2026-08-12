@@ -1956,6 +1956,8 @@ function editConditioning(index = 0) {
     partner: existing?.partner ? { ...existing.partner } : null,
     picking: false,
     query: '',
+    filters: blankCondFilters(),
+    filtersOpen: false,
   };
   go('condedit');
 }
@@ -2214,73 +2216,144 @@ function condPicker() {
   const e = condEditState();
   if (e.creating) return condCustomForm();
 
-  const f = e.filters || {};
+  // The Library's filter apparatus, with conditioning's own axes. Same search
+  // bar and folded panel, same count badge on the toggle, same surgical refresh
+  // that never re-renders the screen -- three rails of chips was a wall of
+  // controls above the list you came to read, and this is the pattern the app
+  // already had for exactly this job.
+  const list = h('div.rows-boxed', { id: 'cond-picker-list' });
+  const count = h('div.kicker');
+  const filterCount = h('span.filter-count');
+  const panel = h('div.filter-panel');
+  const f = e.filters;
 
-  const search = h('input.input', {
-    type: 'search',
-    placeholder: t('cond.searchMovements'),
-    value: e.query || '',
-    oninput: (ev) => {
-      // Written straight to state without a render, so the field keeps focus and
-      // the caret while the list below filters.
-      state.condEdit.query = ev.target.value;
-      refreshPickerList();
-    },
-  });
+  const activeFilters = () => COND_FILTER_KEYS.filter((k) => f[k]).length;
 
-  // Filters that answer the questions actually asked at this point: what can I
-  // reach, and what do I want to work. Tier is here too because "show me the
-  // simple ones" is the other real question, and it is the one a beginner asks.
-  const filterRow = (key, values, labelFor) =>
+  const refresh = () => {
+    const results = condPickerPool();
+    const chosen = new Set(e.movements.map((m) => m.ref));
+
+    const n = activeFilters();
+    filterCount.textContent = n ? String(n) : '';
+    filterCount.hidden = n === 0;
+
+    // The kicker doubles as the result count, so a filtered list never looks
+    // like the whole set of movements.
+    count.textContent =
+      (e.query || '').trim() || n
+        ? tp('cond.matching', results.length)
+        : tp('cond.matchCount', results.length);
+
+    // An empty result with filters on has an off-screen cause when the panel is
+    // folded, so unfold it -- the reason and the way out arrive together.
+    if (!results.length && n > 0 && !e.filtersOpen) {
+      e.filtersOpen = true;
+      panel.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+
+    mount(
+      list,
+      results.length
+        ? results.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => addCondMovement(ex)))
+        : empty(t('cond.noMatches'), t('cond.noMatchesHint'))
+    );
+  };
+
+  const select = (key, label, options, anyLabel, labelFor) =>
     h(
-      'div.filter-rail',
+      'label.field',
+      h('span.field-label', label),
       h(
-        'button.chip.chip-sm',
-        { class: !f[key] ? 'is-on' : '', onclick: () => setCondFilter(key, null) },
-        t('cond.filterAll')
-      ),
-      values.map((v) =>
-        h(
-          'button.chip.chip-sm',
-          { class: f[key] === v ? 'is-on' : '', onclick: () => setCondFilter(key, v) },
-          labelFor ? labelFor(v) : v
+        'select.input',
+        {
+          value: f[key],
+          onchange: (ev) => {
+            f[key] = ev.target.value;
+            refresh();
+          },
+        },
+        h('option', { value: '' }, anyLabel),
+        options.map((o) =>
+          h('option', { value: o, selected: f[key] === o }, labelFor ? labelFor(o) : o)
         )
       )
     );
 
-  // Built inline rather than deferred to the frame after mount. Filter chips go
-  // through render(), so the list they produce should exist by the time render
-  // returns -- waiting on a frame makes the list depend on rAF actually firing,
-  // and a filtered list that arrives late reads as a filter that found nothing.
-  const chosen = new Set(e.movements.map((m) => m.ref));
-  const pool = condPickerPool();
+  const v = state.catalog.vocabulary;
+  mount(
+    panel,
+    select('kit', t('cond.kit'), COND_KITS, t('cond.anyKit'), (k) => t(`cond.kit.${k}`)),
+    // Primary and supporting are separate, as they are in the Library: a
+    // movement whose headline muscle is Core is a different search from one
+    // that merely leans on it, and conditioning has plenty of both.
+    select('primary', t('library.primary'), condPrimaryMuscles(), t('library.anyPrimary')),
+    select('secondary', t('library.secondary'), v.muscles, t('library.anySecondary')),
+    select('tier', t('cond.complexity'), COMPLEXITY_LEVELS, t('cond.anyTier'), (x) =>
+      t(`quick.level.${x}`)
+    ),
+    // Conditioning's own axis, and the one the Library has no equivalent for.
+    // "Nothing that pounds my knees" is a real constraint, and a filter answers
+    // it in a way the generator's single low-impact switch cannot.
+    select('impact', t('cond.impact'), ['low', 'medium', 'high'], t('cond.anyImpact'), (x) =>
+      t(`cond.impact.${x}`)
+    ),
+    select('unit', t('cond.measuredIn'), ['reps', 'calories', 'metres', 'seconds'], t('cond.anyUnit'), (u) =>
+      t(`cond.unit.${u}`)
+    ),
+    h(
+      'button.btn.btn-sm',
+      {
+        type: 'button',
+        onclick: () => {
+          for (const k of COND_FILTER_KEYS) f[k] = '';
+          for (const el of panel.querySelectorAll('select')) el.value = '';
+          refresh();
+        },
+      },
+      t('library.clearFilters')
+    )
+  );
+
+  panel.classList.toggle('is-open', !!e.filtersOpen);
+
+  const toggle = h(
+    'button.btn.filter-toggle',
+    {
+      type: 'button',
+      'aria-expanded': String(!!e.filtersOpen),
+      onclick: () => {
+        e.filtersOpen = !e.filtersOpen;
+        panel.classList.toggle('is-open', e.filtersOpen);
+        toggle.setAttribute('aria-expanded', String(e.filtersOpen));
+      },
+    },
+    t('library.filters'),
+    filterCount
+  );
+
+  const search = h('input.input', {
+    type: 'search',
+    value: e.query || '',
+    placeholder: t('cond.searchMovements'),
+    oninput: (ev) => {
+      e.query = ev.target.value;
+      refresh();
+    },
+  });
+
+  refresh();
 
   return h(
     'div.screen',
     { style: `--g:${formatColor(e.format)}` },
     h(
       'div.screen-inner',
-      { style: 'gap:14px' },
+      { style: 'gap:16px' },
       backLink(t('cond.editTitle'), () => setCondEdit({ picking: false, query: '' })),
-      screenHead(t('cond.addMovement'), t('cond.pickerTitle')),
-      search,
-      h(
-        'div.stack',
-        { style: 'gap:7px' },
-        filterRow('kit', COND_KITS, (k) => t(`cond.kit.${k}`)),
-        filterRow('muscle', condMuscles()),
-        filterRow('tier', COMPLEXITY_LEVELS, (v) => t(`quick.level.${v}`))
-      ),
-      h(
-        'div.pick-count',
-        { id: 'cond-picker-count' },
-        pool.length ? tp('cond.matchCount', pool.length) : t('cond.noMatches')
-      ),
-      h(
-        'div.rows-boxed',
-        { id: 'cond-picker-list' },
-        pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => addCondMovement(ex)))
-      ),
+      h('div.stack', { style: 'gap:2px' }, count, h('h1.screen-title', t('cond.pickerTitle'))),
+      h('div.stack', { style: 'gap:10px' }, h('div.filter-bar', search, toggle), panel),
+      list,
       // Offered here rather than buried in the Library, because "it is not in
       // the list" is a thought you have while looking at the list.
       h(
@@ -2293,20 +2366,17 @@ function condPicker() {
   );
 }
 
-/** Every muscle any conditioning movement names, primary or supporting. */
-function condMuscles() {
-  const set = new Set();
-  for (const ex of state.catalog.conditioningPool) {
-    if (ex.primary) set.add(ex.primary);
-    for (const m of ex.secondary || []) set.add(m);
-  }
-  return [...set].sort();
+const COND_FILTER_KEYS = ['kit', 'primary', 'secondary', 'tier', 'impact', 'unit'];
+
+function blankCondFilters() {
+  return { kit: '', primary: '', secondary: '', tier: '', impact: '', unit: '' };
 }
 
-function setCondFilter(key, value) {
-  const e = condEditState();
-  e.filters = { ...(e.filters || {}), [key]: value };
-  render();
+/** Only the muscles some conditioning movement actually leads with. */
+function condPrimaryMuscles() {
+  const set = new Set();
+  for (const ex of state.catalog.conditioningPool) if (ex.primary) set.add(ex.primary);
+  return [...set].sort();
 }
 
 /** The pool as the filters and the search leave it. */
@@ -2322,11 +2392,10 @@ function condPickerPool() {
       const cond = state.catalog.conditioningOf(ex);
       if (f.kit && cond.kit !== f.kit) return false;
       if (f.tier && cond.tier !== f.tier) return false;
-      // Primary or supporting: someone filtering for Core wants the movements
-      // that hammer it as a side effect too, which is most of them.
-      if (f.muscle && ex.primary !== f.muscle && !(ex.secondary || []).includes(f.muscle)) {
-        return false;
-      }
+      if (f.impact && cond.impact !== f.impact) return false;
+      if (f.unit && cond.unit !== f.unit) return false;
+      if (f.primary && ex.primary !== f.primary) return false;
+      if (f.secondary && !(ex.secondary || []).includes(f.secondary)) return false;
       return true;
     })
     .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
@@ -2366,32 +2435,6 @@ function addCondMovement(ex) {
     pace: cond.pace,
   });
   setCondEdit({ picking: false, query: '' });
-}
-
-/**
- * Refilter in place for the search box only.
- *
- * The filter chips go through `render()` and rebuild the whole screen, which is
- * fine — nothing on it holds focus. The search field does, and re-rendering it
- * mid-word would take the caret with it, so typing patches the list underneath
- * and leaves the input alone.
- */
-function refreshPickerList() {
-  const list = document.getElementById('cond-picker-list');
-  if (!list) return;
-
-  const e = condEditState();
-  const chosen = new Set(e.movements.map((m) => m.ref));
-  const pool = condPickerPool();
-
-  mount(list, pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => addCondMovement(ex))));
-
-  const count = document.getElementById('cond-picker-count');
-  if (count) {
-    count.textContent = pool.length
-      ? tp('cond.matchCount', pool.length)
-      : t('cond.noMatches');
-  }
 }
 
 /* ------------------------------------------------- movements of one's own

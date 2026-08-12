@@ -325,10 +325,16 @@ const LOCALES = {
     'cond.more': 'More',
     'cond.willBe': 'This will be',
     'cond.willBeEmpty': 'Nothing yet — add a movement.',
-    'cond.filterAll': 'All',
     'cond.matchCount.one': '{n} movement',
     'cond.matchCount.other': '{n} movements',
-    'cond.noMatches': 'Nothing matches that. Loosen a filter, or add your own.',
+    'cond.matching.one': '{n} match',
+    'cond.matching.other': '{n} matches',
+    'cond.noMatches': 'Nothing matches',
+    'cond.noMatchesHint': 'Loosen a filter, or add a movement of your own.',
+    'cond.anyKit': 'Anything',
+    'cond.anyTier': 'Any level',
+    'cond.anyImpact': 'Any impact',
+    'cond.anyUnit': 'Counted any way',
     'cond.yours': 'yours',
 
     // --- your own conditioning movements ---

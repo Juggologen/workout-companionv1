@@ -2532,11 +2532,13 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .cond-preview-text { font-size: 13.5px; color: var(--color-text); text-wrap: pretty; }
 
-/* ---- the movement picker's filters ----
+/* ---- chip rails, in the "add your own movement" form ----
 
-   A scrolling rail per axis rather than a wrapped block: three axes stacked as
-   wrapped chip clouds is most of a phone screen before a single result, and the
-   list is the thing you came here to read. */
+   Choosing, not filtering. The picker's filters are the Library's folded panel
+   of selects, because filtering is a job this app already had an answer for;
+   these are the multi-select fields where a rail of chips genuinely beats a
+   dropdown, since picking three supporting muscles from fourteen through a
+   <select> is fourteen taps. */
 .filter-rail {
   display: flex;
   gap: 6px;
@@ -2547,13 +2549,6 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .filter-rail::-webkit-scrollbar { display: none; }
 .filter-rail .chip { flex: none; width: auto; padding: 0 11px; height: 32px; }
-
-.pick-count {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--t-45);
-}
 
 /* Marks a movement as the user's own, in the list beside the shipped ones. */
 .pick-badge {

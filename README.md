@@ -455,12 +455,15 @@ given it. The picker offers all 58 movements whatever kit they need, unlike the
 generator, which is asked what's to hand: someone building by hand is looking at
 the gym they're standing in.
 
-**Filter by kit, muscle or technique level**, in three rails that compose — 58
-movements, 20 with kit set to bodyweight, 14 adding Core, 1 adding Advanced — with
-a live count of what survives. The muscle filter matches supporting muscles too,
-since someone looking for Core wants the movements that hammer it as a side
-effect. Every row shows what it works, and a conditioning-only plan now gets a
-body map of its own: it always had the muscle data, it just was never asked.
+**Filtering is the Library's**, down to the count badge on the Filters button and
+the panel unfolding itself when a combination finds nothing. The axes are
+conditioning's own: kit, primary muscle, supporting muscle, technique, **impact**
+and **what it's counted in**. Impact earns its place — "nothing that pounds my
+knees" is a real constraint that the generator's single low-impact switch can't
+express.
+
+Every row shows what it works, and a conditioning-only plan now gets a body map
+of its own: it always had the muscle data, it just was never asked.
 
 **Add your own movement** when the list is missing one. Name it, say what it's
 counted in, and answer *"how many in a minute, going hard?"* — that's the pace

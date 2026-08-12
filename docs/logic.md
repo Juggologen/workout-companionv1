@@ -2008,23 +2008,44 @@ discards the work it sits under. Same reasoning as `markHandEdited` dropping the
 
 ## 28. Filtering the movement list, and adding your own
 
-### Filters
+### Filters — the Library's apparatus, conditioning's axes
 
-Three rails over the picker: **kit**, **muscle**, **tier**. Each is a horizontal
-scroller rather than a wrapped chip cloud, because three wrapped clouds is most
-of a phone screen before a single result and the list is what you came to read.
+The first attempt was three horizontal rails of chips, one per axis, always
+visible above the list. It was a wall of controls in front of the thing you came
+to read, and it invented a filtering idiom the app did not need: **the Library
+already had one**, and reusing it means one thing to learn and one thing to
+maintain.
 
-They compose, and a live count says what survives — 58 movements, 20 with kit
-set to bodyweight, 14 adding Core, 1 adding Advanced. The muscle filter matches
-**primary or supporting**, because someone filtering for Core wants the movements
-that hammer it as a side effect too, which is most of them.
+So the picker is the Library's filter apparatus exactly — the same
+`.filter-bar` of a search box and a **Filters** toggle carrying a count badge,
+the same folded `.filter-panel` of labelled `<select>`s with a **Clear**, the
+same `refresh()` that patches the list and the count in place and never
+re-renders the screen. Three behaviours come free with it, and all three matter:
 
-The list is built inline in `condPicker`, not deferred to the frame after mount.
-Filter chips go through `render()`, so the list they produce should exist by the
-time render returns — waiting on `requestAnimationFrame` makes the list depend on
-a frame actually firing, and a filtered list that arrives late reads as a filter
-that found nothing. The search box is the exception: it patches the list
-underneath via `refreshPickerList` so typing does not cost the field its caret.
+- The badge counts active filters, so a filtered list never silently looks like
+  the whole set.
+- The kicker doubles as the result count — "59 movements" becomes "5 matches".
+- **An empty result unfolds the panel**, because with it closed the cause is off
+  screen. The reason and the way out arrive together.
+
+Six axes, of which two have no Library equivalent:
+
+| | |
+|---|---|
+| What have you got | the five kit groups |
+| Primary muscle | only what some movement actually leads with |
+| Supporting muscle | the full vocabulary |
+| Technique | the three tiers |
+| **Impact** | low / some / high — "nothing that pounds my knees" is a real constraint, and a filter answers it in a way the generator's single low-impact switch cannot |
+| **Counted in** | reps / calories / metres / seconds |
+
+Primary and supporting are separate selects rather than one muscle field, as in
+the Library: a movement whose headline muscle is Core is a different search from
+one that merely leans on it, and conditioning has plenty of both.
+
+Chip rails survive in the **create** form, where the job is different. Picking
+three supporting muscles from fourteen through a `<select>` is fourteen taps;
+filtering by one is one.
 
 ### Muscle groups
 

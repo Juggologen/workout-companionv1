@@ -2212,24 +2212,9 @@ function condEditRow(movement, index) {
  */
 function condPicker() {
   const e = condEditState();
-  const q = (e.query || '').trim().toLowerCase();
-  const chosen = new Set(e.movements.map((m) => m.ref));
+  if (e.creating) return condCustomForm();
 
-  const pool = state.catalog.conditioningPool
-    .filter((ex) => !ex.archived)
-    .filter((ex) => !q || localized(ex.name).toLowerCase().includes(q))
-    .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
-
-  const add = (ex) => {
-    const cond = state.catalog.conditioningOf(ex);
-    e.movements.push({
-      ref: ex.id,
-      amount: defaultAmountFor(cond, e.format),
-      unit: cond.unit,
-      pace: cond.pace,
-    });
-    setCondEdit({ picking: false, query: '' });
-  };
+  const f = e.filters || {};
 
   const search = h('input.input', {
     type: 'search',
@@ -2243,22 +2228,108 @@ function condPicker() {
     },
   });
 
+  // Filters that answer the questions actually asked at this point: what can I
+  // reach, and what do I want to work. Tier is here too because "show me the
+  // simple ones" is the other real question, and it is the one a beginner asks.
+  const filterRow = (key, values, labelFor) =>
+    h(
+      'div.filter-rail',
+      h(
+        'button.chip.chip-sm',
+        { class: !f[key] ? 'is-on' : '', onclick: () => setCondFilter(key, null) },
+        t('cond.filterAll')
+      ),
+      values.map((v) =>
+        h(
+          'button.chip.chip-sm',
+          { class: f[key] === v ? 'is-on' : '', onclick: () => setCondFilter(key, v) },
+          labelFor ? labelFor(v) : v
+        )
+      )
+    );
+
+  // Built inline rather than deferred to the frame after mount. Filter chips go
+  // through render(), so the list they produce should exist by the time render
+  // returns -- waiting on a frame makes the list depend on rAF actually firing,
+  // and a filtered list that arrives late reads as a filter that found nothing.
+  const chosen = new Set(e.movements.map((m) => m.ref));
+  const pool = condPickerPool();
+
   return h(
     'div.screen',
     { style: `--g:${formatColor(e.format)}` },
     h(
       'div.screen-inner',
-      { style: 'gap:16px' },
+      { style: 'gap:14px' },
       backLink(t('cond.editTitle'), () => setCondEdit({ picking: false, query: '' })),
       screenHead(t('cond.addMovement'), t('cond.pickerTitle')),
       search,
       h(
+        'div.stack',
+        { style: 'gap:7px' },
+        filterRow('kit', COND_KITS, (k) => t(`cond.kit.${k}`)),
+        filterRow('muscle', condMuscles()),
+        filterRow('tier', COMPLEXITY_LEVELS, (v) => t(`quick.level.${v}`))
+      ),
+      h(
+        'div.pick-count',
+        { id: 'cond-picker-count' },
+        pool.length ? tp('cond.matchCount', pool.length) : t('cond.noMatches')
+      ),
+      h(
         'div.rows-boxed',
         { id: 'cond-picker-list' },
-        pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => add(ex)))
+        pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => addCondMovement(ex)))
+      ),
+      // Offered here rather than buried in the Library, because "it is not in
+      // the list" is a thought you have while looking at the list.
+      h(
+        'button.btn.btn-block',
+        { onclick: () => setCondEdit({ creating: true, draft: blankCondCustom() }) },
+        icon(ICONS.plus, { size: 15 }),
+        t('cond.createOwn')
       )
     )
   );
+}
+
+/** Every muscle any conditioning movement names, primary or supporting. */
+function condMuscles() {
+  const set = new Set();
+  for (const ex of state.catalog.conditioningPool) {
+    if (ex.primary) set.add(ex.primary);
+    for (const m of ex.secondary || []) set.add(m);
+  }
+  return [...set].sort();
+}
+
+function setCondFilter(key, value) {
+  const e = condEditState();
+  e.filters = { ...(e.filters || {}), [key]: value };
+  render();
+}
+
+/** The pool as the filters and the search leave it. */
+function condPickerPool() {
+  const e = condEditState();
+  const q = (e.query || '').trim().toLowerCase();
+  const f = e.filters || {};
+
+  return state.catalog.conditioningPool
+    .filter((ex) => !ex.archived)
+    .filter((ex) => !q || localized(ex.name).toLowerCase().includes(q))
+    .filter((ex) => {
+      const cond = state.catalog.conditioningOf(ex);
+      if (f.kit && cond.kit !== f.kit) return false;
+      if (f.tier && cond.tier !== f.tier) return false;
+      // Primary or supporting: someone filtering for Core wants the movements
+      // that hammer it as a side effect too, which is most of them.
+      if (f.muscle && ex.primary !== f.muscle && !(ex.secondary || []).includes(f.muscle)) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
 }
 
 function condPickerRow(ex, already, onPick) {
@@ -2268,40 +2339,257 @@ function condPickerRow(ex, already, onPick) {
     { onclick: onPick },
     h(
       'span.pick-main',
-      h('span.pick-name', localized(ex.name)),
+      h(
+        'span.pick-name',
+        localized(ex.name),
+        ex.custom && h('span.pick-badge', t('cond.yours'))
+      ),
       h(
         'span.pick-meta',
         `${t(`cond.kit.${cond.kit}`)} · ${t(`cond.unit.${cond.unit}`)}${already ? ` · ${t('cond.alreadyIn')}` : ''}`
-      )
+      ),
+      // What it actually works, which is the question the muscle filter above
+      // is asking and the one a movement name only half answers.
+      muscleLine(ex)
     ),
     icon(ICONS.plus, { size: 15 })
   );
 }
 
-/** Refilter the picker in place, so typing does not cost the field its focus. */
+function addCondMovement(ex) {
+  const e = condEditState();
+  const cond = state.catalog.conditioningOf(ex);
+  e.movements.push({
+    ref: ex.id,
+    amount: defaultAmountFor(cond, e.format),
+    unit: cond.unit,
+    pace: cond.pace,
+  });
+  setCondEdit({ picking: false, query: '' });
+}
+
+/**
+ * Refilter in place for the search box only.
+ *
+ * The filter chips go through `render()` and rebuild the whole screen, which is
+ * fine — nothing on it holds focus. The search field does, and re-rendering it
+ * mid-word would take the caret with it, so typing patches the list underneath
+ * and leaves the input alone.
+ */
 function refreshPickerList() {
   const list = document.getElementById('cond-picker-list');
   if (!list) return;
+
   const e = condEditState();
-  const q = (e.query || '').trim().toLowerCase();
   const chosen = new Set(e.movements.map((m) => m.ref));
+  const pool = condPickerPool();
 
-  const pool = state.catalog.conditioningPool
-    .filter((ex) => !ex.archived)
-    .filter((ex) => !q || localized(ex.name).toLowerCase().includes(q))
-    .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
+  mount(list, pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => addCondMovement(ex))));
 
-  const cond = state.catalog.conditioningOf;
-  mount(
-    list,
-    pool.map((ex) =>
-      condPickerRow(ex, chosen.has(ex.id), () => {
-        const c = cond(ex);
-        e.movements.push({ ref: ex.id, amount: defaultAmountFor(c, e.format), unit: c.unit, pace: c.pace });
-        setCondEdit({ picking: false, query: '' });
-      })
+  const count = document.getElementById('cond-picker-count');
+  if (count) {
+    count.textContent = pool.length
+      ? tp('cond.matchCount', pool.length)
+      : t('cond.noMatches');
+  }
+}
+
+/* ------------------------------------------------- movements of one's own
+
+   The compendium is a lifting compendium and the conditioning file is 22 rows
+   long, so "it is not in the list" is a thought people will have. A custom
+   conditioning movement needs no engine support at all: `conditioningOf` reads
+   `mode`, `unit`, `pace` and `kit` straight off the row, and `indexComplexity`
+   already believes a row that states its own tier.
+   ------------------------------------------------------------------------ */
+
+function blankCondCustom() {
+  return {
+    name: '',
+    unit: 'reps',
+    pace: 15,
+    kit: 'bodyweight',
+    tier: 'basic',
+    impact: 'low',
+    primary: '',
+    secondary: [],
+    how: '',
+    error: null,
+  };
+}
+
+/**
+ * The form.
+ *
+ * `pace` is the one field that could have been jargon -- "units per minute at a
+ * hard but repeatable effort" is exactly right and exactly unanswerable. Asked
+ * as "how many in a minute, going hard?" it is the same number and a question
+ * anyone can answer about a movement they already do.
+ */
+function condCustomForm() {
+  const e = condEditState();
+  const d = e.draft;
+  const v = state.catalog.vocabulary;
+
+  const set = (patch) => {
+    state.condEdit.draft = { ...d, ...patch, error: null };
+    render();
+  };
+
+  const chips = (key, values, labelFor) =>
+    h(
+      'div.filter-rail',
+      values.map((val) =>
+        h(
+          'button.chip.chip-sm',
+          { class: d[key] === val ? 'is-on' : '', onclick: () => set({ [key]: val }) },
+          labelFor ? labelFor(val) : val
+        )
+      )
+    );
+
+  return h(
+    'div.screen',
+    { style: `--g:${formatColor(e.format)}` },
+    h(
+      'div.screen-inner',
+      { style: 'gap:18px' },
+      backLink(t('cond.pickerTitle'), () => setCondEdit({ creating: false, draft: null })),
+      screenHead(t('cond.createOwn'), t('cond.createTitle')),
+
+      d.error && h('p.form-error', d.error),
+
+      field(
+        t('custom.name'),
+        h('input.input', {
+          value: d.name,
+          placeholder: t('cond.namePlaceholder'),
+          oninput: (ev) => (state.condEdit.draft.name = ev.target.value),
+        })
+      ),
+
+      field(t('cond.measuredIn'), chips('unit', ['reps', 'calories', 'metres', 'seconds'], (u) => t(`cond.unit.${u}`))),
+
+      // Seconds are their own answer: a minute of a movement measured in
+      // seconds is sixty seconds, so asking would be asking a question with
+      // one possible reply.
+      d.unit !== 'seconds' &&
+        field(
+          t('cond.paceQuestion', { unit: t(`cond.unit.${d.unit}`) }),
+          h(
+            'div.stepper',
+            h('span.stepper-label', t(`cond.unit.${d.unit}`)),
+            h('button.stepper-btn', { onclick: () => set({ pace: Math.max(1, d.pace - condPaceStep(d.unit)) }) }, '−'),
+            h('span.cond-edit-value', String(d.pace)),
+            h('button.stepper-btn', { onclick: () => set({ pace: d.pace + condPaceStep(d.unit) }) }, '+')
+          ),
+          t('cond.paceHint')
+        ),
+
+      field(t('cond.kit'), chips('kit', COND_KITS, (k) => t(`cond.kit.${k}`))),
+      field(t('library.primary'), chips('primary', v.muscles)),
+
+      field(
+        t('map.supporting'),
+        h(
+          'div.filter-rail',
+          v.muscles
+            .filter((m) => m !== d.primary)
+            .map((m) =>
+              h(
+                'button.chip.chip-sm',
+                {
+                  class: d.secondary.includes(m) ? 'is-on' : '',
+                  onclick: () =>
+                    set({
+                      secondary: d.secondary.includes(m)
+                        ? d.secondary.filter((x) => x !== m)
+                        : [...d.secondary, m],
+                    }),
+                },
+                m
+              )
+            )
+        )
+      ),
+
+      field(t('cond.complexity'), chips('tier', COMPLEXITY_LEVELS, (x) => t(`quick.level.${x}`))),
+      field(t('cond.impact'), chips('impact', ['low', 'medium', 'high'], (x) => t(`cond.impact.${x}`))),
+
+      field(
+        t('cond.howTo'),
+        h('textarea.input', {
+          rows: '3',
+          value: d.how,
+          placeholder: t('cond.howPlaceholder'),
+          oninput: (ev) => (state.condEdit.draft.how = ev.target.value),
+        }),
+        t('cond.howHint')
+      )
+    ),
+    h(
+      'div.sticky-actions',
+      h('button.btn.btn-goal.btn-lg.btn-block', { onclick: saveCondCustom }, t('cond.createSave'))
     )
   );
+}
+
+/** Calories and reps move by one; metres by ten, because nobody runs 141 m. */
+function condPaceStep(unit) {
+  return unit === 'metres' ? 10 : 1;
+}
+
+function saveCondCustom() {
+  const e = condEditState();
+  const d = e.draft;
+  const name = (d.name || '').trim();
+
+  const missing = [
+    !name && t('custom.name'),
+    !d.primary && t('library.primary'),
+  ].filter(Boolean);
+
+  if (missing.length) {
+    state.condEdit.draft = { ...d, error: t('custom.missing', { fields: missing.join(', ') }) };
+    render();
+    return;
+  }
+
+  const record = {
+    id: `u${newId()}`,
+    name: { en: name, sv: '' },
+    // Conditioning rows are catalog rows like any other, so they need the
+    // fields the rest of the app reads off an exercise -- the warm-up builder
+    // triggers on `pattern`, the body map on `primary` and `secondary`.
+    equipment: d.kit === 'erg' ? 'Erg' : 'Bodyweight',
+    pattern: 'Monostructural',
+    profile: 'Conditioning',
+    primary: d.primary,
+    secondary: (d.secondary || []).filter((m) => m !== d.primary),
+    mode: 'conditioning',
+    unit: d.unit,
+    pace: d.unit === 'seconds' ? 60 : Math.max(1, d.pace),
+    kit: d.kit,
+    tier: d.tier,
+    impact: d.impact,
+    how: { en: (d.how || '').trim(), sv: null },
+    cue: '',
+    custom: true,
+    archived: false,
+  };
+
+  state.customExercises.push(record);
+  saveCustomExercises();
+
+  // Straight into the block being built: creating it here means you wanted it
+  // here, and making you find it again in the list you just left is a step for
+  // the app's benefit rather than yours.
+  state.condEdit.creating = false;
+  state.condEdit.draft = null;
+  const added = state.catalog.byId.get(record.id);
+  if (added) addCondMovement(added);
+  else setCondEdit({ picking: false });
+  flash(t('custom.created'));
 }
 
 /** Re-roll the whole conditioning workout on the same inputs. */
@@ -3297,10 +3585,12 @@ function viewPlan() {
           built.cooldown.items.map((m) => drillRow(m.type, localized(m.name), m.minutes))
         ),
 
-      // The map reads muscles off the lifts. With none there is nothing to
-      // shade, and an empty silhouette under "What this trains" answers the
-      // question with a blank.
-      exercises.length > 0 && bodyMapSection(exercises)
+      // Conditioning movements are catalog rows with `primary` and `secondary`
+      // like any other, so a workout of nothing but conditioning has a perfectly
+      // good answer to "what does this train" -- it just was not being asked.
+      // The map reads whichever the session actually contains.
+      (exercises.length > 0 || cond.length > 0) &&
+        bodyMapSection(exercises.length ? exercises : condMovementExercises())
     ),
     h(
       'div.sticky-actions',
@@ -3362,6 +3652,21 @@ function condMinutes() {
   const blocks = conditioningBlocks();
   const worked = blocks.reduce((sum, b) => sum + (b.minutes || 0), 0);
   return worked + Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
+}
+
+/** Every movement across every block, as catalog rows, for the body map. */
+function condMovementExercises() {
+  const seen = new Set();
+  const out = [];
+  for (const block of conditioningBlocks()) {
+    for (const m of block.movements || []) {
+      if (seen.has(m.ref)) continue;
+      seen.add(m.ref);
+      const ex = state.catalog.byId.get(m.ref);
+      if (ex) out.push(ex);
+    }
+  }
+  return out;
 }
 
 /** "12 cal", "15", "400 m", "30 s" — the amount as it would be said aloud. */
@@ -5773,8 +6078,8 @@ function manualLogForm() {
   );
 }
 
-function field(label, control) {
-  return h('div.field', h('span.field-label', label), control);
+function field(label, control, hint) {
+  return h('div.field', h('span.field-label', label), control, hint && h('p.hint', hint));
 }
 
 function bestsSection() {

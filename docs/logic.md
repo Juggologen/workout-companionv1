@@ -2003,3 +2003,66 @@ Saving drops the block's `inputs`, which is what removes Re-roll — a hand-buil
 block has nothing to roll back to, and offering it would be a button that
 discards the work it sits under. Same reasoning as `markHandEdited` dropping the
 "Auto-generated" badge on a hand-edited session.
+
+---
+
+## 28. Filtering the movement list, and adding your own
+
+### Filters
+
+Three rails over the picker: **kit**, **muscle**, **tier**. Each is a horizontal
+scroller rather than a wrapped chip cloud, because three wrapped clouds is most
+of a phone screen before a single result and the list is what you came to read.
+
+They compose, and a live count says what survives — 58 movements, 20 with kit
+set to bodyweight, 14 adding Core, 1 adding Advanced. The muscle filter matches
+**primary or supporting**, because someone filtering for Core wants the movements
+that hammer it as a side effect too, which is most of them.
+
+The list is built inline in `condPicker`, not deferred to the frame after mount.
+Filter chips go through `render()`, so the list they produce should exist by the
+time render returns — waiting on `requestAnimationFrame` makes the list depend on
+a frame actually firing, and a filtered list that arrives late reads as a filter
+that found nothing. The search box is the exception: it patches the list
+underneath via `refreshPickerList` so typing does not cost the field its caret.
+
+### Muscle groups
+
+Conditioning movements have carried `primary` and `secondary` since §20 — they
+are catalog rows like any other — and nothing was showing them. Now:
+
+- every picker row carries the same `muscleLine` the Library uses;
+- **the body map appears for a conditioning-only plan**, reading its muscles off
+  the movements. A workout of nothing but conditioning has a perfectly good
+  answer to "what does this train"; it just was not being asked.
+
+### Movements of your own
+
+`data/conditioning.json` is 22 rows and the overlay covers 36 more, so "it is not
+in the list" is a thought people will have. The form is offered in the picker
+rather than the Library, because that thought happens while looking at the list.
+
+**It needed no engine support.** `conditioningOf` reads `mode`, `unit`, `pace`
+and `kit` straight off the row, and `indexComplexity` already believes a row that
+states its own `tier` (§20). A custom movement is therefore a first-class one:
+measured 90 appearances in 400 generated workouts, and it carries its `how` text
+into the info panel during a session like any shipped drill.
+
+The one field that could have been jargon is `pace`. "Units per minute at a hard
+but repeatable effort" is exactly right and exactly unanswerable, so the form
+asks **"How many reps in a minute, going hard?"** — the same number, and a
+question anyone can answer about a movement they already do. Movements counted in
+seconds skip it entirely: a minute of them is sixty seconds, so asking would be
+posing a question with one possible reply.
+
+Saving adds it straight to the block being built, because creating it there means
+you wanted it there, and making you find it again in the list you just left is a
+step for the app's benefit rather than yours.
+
+Custom conditioning rows still carry `pattern` and `profile`, because the rest of
+the app reads them off an exercise — the warm-up builder triggers on `pattern`,
+the body map on `primary` and `secondary`.
+
+The **Library stays lifts-only** (167). Every card there offers a 1RM and filters
+on equipment and pattern, none of which a rowing machine answers; conditioning
+movements have their own shelf, which is the picker.

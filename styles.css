@@ -2531,3 +2531,41 @@ details > summary::-webkit-details-marker { display: none; }
   color: var(--t-45);
 }
 .cond-preview-text { font-size: 13.5px; color: var(--color-text); text-wrap: pretty; }
+
+/* ---- the movement picker's filters ----
+
+   A scrolling rail per axis rather than a wrapped block: three axes stacked as
+   wrapped chip clouds is most of a phone screen before a single result, and the
+   list is the thing you came here to read. */
+.filter-rail {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+  scroll-padding: 0 20px;
+}
+.filter-rail::-webkit-scrollbar { display: none; }
+.filter-rail .chip { flex: none; width: auto; padding: 0 11px; height: 32px; }
+
+.pick-count {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--t-45);
+}
+
+/* Marks a movement as the user's own, in the list beside the shipped ones. */
+.pick-badge {
+  margin-left: 7px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 16%, transparent);
+  vertical-align: 1px;
+}
+
+.pick-row .muscle-line { margin-top: 3px; }

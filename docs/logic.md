@@ -1933,3 +1933,73 @@ symptom — an undefined `RING_LEN`, a movement name reading `window.name`, a
 missing list element and a missing button label. Every special character now
 reconciles against HEAD exactly. **Use the Edit tool for source files;
 `Get-Content`/`Set-Content` on PowerShell 5.1 is not UTF-8 safe.**
+
+---
+
+## 27. Building a conditioning block by hand
+
+The generator answers "give me something". This answers "give me *this*". They
+produce the same block, which is the whole point: a generated workout opens in
+the editor and can be fixed, so the two are one feature rather than two paths
+that each have to be complete alone.
+
+### What the editor owns, and what it does not
+
+It owns the things someone has an opinion about — the shape, how long, which
+movements, how many of each, and whether anyone else is doing it.
+
+It does **not** own the structural arithmetic. `rounds`, `work` and `rest` come
+out of `assembleConditioningBlock`, which derives them exactly as the generator
+does, and `minutes` for a window-driven format is read back off `blockSteps`
+rather than trusted from the input. Ask for a ten-minute Tabata of three
+movements and you get twelve minutes and are *told* twelve, because that is what
+the clock will run. §26's invariant — the plan and the clock agree by
+construction — has to hold for hand-built blocks too, or it does not hold.
+
+### Per format, only what is a real choice
+
+| Format | Editor shows |
+|---|---|
+| EMOM | duration |
+| AMRAP | duration |
+| Intervals | duration **and** a work/rest shape |
+| Tabata | **no duration** — 8 × 20/10 is four minutes a movement, so the movement list decides |
+| For time | duration (a cap) and a round count |
+
+A live preview line says what the block will be, in the plan's own words. That
+is where a hand-built block is most likely to surprise you, so it says so before
+you save rather than after.
+
+### Amounts are stepped, never typed
+
+Every unit has its own grain — reps by one, calories by one, metres by ten,
+seconds by five — and a keyboard for a number you are nudging is three taps too
+many. A newly added movement opens on `defaultAmountFor`, the same
+`pace × seconds / 60` the generator uses, so nothing starts on a figure that
+needs fixing before it means anything.
+
+### The picker offers everything
+
+All 58 conditioning movements, whatever kit they need — unlike the generator,
+which is *asked* what is to hand. Someone building by hand is looking at the gym
+they are standing in, and filtering their choices out from under them would be
+the app arguing with what it can see. Typing filters in place via
+`refreshPickerList` rather than through `render()`, so the field keeps its focus
+and caret.
+
+### Entry points, and what each implies
+
+- **Build my own**, beside Generate on the HIIT screen. It ignores every answer
+  above it, which is right: those questions exist to brief the generator, and
+  someone who already knows what they want is not briefing anybody. It asks the
+  same on-its-own-or-finisher question as generating, for the same reason (§24).
+- **The pencil on a block**, on the plan. Per block, because editing is per
+  block — unlike Re-roll and Remove, which act on the workout and sit once at
+  the bottom.
+- **Add a block**, in that same action row, which opens the editor on an index
+  past the end. Appending needs no second code path.
+
+Saving drops the block's `inputs`, which is what removes Re-roll — a hand-built
+block has nothing to roll back to, and offering it would be a button that
+discards the work it sits under. Same reasoning as `markHandEdited` dropping the
+"Auto-generated" badge on a hand-edited session.

@@ -846,6 +846,113 @@ export function generateConditioning(options, catalog) {
   };
 }
 
+/** The interval shapes a hand-built block can choose between. */
+export const INTERVAL_SHAPES = [
+  { work: 30, rest: 30 },
+  { work: 40, rest: 20 },
+  { work: 45, rest: 15 },
+  { work: 60, rest: 60 },
+  { work: 90, rest: 60 },
+];
+
+/**
+ * Assemble a block from a hand-made choice of format, length and movements.
+ *
+ * The generator picks movements and sizes them; this takes both as given and
+ * fills in everything else. What it must not do is compute the structural
+ * numbers differently -- a hand-built EMOM and a generated one are the same
+ * kind of thing, and the timer walks both with the same code.
+ *
+ * So the derivation is the generator's, not a parallel one: `rounds`, `work`
+ * and `rest` come out the same way, and `minutes` for a window-driven format is
+ * read back off `blockSteps` rather than trusted from the input. Someone who
+ * asks for a ten-minute Tabata of three movements gets twelve minutes and is
+ * told twelve, because that is what the clock will actually run.
+ */
+export function assembleConditioningBlock(input) {
+  const {
+    format = 'emom',
+    minutes = 12,
+    movements = [],
+    partner = null,
+    intervalShape = INTERVAL_SHAPES[1],
+  } = input;
+
+  let rounds = null;
+  let work = null;
+  let rest = 0;
+  let openEnded = false;
+
+  switch (format) {
+    case 'emom':
+      rounds = Math.max(1, minutes);
+      work = 60;
+      break;
+    case 'intervals': {
+      work = intervalShape.work;
+      rest = intervalShape.rest;
+      rounds = Math.max(1, Math.floor((minutes * 60 + rest) / (work + rest)));
+      break;
+    }
+    case 'tabata':
+      work = 20;
+      rest = 10;
+      rounds = 8;
+      break;
+    case 'amrap':
+      openEnded = true;
+      break;
+    default:
+      // For time: the rounds are the shape, and the minutes are the cap.
+      rounds = Math.max(1, input.rounds || 3);
+      break;
+  }
+
+  const shape = { format, rounds, work, rest, movements };
+  const windowDriven = format === 'emom' || format === 'intervals' || format === 'tabata';
+  const actualMinutes = windowDriven
+    ? Math.max(1, Math.round(stepsSeconds(blockSteps(shape)) / 60))
+    : Math.max(1, minutes);
+
+  const roundSeconds = movements.reduce((sum, m) => sum + movementSeconds(m), 0);
+
+  return {
+    format,
+    minutes: actualMinutes,
+    work,
+    rest,
+    rounds,
+    openEnded,
+    movements,
+    partner: partner ? { mode: partner.mode, people: Math.max(2, partner.people || 2) } : null,
+    roundSeconds: Math.round(roundSeconds),
+    estimatedRounds:
+      openEnded && roundSeconds > 0
+        ? Math.max(1, Math.round((actualMinutes * 60) / roundSeconds))
+        : null,
+    shortfall: movements.length === 0,
+  };
+}
+
+/**
+ * A sensible starting amount for a movement someone has just added by hand.
+ *
+ * The same `pace × seconds / 60` the generator uses, so a hand-built block does
+ * not open on numbers that need fixing before they mean anything. It is a
+ * starting point, not a prescription -- the whole reason to build by hand is
+ * that you intend to change it.
+ */
+export function defaultAmountFor(cond, format, stations = 3) {
+  const perStation =
+    format === 'emom' ? 40
+    : format === 'tabata' ? 20
+    : format === 'intervals' ? 40
+    : format === 'amrap' ? 30
+    : 45;
+  const windowDriven = format === 'emom' || format === 'intervals' || format === 'tabata';
+  return niceAmount((cond.pace * perStation) / 60, cond.unit, windowDriven ? 'fit' : 'nearest');
+}
+
 /* ------------------------------------------------------- multi-block work */
 
 /**

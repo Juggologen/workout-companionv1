@@ -2481,3 +2481,53 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .tmr-sum-fmt { font-size: 15px; font-weight: 600; color: var(--g); }
 .tmr-sum-score { font-size: 13px; color: var(--t-65); font-variant-numeric: tabular-nums; }
+
+/* ---- building a block by hand ---- */
+
+.cond-edit-btn { width: 30px; height: 26px; flex: none; }
+
+.cond-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px 8px 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.cond-edit-main { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.cond-edit-name { font-size: 14px; }
+.cond-edit-unit { font-size: 10.5px; color: var(--t-45); }
+
+/* The amount is stepped, never typed: every unit here has its own grain -- reps
+   by one, metres by ten, seconds by five -- and a keyboard for a number you are
+   nudging is three taps too many. */
+.cond-edit-amount { flex: none; display: flex; align-items: center; gap: 2px; }
+.cond-edit-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--g);
+}
+.cond-edit-row .icon-btn { width: 36px; height: 36px; }
+
+/* What the block will actually be, in the plan's own words. A hand-built block
+   is exactly where the derived numbers surprise you: a Tabata of three
+   movements is twelve minutes however long you asked for. */
+.cond-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border-left: 2px solid var(--g);
+  background: color-mix(in srgb, var(--g) 7%, transparent);
+}
+.cond-preview-label {
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t-45);
+}
+.cond-preview-text { font-size: 13.5px; color: var(--color-text); text-wrap: pretty; }

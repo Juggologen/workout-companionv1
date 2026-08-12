@@ -434,6 +434,27 @@ whiteboard writes it the same way, for the same reason. The header carries each
 format's own sentence rather than a generic count, because "12 min" is a limit
 in an AMRAP and a cap you hope not to reach in a for-time.
 
+### Building one yourself
+
+**Build my own** sits beside Generate, and the pencil on any block opens the same
+editor — so a generated workout can be fixed rather than only re-rolled. Pick the
+shape, the length, the movements and how many of each; a live line tells you what
+the block will actually be, in the words the plan will use.
+
+The editor only asks what's a real choice. Intervals get a work/rest shape;
+for-time gets a round count; **Tabata gets no duration at all**, because 8 × 20/10
+is four minutes a movement and the movement list decides. What it never lets you
+set is the structural arithmetic — rounds, work and rest are derived exactly as
+they are for a generated block, and the stated minutes are read back off the same
+step list the timer walks. Ask for a ten-minute Tabata of three movements and you
+get twelve, and you're *told* twelve, because that's what the clock will run.
+
+Amounts are stepped, not typed — reps by one, metres by ten, seconds by five — and
+a movement you've just added opens on the same sizing the generator would have
+given it. The picker offers all 58 movements whatever kit they need, unlike the
+generator, which is asked what's to hand: someone building by hand is looking at
+the gym they're standing in.
+
 ### Running it
 
 **Start the clock** runs the workout. One screen, two controls, everything sized

@@ -39,6 +39,9 @@ import {
   generateConditioning,
   generateConditioningWorkout,
   maxConditioningBlocks,
+  assembleConditioningBlock,
+  defaultAmountFor,
+  INTERVAL_SHAPES,
   workoutSteps,
   stepsSeconds,
   BLOCK_REST_MINUTES,
@@ -97,6 +100,9 @@ const SCREEN_DEPTH = {
   quick: 1,
   cond: 1,
   plan: 2,
+  // Deeper than Plan: it is reached from there, and from the HIIT screen when
+  // you choose to build rather than generate.
+  condedit: 3,
   live: 3,
   timer: 3,
 };
@@ -599,6 +605,8 @@ function screen() {
       return viewQuick();
     case 'cond':
       return viewConditioning();
+    case 'condedit':
+      return viewCondEdit();
     case 'timer':
       if (!state.timer) {
         state.screen = 'home';
@@ -625,6 +633,7 @@ function tabbar() {
     state.screen === 'live' ||
     state.screen === 'quick' ||
     state.screen === 'cond' ||
+    state.screen === 'condedit' ||
     state.screen === 'timer'
       ? 'build'
       : state.screen === 'saved' || state.screen === 'guide'
@@ -1647,14 +1656,61 @@ function viewConditioning() {
     ),
     h(
       'div.sticky-actions',
+      // Building by hand ignores every answer above it, which is exactly right:
+      // those questions exist to brief the generator, and someone who already
+      // knows what they want is not briefing anybody.
       h(
-        'button.btn.btn-goal.btn-lg.btn-block',
-        { disabled: noKit, onclick: () => runConditioning() },
+        'button.btn.btn-lg',
+        { style: 'flex:none;width:104px', onclick: () => startBuiltConditioning() },
+        t('cond.buildOwn')
+      ),
+      h(
+        'button.btn.btn-goal.btn-lg',
+        { style: 'flex:1', disabled: noKit, onclick: () => runConditioning() },
         icon(ICONS.spark, { size: 16 }),
         t('cond.generate')
       )
     )
   );
+}
+
+/**
+ * Start a hand-built conditioning workout.
+ *
+ * Same collision question as generating, and for the same reason: the entry
+ * point says a HIIT workout was wanted, and a lifting draft sitting there is
+ * leftover state rather than an answer.
+ */
+function startBuiltConditioning() {
+  const open = () => {
+    editConditioning(conditioningBlocks().length);
+  };
+
+  const lifts = sessionExercises().length;
+  if (!lifts) {
+    if (!conditioningBlocks().length) state.session = blankSession();
+    open();
+    return;
+  }
+
+  const name = sessionTitle(state.session);
+  choiceSheet({
+    title: t('cond.attachTitle'),
+    body: tp('cond.attachBody', lifts, { name }),
+    choices: [
+      {
+        label: t('cond.attachAlone'),
+        sub: t('cond.attachAloneSub', { name }),
+        primary: true,
+        onPick: () => {
+          state.session = blankSession();
+          open();
+        },
+      },
+      { label: t('cond.attachFinisher', { name }), sub: t('cond.attachFinisherSub'), onPick: open },
+    ],
+    cancelLabel: t('custom.cancel'),
+  });
 }
 
 /**
@@ -1859,6 +1915,393 @@ function applyConditioning(blocks, standalone) {
   setTimeout(() => {
     state.freshQuick = false;
   }, 1600);
+}
+
+/* ------------------------------------------------------ building one by hand
+
+   The generator answers "give me something"; this answers "give me this". They
+   produce the same block, which is the point: a generated workout can be opened
+   here and fixed, so the two are one feature rather than two paths that both
+   have to be complete on their own.
+
+   What the editor owns is what someone actually has an opinion about -- the
+   shape, how long, which movements, how many of each. What it does not own is
+   the structural arithmetic: rounds, work and rest are derived by
+   `assembleConditioningBlock` exactly as they are for a generated block, so the
+   plan and the clock cannot disagree about a hand-built workout either.
+   ------------------------------------------------------------------------ */
+
+/**
+ * Open the editor on a block, or on a blank one.
+ *
+ * `index` is where it will land in `session.conditioning.blocks`; past the end
+ * means appending, which is how "add another block" works without a second
+ * code path.
+ */
+function editConditioning(index = 0) {
+  const blocks = conditioningBlocks();
+  const existing = blocks[index];
+
+  state.condEdit = {
+    index,
+    isNew: !existing,
+    format: existing?.format || 'emom',
+    minutes: existing?.minutes || 10,
+    rounds: existing?.rounds || 3,
+    intervalShape:
+      INTERVAL_SHAPES.find((s) => s.work === existing?.work && s.rest === existing?.rest) ||
+      INTERVAL_SHAPES[1],
+    // A copy: backing out of the editor has to leave the block as it was.
+    movements: JSON.parse(JSON.stringify(existing?.movements || [])),
+    partner: existing?.partner ? { ...existing.partner } : null,
+    picking: false,
+    query: '',
+  };
+  go('condedit');
+}
+
+function condEditState() {
+  return state.condEdit;
+}
+
+function setCondEdit(patch) {
+  state.condEdit = { ...state.condEdit, ...patch };
+  render();
+}
+
+/** The block as it currently stands, so the editor can show what it will be. */
+function condEditPreview() {
+  const e = condEditState();
+  return assembleConditioningBlock({
+    format: e.format,
+    minutes: e.minutes,
+    rounds: e.rounds,
+    movements: e.movements,
+    partner: e.partner,
+    intervalShape: e.intervalShape,
+  });
+}
+
+function saveCondEdit() {
+  const e = condEditState();
+  if (!e.movements.length) return;
+
+  const block = condEditPreview();
+  block.id = conditioningBlocks()[e.index]?.id || newId();
+  // Hand-built blocks carry no `inputs`, which is what removes Re-roll: there
+  // is nothing to re-roll to. Editing a generated block drops it for the same
+  // reason a hand-edited session stops being "auto-generated" -- shuffling
+  // would throw away the choosing you just did.
+  const blocks = conditioningBlocks().slice();
+  blocks[e.index] = block;
+
+  state.session.conditioning = { blocks: blocks.filter(Boolean) };
+  state.condEdit = null;
+  saveDraft();
+  go('plan');
+}
+
+function viewCondEdit() {
+  const e = condEditState();
+  if (!e) {
+    state.screen = 'plan';
+    return viewPlan();
+  }
+  if (e.picking) return condPicker();
+
+  const preview = condEditPreview();
+  const colour = formatColor(e.format);
+
+  return h(
+    'div.screen',
+    { style: `--g:${colour}` },
+    h(
+      'div.screen-inner',
+      { style: 'gap:22px' },
+      backLink(t('cond.block'), () => {
+        state.condEdit = null;
+        go('plan');
+      }),
+      screenHead(t(e.isNew ? 'cond.editNew' : 'cond.editTitle'), t(`cond.format.${e.format}`)),
+
+      quickSection(
+        t('cond.format'),
+        cardScroller(
+          CONDITIONING_FORMATS,
+          e.format,
+          'cond.format',
+          'cond.formatWhy',
+          (key, ev) => pickAccent(ev, formatColor(key), () => setCondEdit({ format: key })),
+          formatColor
+        )
+      ),
+
+      // Tabata has no duration to set: eight rounds of 20/10 is four minutes per
+      // movement, and the movement list is what decides how long it takes.
+      e.format !== 'tabata' &&
+        quickSection(
+          t('cond.time'),
+          timeScroller(e.minutes, COND_TIMES, (minutes) => {
+            state.condEdit.minutes = minutes;
+            updateCondPreview();
+          })
+        ),
+
+      e.format === 'intervals' &&
+        quickSection(
+          t('cond.shape'),
+          h(
+            'div.chips',
+            INTERVAL_SHAPES.map((s) =>
+              h(
+                'button.chip',
+                {
+                  class: e.intervalShape.work === s.work && e.intervalShape.rest === s.rest ? 'is-on' : '',
+                  onclick: () => setCondEdit({ intervalShape: s }),
+                },
+                `${s.work}/${s.rest}`
+              )
+            )
+          )
+        ),
+
+      e.format === 'fortime' &&
+        quickSection(
+          t('cond.rounds'),
+          h(
+            'div.chips',
+            [2, 3, 4, 5, 6].map((n) =>
+              h(
+                'button.chip',
+                { class: e.rounds === n ? 'is-on' : '', onclick: () => setCondEdit({ rounds: n }) },
+                String(n)
+              )
+            )
+          )
+        ),
+
+      quickSection(
+        t('cond.movements'),
+        h(
+          'div.stack',
+          { style: 'gap:9px' },
+          e.movements.length
+            ? h('div.stack', { style: 'gap:7px' }, e.movements.map((m, i) => condEditRow(m, i)))
+            : empty(t('cond.noMovements'), t('cond.noMovementsHint')),
+          h(
+            'button.btn.btn-block',
+            { onclick: () => setCondEdit({ picking: true, query: '' }) },
+            icon(ICONS.plus, { size: 15 }),
+            t('cond.addMovement')
+          )
+        )
+      ),
+
+      quickSection(
+        t('cond.partner'),
+        cardScroller(
+          COND_PARTNERS,
+          e.partner?.mode || 'solo',
+          'cond.partner',
+          'cond.partnerWhy',
+          (key) =>
+            setCondEdit({
+              partner: key === 'solo' ? null : { mode: key, people: e.partner?.people || 2 },
+            })
+        )
+      ),
+
+      e.partner &&
+        quickSection(
+          t('cond.people'),
+          h(
+            'div.chips',
+            [2, 3, 4].map((n) =>
+              h(
+                'button.chip',
+                {
+                  class: e.partner.people === n ? 'is-on' : '',
+                  onclick: () => setCondEdit({ partner: { ...e.partner, people: n } }),
+                },
+                String(n)
+              )
+            )
+          )
+        ),
+
+      // What it will actually be, in the words the plan will use. A hand-built
+      // block is exactly where the derived numbers surprise you -- a Tabata of
+      // three movements is twelve minutes however long you asked for.
+      h(
+        'div.cond-preview',
+        h('span.cond-preview-label', t('cond.willBe')),
+        h('span.cond-preview-text', preview.movements.length ? condMeta(preview) : t('cond.willBeEmpty'))
+      )
+    ),
+    h(
+      'div.sticky-actions',
+      h(
+        'button.btn.btn-goal.btn-lg.btn-block',
+        { disabled: !e.movements.length, onclick: saveCondEdit },
+        t('cond.saveBlock')
+      )
+    )
+  );
+}
+
+/** Keep the preview line honest while the time strip is scrolling. */
+function updateCondPreview() {
+  const node = document.querySelector('.cond-preview-text');
+  if (!node) return;
+  const preview = condEditPreview();
+  node.textContent = preview.movements.length ? condMeta(preview) : t('cond.willBeEmpty');
+}
+
+/**
+ * One movement in the block being built: what it is, and how much of it.
+ *
+ * The amount is stepped rather than typed. Every unit here has its own sensible
+ * grain -- reps go up by one, calories by one, metres by ten, seconds by five --
+ * and a keyboard for a number you are nudging is three taps too many.
+ */
+function condEditRow(movement, index) {
+  const e = condEditState();
+  const ex = state.catalog.byId.get(movement.ref);
+  const step = movement.unit === 'metres' ? 10 : movement.unit === 'seconds' ? 5 : 1;
+
+  const bump = (delta) => {
+    const next = Math.max(step, movement.amount + delta * step);
+    e.movements[index] = { ...movement, amount: next };
+    render();
+  };
+
+  return h(
+    'div.cond-edit-row',
+    h(
+      'span.cond-edit-main',
+      h('span.cond-edit-name', localized(ex?.name) || '—'),
+      h('span.cond-edit-unit', t(`cond.unit.${movement.unit}`))
+    ),
+    h(
+      'span.cond-edit-amount',
+      h('button.stepper-btn', { onclick: () => bump(-1), 'aria-label': t('cond.less') }, '−'),
+      h('span.cond-edit-value', String(movement.amount)),
+      h('button.stepper-btn', { onclick: () => bump(1), 'aria-label': t('cond.more') }, '+')
+    ),
+    h(
+      'button.icon-btn',
+      {
+        'aria-label': t('cond.removeMovement'),
+        onclick: () => {
+          e.movements.splice(index, 1);
+          render();
+        },
+      },
+      icon(ICONS.trash, { size: 14 })
+    )
+  );
+}
+
+/**
+ * The movement picker.
+ *
+ * Everything conditioning can use, whatever kit it needs -- unlike the
+ * generator, which is asked what is to hand. Someone building by hand is
+ * looking at the gym they are standing in, and filtering their own choices out
+ * from under them would be the app arguing with what it can see.
+ */
+function condPicker() {
+  const e = condEditState();
+  const q = (e.query || '').trim().toLowerCase();
+  const chosen = new Set(e.movements.map((m) => m.ref));
+
+  const pool = state.catalog.conditioningPool
+    .filter((ex) => !ex.archived)
+    .filter((ex) => !q || localized(ex.name).toLowerCase().includes(q))
+    .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
+
+  const add = (ex) => {
+    const cond = state.catalog.conditioningOf(ex);
+    e.movements.push({
+      ref: ex.id,
+      amount: defaultAmountFor(cond, e.format),
+      unit: cond.unit,
+      pace: cond.pace,
+    });
+    setCondEdit({ picking: false, query: '' });
+  };
+
+  const search = h('input.input', {
+    type: 'search',
+    placeholder: t('cond.searchMovements'),
+    value: e.query || '',
+    oninput: (ev) => {
+      // Written straight to state without a render, so the field keeps focus and
+      // the caret while the list below filters.
+      state.condEdit.query = ev.target.value;
+      refreshPickerList();
+    },
+  });
+
+  return h(
+    'div.screen',
+    { style: `--g:${formatColor(e.format)}` },
+    h(
+      'div.screen-inner',
+      { style: 'gap:16px' },
+      backLink(t('cond.editTitle'), () => setCondEdit({ picking: false, query: '' })),
+      screenHead(t('cond.addMovement'), t('cond.pickerTitle')),
+      search,
+      h(
+        'div.rows-boxed',
+        { id: 'cond-picker-list' },
+        pool.map((ex) => condPickerRow(ex, chosen.has(ex.id), () => add(ex)))
+      )
+    )
+  );
+}
+
+function condPickerRow(ex, already, onPick) {
+  const cond = state.catalog.conditioningOf(ex);
+  return h(
+    'button.pick-row',
+    { onclick: onPick },
+    h(
+      'span.pick-main',
+      h('span.pick-name', localized(ex.name)),
+      h(
+        'span.pick-meta',
+        `${t(`cond.kit.${cond.kit}`)} · ${t(`cond.unit.${cond.unit}`)}${already ? ` · ${t('cond.alreadyIn')}` : ''}`
+      )
+    ),
+    icon(ICONS.plus, { size: 15 })
+  );
+}
+
+/** Refilter the picker in place, so typing does not cost the field its focus. */
+function refreshPickerList() {
+  const list = document.getElementById('cond-picker-list');
+  if (!list) return;
+  const e = condEditState();
+  const q = (e.query || '').trim().toLowerCase();
+  const chosen = new Set(e.movements.map((m) => m.ref));
+
+  const pool = state.catalog.conditioningPool
+    .filter((ex) => !ex.archived)
+    .filter((ex) => !q || localized(ex.name).toLowerCase().includes(q))
+    .sort((a, b) => localized(a.name).localeCompare(localized(b.name)));
+
+  const cond = state.catalog.conditioningOf;
+  mount(
+    list,
+    pool.map((ex) =>
+      condPickerRow(ex, chosen.has(ex.id), () => {
+        const c = cond(ex);
+        e.movements.push({ ref: ex.id, amount: defaultAmountFor(c, e.format), unit: c.unit, pace: c.pace });
+        setCondEdit({ picking: false, query: '' });
+      })
+    )
+  );
 }
 
 /** Re-roll the whole conditioning workout on the same inputs. */
@@ -3009,7 +3452,9 @@ function conditioningSection() {
             condCard(block, i),
           ]
     ),
-    blocks[0]?.inputs && condActions(),
+    // Always: adding and removing apply to any workout. Only Re-roll is
+    // generation-specific, and that is decided inside.
+    condActions(),
     // The finisher still is not carried into the lifting session screen, which
     // runs sets rather than a clock. Said here, where the thing it limits is.
     hasLifts && h('p.hint', t('cond.finisherNote'))
@@ -3038,7 +3483,14 @@ function condCard(block, index = 0) {
       // label for a sequence that does not exist.
       conditioningBlocks().length > 1 && h('span.cond-index', String(index + 1)),
       h('span.cond-format', t(`cond.format.${block.format}`)),
-      h('span.cond-meta', condMeta(block))
+      h('span.cond-meta', condMeta(block)),
+      // Per block, because editing is per block -- unlike re-roll and remove,
+      // which act on the workout and live once at the bottom.
+      h(
+        'button.icon-btn.cond-edit-btn',
+        { 'aria-label': t('cond.editBlock'), onclick: () => editConditioning(index) },
+        icon(ICONS.pencil, { size: 13 })
+      )
     ),
 
     // An AMRAP with no idea how many rounds is a workout you cannot pace. The
@@ -3077,13 +3529,24 @@ function condCard(block, index = 0) {
  * re-rolled into a movement its neighbour already has.
  */
 function condActions() {
+  const generated = !!conditioningBlocks()[0]?.inputs;
   return h(
     'div.cond-actions',
+    // Only a generated workout can be re-rolled: a hand-built one has nothing to
+    // roll back to, and offering it would mean a button that discards the work
+    // it is sitting under.
+    generated &&
+      h(
+        'button.btn.btn-sm',
+        { onclick: reshuffleConditioning },
+        icon(ICONS.shuffle, { size: 13 }),
+        t('cond.reshuffle')
+      ),
     h(
       'button.btn.btn-sm',
-      { onclick: reshuffleConditioning },
-      icon(ICONS.shuffle, { size: 13 }),
-      t('cond.reshuffle')
+      { onclick: () => editConditioning(conditioningBlocks().length) },
+      icon(ICONS.plus, { size: 13 }),
+      t('cond.addBlock')
     ),
     h(
       'button.btn.btn-sm',

@@ -21,8 +21,6 @@ import {
   getPrescription,
   suggestedLoad,
   mround,
-  setVolume,
-  estimatedOneRm,
   summariseProgress,
   formatMinutes,
   withinDays,
@@ -36,14 +34,12 @@ import {
   RPE_MAX,
   generateQuickWorkout,
   COMPLEXITY_LEVELS,
-  generateConditioning,
   generateConditioningWorkout,
   maxConditioningBlocks,
   assembleConditioningBlock,
   defaultAmountFor,
   INTERVAL_SHAPES,
   workoutSteps,
-  stepsSeconds,
   BLOCK_REST_MINUTES,
   CONDITIONING_FORMATS,
   PARTNER_MODES,
@@ -884,8 +880,8 @@ function savedPlatform() {
         h(
           'button.saved-chip',
           {
-            style: `--gs:${goalColor(s.goal)}`,
-            title: `${s.name} — ${goalLabel(s.goal)}`,
+            style: `--gs:${goalColor(sessionGoalKey(s))}`,
+            title: `${s.name} — ${goalLabel(sessionGoalKey(s))}`,
             onclick: () => {
               state.session = JSON.parse(JSON.stringify(s));
               saveDraft();
@@ -4759,6 +4755,26 @@ function startConditioning(session = state.session) {
   const blocks = session.conditioning?.blocks || [];
   if (!blocks.length) return;
 
+  // A clock already running is a workout in progress, and overwriting it threw
+  // away both the rounds counted so far and the fact that it happened -- with no
+  // warning, because Start looks the same whether or not anything is running.
+  if (state.timer && !state.timer.done) {
+    confirmSheet({
+      title: t('cond.alreadyRunningTitle'),
+      body: t('cond.alreadyRunningBody'),
+      confirmLabel: t('cond.startAnyway'),
+      // Cancel closes the sheet and nothing else, so it is named for that. The
+      // bubble is right there to get back to the running clock.
+      cancelLabel: t('cond.keepRunning'),
+      onConfirm: () => {
+        state.timer = null;
+        store.clearTimer();
+        startConditioning(session);
+      },
+    });
+    return;
+  }
+
   state.timer = {
     sessionId: session.id,
     sessionName: sessionTitle(session),
@@ -4779,8 +4795,22 @@ function startConditioning(session = state.session) {
   go('timer');
 }
 
+/**
+ * The step list, rebuilt only when the blocks change.
+ *
+ * Derived rather than stored, so it cannot drift from the plan -- but the tick
+ * asks for it four times a second and `screenAccent` asks again on every render,
+ * and rebuilding forty-odd objects that often to read one of them is work for
+ * nothing. Keyed on the blocks array's identity, which only changes when a new
+ * timer is started.
+ */
+let stepCache = { blocks: null, steps: [] };
+
 function timerSteps() {
-  return state.timer ? workoutSteps(state.timer.blocks) : [];
+  const blocks = state.timer?.blocks;
+  if (!blocks) return [];
+  if (stepCache.blocks !== blocks) stepCache = { blocks, steps: workoutSteps(blocks) };
+  return stepCache.steps;
 }
 
 function timerStep() {
@@ -4836,6 +4866,8 @@ function timerAdvance(auto = true) {
   const tm = state.timer;
   if (!tm) return;
 
+  recordStepScore();
+
   const steps = timerSteps();
   const next = tm.index + 1;
 
@@ -4865,6 +4897,26 @@ function timerAdvance(auto = true) {
   if (auto) (step.kind === 'rest' || step.kind === 'between' ? cueRest : cueGo)();
   saveTimer();
   render();
+}
+
+/**
+ * Bank the score of the step being left, if it has one.
+ *
+ * For time is scored by the clock, and the clock was being thrown away: the log
+ * read `seconds` when writing an entry and nothing ever wrote it, so every
+ * for-time workout recorded null for the one number the format exists to
+ * produce. Pressing "I'm done" is the moment that number is known, and running
+ * out of time still records the cap, which is a real result -- it means you did
+ * not finish.
+ */
+function recordStepScore() {
+  const tm = state.timer;
+  const step = timerStep();
+  if (!tm || step?.kind !== 'fortime') return;
+
+  const block = step.block ?? 0;
+  const elapsed = Math.max(1, step.seconds - timerRemaining());
+  tm.scores[block] = { ...(tm.scores[block] || {}), seconds: elapsed, capped: elapsed >= step.seconds };
 }
 
 /** Count a round of the open-ended formats. The number IS the score. */
@@ -5272,6 +5324,24 @@ function phaseWord(step, resting) {
   return t('cond.work');
 }
 
+/**
+ * What a block scored, in the terms that block is scored in.
+ *
+ * Rounds for an AMRAP, a time for a for-time, and for the formats that are only
+ * a clock -- EMOM, intervals, Tabata -- the duration, because there is nothing
+ * else to say: you either did it or you stopped, and stopping shows up as the
+ * blocks that are not there.
+ */
+function blockScoreLine(block, score) {
+  if (score.rounds) return tp('cond.roundsDone', score.rounds);
+  if (score.seconds) {
+    return score.capped
+      ? t('cond.hitTheCap', { time: restClock(score.seconds) })
+      : t('cond.finishedIn', { time: restClock(score.seconds) });
+  }
+  return t('cond.minutes', { n: block.minutes });
+}
+
 /** What you did, before it is written down. */
 function timerSummary(tm) {
   const elapsed = tm.startedAt ? Math.round((Date.now() - tm.startedAt) / 1000) : 0;
@@ -5290,12 +5360,7 @@ function timerSummary(tm) {
             'div.tmr-sum-row',
             { style: `--g:${formatColor(block.format)}` },
             h('span.tmr-sum-fmt', t(`cond.format.${block.format}`)),
-            h(
-              'span.tmr-sum-score',
-              score.rounds
-                ? tp('cond.roundsDone', score.rounds)
-                : t('cond.minutes', { n: block.minutes })
-            )
+            h('span.tmr-sum-score', blockScoreLine(block, score))
           );
         })
       ),
@@ -5507,14 +5572,35 @@ function goalColor(goal) {
   return GOAL_COLOR[goal] || 'var(--color-neutral-700)';
 }
 
+/**
+ * What a saved workout should be filed and coloured as.
+ *
+ * `session.goal` is the lifting goal, and a conditioning-only session still
+ * carries whatever `blankSession` gave it -- so a saved HIIT workout was landing
+ * in the Strength bucket, in Strength orange, indistinguishable from a session
+ * of barbell work. It is not a Strength workout; it has no lifts at all.
+ *
+ * A session with lifts keeps its goal, because the lifting is what it is, even
+ * with a finisher attached.
+ */
+function sessionGoalKey(session) {
+  const liftless = !(session.exerciseIds || []).length;
+  const conditioning = (session.conditioning?.blocks || []).length > 0;
+  return liftless && conditioning ? 'Conditioning' : session.goal;
+}
+
 function savedGroups() {
-  const buckets = new Map(state.catalog.vocabulary.goals.map((goal) => [goal, []]));
+  // Conditioning is a bucket here even though it is not a goal you can pick:
+  // the Saved screen groups by what a workout IS, and a HIIT session is not a
+  // Strength one. Same list the balance chart reads for the same reason (§26).
+  const buckets = new Map(REPORT_GOALS(state.catalog.vocabulary.goals).map((goal) => [goal, []]));
 
   // A workout saved under a goal the catalog no longer lists still has to go
   // somewhere, so it gets its own group rather than vanishing from the screen.
   const orphans = [];
   for (const s of state.sessions) {
-    if (buckets.has(s.goal)) buckets.get(s.goal).push(s);
+    const key = sessionGoalKey(s);
+    if (buckets.has(key)) buckets.get(key).push(s);
     else orphans.push(s);
   }
 
@@ -5566,20 +5652,31 @@ function savedRow(s) {
   const exercises = sessionExercises(s);
   const built = buildSession(s, state.catalog, state.oneRm);
 
+  // A conditioning workout has minutes and contents; they are just not lift
+  // minutes and not lifts. Reading only the lifting side printed "0 min · 0
+  // lifts" over a twelve-minute AMRAP, which describes it as nothing at all.
+  const blocks = s.conditioning?.blocks || [];
+  const condMins =
+    blocks.reduce((sum, b) => sum + (b.minutes || 0), 0) +
+    Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
+  const contents = exercises.length
+    ? tp('saved.lifts', exercises.length)
+    : tp('cond.blockCount', blocks.length);
+
   return h(
     'div.home-card.saved-card',
-    { style: `--gs:${goalColor(s.goal)}` },
+    { style: `--gs:${goalColor(sessionGoalKey(s))}` },
     h(
       'div.saved-head',
       h('div.saved-name', s.name),
-      h('div.saved-time', formatMinutes(built.totalMinutes))
+      h('div.saved-time', formatMinutes(built.totalMinutes + condMins))
     ),
     h(
       'div.stack',
       { style: 'gap:3px' },
       h(
         'div.saved-meta',
-        `${tp('saved.lifts', exercises.length)} · ${t('saved.savedOn', { date: shortDate(s.date) })}`
+        `${contents} · ${t('saved.savedOn', { date: shortDate(s.date) })}`
       ),
       h(
         'div.saved-done',
@@ -5610,7 +5707,7 @@ function savedRow(s) {
             rpeSheet({
               title: t('rpe.title'),
               body: t('rpe.bodySaved', { name: s.name }),
-              onPick: (rpe) => flash(tp('live.logged', logWholeSession(s, today(), rpe))),
+              onPick: (rpe) => flash(loggedMessage(logWholeSession(s, today(), rpe))),
             });
           },
         },
@@ -5660,10 +5757,50 @@ function logWholeSession(session, date, rpe = null) {
       });
     }
   }
+
+  // The conditioning too, or "Did it again" on a HIIT workout logged nothing at
+  // all and cheerfully reported "Logged 0 sets". No scores: nobody watched a
+  // clock, so the honest record is that the blocks were done and how hard it
+  // felt -- inventing a round count would be worse than leaving it blank.
+  for (const block of session.conditioning?.blocks || []) {
+    entries.push({
+      id: newId(),
+      date,
+      sessionId: session.id,
+      sessionName: session.name,
+      kind: 'conditioning',
+      format: block.format,
+      blockMinutes: block.minutes,
+      movementIds: (block.movements || []).map((m) => m.ref),
+      rounds: null,
+      seconds: null,
+      exerciseId: null,
+      goal: 'Conditioning',
+      weight: null,
+      reps: null,
+      rpe,
+      auto: true,
+    });
+  }
+
   state.log = [...entries, ...state.log];
   store.setLog(state.log);
   recordCompletion(session, date, entries.length, rpe);
-  return entries.length;
+
+  // Counted separately so the confirmation can say what it actually wrote. A
+  // conditioning workout reporting "Logged 1 set" is using the word for a thing
+  // it did not record.
+  return {
+    sets: entries.filter((e) => e.kind !== 'conditioning').length,
+    blocks: entries.filter((e) => e.kind === 'conditioning').length,
+  };
+}
+
+/** "Logged 12 sets", "Logged 2 blocks", or both. */
+function loggedMessage({ sets, blocks }) {
+  if (sets && blocks) return `${tp('live.logged', sets)} · ${tp('cond.logged', blocks)}`;
+  if (blocks) return tp('cond.logged', blocks);
+  return tp('live.logged', sets);
 }
 
 /* ------------------------------------------------------------------ log */

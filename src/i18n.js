@@ -464,6 +464,13 @@ const LOCALES = {
     'cond.rpeBody': 'How hard was that, all in?',
     'cond.logged.one': 'Logged {n} block',
     'cond.logged.other': 'Logged {n} blocks',
+    'cond.finishedIn': 'finished in {time}',
+    'cond.hitTheCap': 'still going at {time}',
+    'cond.alreadyRunningTitle': 'A clock is already running',
+    'cond.alreadyRunningBody':
+      'Starting this one throws the other away, along with anything counted so far.',
+    'cond.startAnyway': 'Start this one',
+    'cond.keepRunning': 'Keep the other',
     'cond.resumePill': 'Clock running: {name}',
     'cond.paused': 'Paused',
     'cond.remove': 'Remove conditioning',

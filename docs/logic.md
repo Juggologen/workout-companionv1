@@ -2087,3 +2087,68 @@ the body map on `primary` and `secondary`.
 The **Library stays lifts-only** (167). Every card there offers a 1RM and filters
 on equipment and pattern, none of which a rowing machine answers; conditioning
 movements have their own shelf, which is the picker.
+
+---
+
+## 29. A review pass
+
+Five real faults, all of one family: **the conditioning side reached a screen
+that only knew about lifting.**
+
+### For time was throwing away its own score
+
+`timerFinish` wrote `seconds: score.seconds || null` and **nothing ever wrote
+`score.seconds`**. Every for-time workout logged `null` for the one number the
+format exists to produce.
+
+`recordStepScore` banks it when the step is left — pressing "I'm done" is the
+moment it is known. Running out of time records the cap and flags `capped`,
+which is a real result: it means you did not finish. The summary says
+"finished in 4:12" or "still going at 10:00" accordingly.
+
+### Starting a clock silently destroyed a running one
+
+`startConditioning` overwrote `state.timer` unconditionally. A workout in
+progress, with rounds counted, gone — and Start looks identical whether or not
+anything is running. It now asks, and the cancel label says what cancel does
+(closes the sheet; the bubble is right there to get back).
+
+### A saved HIIT workout was a Strength workout
+
+`session.goal` on a conditioning-only session is whatever `blankSession` gave it,
+so Saved filed it under **Strength in Strength orange**, indistinguishable from
+barbell work. `sessionGoalKey` answers what a workout *is*: liftless plus
+conditioning is `Conditioning`; anything with lifts keeps its goal, because with
+a finisher attached the lifting is still what it is.
+
+Its card also read **"0 min · 0 lifts"** over a twelve-minute AMRAP — reading
+only the lifting side describes a conditioning workout as nothing at all. Now
+"12 min · 1 block".
+
+### "Did it again" logged nothing at all
+
+`logWholeSession` walked `sessionExercises` only, so repeating a saved HIIT
+workout wrote zero entries and cheerfully reported "Logged 0 sets". It now writes
+a block entry each, with no scores — nobody watched a clock, and inventing a
+round count would be worse than leaving it blank.
+
+The confirmation counts sets and blocks separately, because "Logged 1 set" for a
+block is using the word for a thing that was not recorded.
+
+### Housekeeping
+
+- Four dead imports (`setVolume`, `estimatedOneRm` — both pre-existing —
+  plus `generateConditioning` and `stepsSeconds`, left behind by the multi-block
+  work).
+- `timerSteps` memoised on the blocks array's identity. It is called by the tick
+  four times a second and again by `screenAccent` on every render, and rebuilding
+  forty-odd objects to read one of them is work for nothing.
+
+### Verified after
+
+7,200 workouts across 6 durations × 4 partner configurations: 0 shortfalls, 0
+over budget, 0 duplicate movements, 0 undersized stations, 0 prescriptions
+exceeding their window, 0 plan-versus-clock drift. Degenerate inputs the UI can
+produce — 0 blocks, 99 blocks, no kit, empty movement lists — clamp or report
+shortfall rather than throwing. Every screen free of raw i18n keys and horizontal
+overflow.

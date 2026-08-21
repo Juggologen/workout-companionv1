@@ -1661,18 +1661,28 @@ function viewConditioning() {
         )
       ),
 
+      // A question and two answers, using the same chip row as every other
+      // control on this screen. It used to be one lone chip whose label was the
+      // section heading repeated verbatim, which reads as a statement you press
+      // rather than a question you answer -- and gave no hint that "off" was
+      // even one of the states.
       quickSection(
         t('cond.lowImpact'),
         h(
-          'button.chip',
-          {
-            class: c.lowImpact ? 'is-on' : '',
-            'aria-pressed': String(c.lowImpact),
-            onclick: () => setCond({ lowImpact: !c.lowImpact }),
-          },
-          t('cond.lowImpact')
+          'div.chips',
+          [true, false].map((yes) =>
+            h(
+              'button.chip',
+              {
+                class: c.lowImpact === yes ? 'is-on' : '',
+                'aria-pressed': String(c.lowImpact === yes),
+                onclick: () => setCond({ lowImpact: yes }),
+              },
+              t(yes ? 'common.yes' : 'common.no')
+            )
+          )
         ),
-        t('cond.lowImpactHint')
+        t(c.lowImpact ? 'cond.lowImpactOn' : 'cond.lowImpactOff')
       )
     ),
     h(

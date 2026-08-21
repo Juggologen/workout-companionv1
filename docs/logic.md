@@ -2217,8 +2217,14 @@ runs and skipping. The label named one of the things it removed and hid the rest
 
 It is worth keeping — bad knees and a neighbour below you are both real, and the
 picker's impact filter is for browsing rather than for constraining a generated
-workout — so it is now **"Easy on the joints"**, with a hint that lists what
-actually goes and what stays.
+workout — so it stays, as the question **"Low impact?"** with **Yes** and **No**.
+
+It was briefly a lone chip labelled "Easy on the joints" sitting under a heading
+that said "Easy on the joints", which reads as a statement you press rather than
+a question you answer, and gave no hint that off was even one of the states. Two
+answers to a question is the idiom every other control on that screen already
+uses, and the hint underneath now says what the answer you picked actually
+means rather than describing one of them.
 
 ### Measured
 

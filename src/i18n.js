@@ -302,9 +302,11 @@ const LOCALES = {
     'cond.complexity': 'Technique',
     'cond.partner': 'Training with anyone?',
     'cond.people': 'How many of you',
-    'cond.lowImpact': 'Easy on the joints',
-    'cond.lowImpactHint':
-      'Low-impact movements only — no running, jumping, skipping or burpees. Ergs, carries, squats and holds all stay. Worth having when the knees are complaining or the neighbours are below you.',
+    'cond.lowImpact': 'Low impact?',
+    'cond.lowImpactOn':
+      'Low-impact movements only — no running, jumping, skipping or burpees. Ergs, carries, squats and holds all stay.',
+    'cond.lowImpactOff':
+      'Everything is on the table, jumping and running included. Say yes when the knees are complaining or the neighbours are below you.',
     'cond.transition': 'Between blocks',
     'cond.noTransition': 'Straight on',
     'cond.transitionHint':
@@ -675,6 +677,8 @@ const LOCALES = {
     'units.kg': 'kg',
     'load.enterRm': 'Enter your 1RM',
     'load.bodyweight': 'Bodyweight / RPE',
+    'common.yes': 'Yes',
+    'common.no': 'No',
     'common.back': 'Back',
     'common.close': 'Close',
     'common.loading': 'Loading the compendium…',

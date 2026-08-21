@@ -356,7 +356,7 @@ their own shins.
 One block of three movements over twenty minutes is those three movements six
 times each — a narrow slice of you, and dull by minute ten. So a workout can be
 cut into up to **four blocks**, each with its own movements and its own shape,
-with two minutes between them.
+with a transition between them that you set.
 
 What that buys, measured over 300 seeds per cell — average distinct movements,
 and body regions of the five:
@@ -367,21 +367,33 @@ and body regions of the five:
 | **30 min** | 2.7 / 2.6 | 5.3 / 3.6 | 8.5 / 4.2 | **10.6 / 4.4** |
 
 The count scales with the clock — a block needs 5 minutes and the gaps cost 2, so
-you get 1 block under 10 minutes, 2 from 12, 3 from 19, 4 from 26. All four are
+you get 1 block under 10 minutes, 2 from 12, 3 from 19, 4 from 26 at the default
+two-minute transition, and fewer if you set a longer one. All four are
 always shown, with the unreachable ones disabled, because a control that grows
 and shrinks as you scroll the time strip is one you can't aim at.
 
 Movements never repeat across blocks unless the pool is genuinely too small, and
 the shapes vary — an EMOM then an AMRAP then a for-time is three different
 relationships with the clock, which is most of what makes the third block feel
-unlike the first. The two-minute transitions are drawn on the plan and counted in
-the total, because changing station and getting your breath back is real time.
+unlike the first.
+
+**You set the transition between blocks** — straight on, or 1, 2, 3 or 5 minutes.
+It is not cosmetic: it comes out of the same total, so it changes how many blocks
+fit — twenty minutes is three blocks at two minutes and two at five. Changing
+station, resetting a machine and getting your breath back is real time, and how
+much you need depends on whether the kit is at your feet or across a busy gym.
 
 ### Formats
 
-Five, from one generator: **EMOM** (one movement a minute, rotating), **AMRAP**
+Five, from one generator: **EMOM** (see below), **AMRAP**
 (fixed round, count the rounds), **intervals** (30/30 through 90/60), **Tabata**
 (8 × 20/10) and **for time** (3–5 rounds against a cap).
+
+**There are two EMOMs, and you choose.** *All of it, every minute* — every
+movement, every minute, resting whatever's left. Or *one movement a minute*,
+taking turns. Both are ordinary, and the app used to only build the second while
+showing you a card that read like the first; now the card, the editor and the
+clock all say which one it is.
 
 The distinction that runs through all of it is whether the clock says *how much
 work fits* (EMOM, intervals, Tabata) or *how long the work takes* (AMRAP, for

@@ -590,20 +590,39 @@ function partnerScale(partner, windowDriven) {
  * how many movements the format wants. AMRAP alone has no round count -- the
  * count is the score.
  */
-function planFormat(format, minutes, rand) {
+function planFormat(format, minutes, rand, style = null) {
   switch (format) {
     case 'emom': {
-      // One movement per minute, rotating. Stations that divide the duration
-      // evenly mean every movement comes up the same number of times, which is
-      // both fairer and easier to read off a plan.
-      // Capped so every movement comes round at least twice. A four-minute EMOM
-      // with four stations is not an EMOM, it is four unrelated minutes.
+      // Two EMOMs, and which one it is changes both the station count and how
+      // the work is sized. See `blockSteps`.
+      const together = style === 'together';
+
+      if (together) {
+        // Everything happens inside one minute, so the movements share the 40 s
+        // rather than each getting it. Two or three: four movements in forty
+        // seconds is ten seconds each, which is a transition, not a set.
+        const stations = 2 + Math.floor(rand() * 2);
+        return {
+          work: 60,
+          rest: 0,
+          rounds: minutes,
+          stations,
+          perStation: 40 / stations,
+          openEnded: false,
+          style: 'together',
+        };
+      }
+
+      // Rotating. Stations that divide the duration evenly mean every movement
+      // comes up the same number of times, which is both fairer and easier to
+      // read off a plan. Capped so every movement comes round at least twice: a
+      // four-minute EMOM with four stations is four unrelated minutes.
       const ceiling = Math.max(2, Math.floor(minutes / 2));
       const options = [2, 3, 4].filter((n) => n <= ceiling && minutes % n === 0);
       const stations = options.length
         ? options[Math.floor(rand() * options.length)]
         : Math.min(3, ceiling);
-      return { work: 60, rest: 0, rounds: minutes, stations, perStation: 40, openEnded: false };
+      return { work: 60, rest: 0, rounds: minutes, stations, perStation: 40, openEnded: false, style: 'rotate' };
     }
     case 'amrap': {
       // At 30 s a movement, a round is `stations x 30` seconds, so the round
@@ -789,7 +808,14 @@ export function generateConditioning(options, catalog) {
   }
   const picked = format === 'any' ? choices[Math.floor(rand() * choices.length)] : format;
 
-  const plan = planFormat(picked, minutes, rand);
+  // Which EMOM. Asked for explicitly where the caller has an opinion, and
+  // otherwise leaning to `together` -- it is what most people mean by an EMOM,
+  // and a generator that only ever produced the rotating kind is how the plan
+  // and the clock came to be describing different workouts.
+  const emomStyle =
+    options.style || (rand() < 0.65 ? 'together' : 'rotate');
+
+  const plan = planFormat(picked, minutes, rand, emomStyle);
 
   // Movements already spent on earlier blocks of the same workout. Honoured
   // where the pool can afford it and abandoned where it cannot: a bodyweight-only
@@ -819,7 +845,14 @@ export function generateConditioning(options, catalog) {
   // claiming twelve minutes for a block the clock runs in nine is the plan
   // being wrong. Deriving it from the same step list the timer walks makes them
   // agree by construction rather than by two functions staying in step.
-  const shape = { format: picked, rounds: plan.rounds, work: plan.work, rest: plan.rest, movements };
+  const shape = {
+    format: picked,
+    rounds: plan.rounds,
+    work: plan.work,
+    rest: plan.rest,
+    style: plan.style,
+    movements,
+  };
   const actualMinutes = windowDriven
     ? Math.max(1, Math.round(stepsSeconds(blockSteps(shape)) / 60))
     : minutes;
@@ -833,6 +866,8 @@ export function generateConditioning(options, catalog) {
     rest: plan.rest,
     rounds: plan.rounds,
     openEnded: plan.openEnded,
+    /** Which EMOM this is. Null for every other format. */
+    style: plan.style || null,
     movements,
     partner: partner ? { mode: partner.mode, people: Math.max(2, partner.people || 2) } : null,
     /** One time through every movement, in seconds. The AMRAP round estimate. */
@@ -876,6 +911,7 @@ export function assembleConditioningBlock(input) {
     movements = [],
     partner = null,
     intervalShape = INTERVAL_SHAPES[1],
+    style = 'together',
   } = input;
 
   let rounds = null;
@@ -908,7 +944,7 @@ export function assembleConditioningBlock(input) {
       break;
   }
 
-  const shape = { format, rounds, work, rest, movements };
+  const shape = { format, rounds, work, rest, movements, style: format === 'emom' ? style : null };
   const windowDriven = format === 'emom' || format === 'intervals' || format === 'tabata';
   const actualMinutes = windowDriven
     ? Math.max(1, Math.round(stepsSeconds(blockSteps(shape)) / 60))
@@ -923,6 +959,7 @@ export function assembleConditioningBlock(input) {
     rest,
     rounds,
     openEnded,
+    style: format === 'emom' ? style : null,
     movements,
     partner: partner ? { mode: partner.mode, people: Math.max(2, partner.people || 2) } : null,
     roundSeconds: Math.round(roundSeconds),
@@ -965,7 +1002,18 @@ export function defaultAmountFor(cond, format, stations = 3) {
  * across a four-block session.
  */
 export const BLOCK_MIN_MINUTES = 5;
+
+/**
+ * How long you get between blocks, by default.
+ *
+ * Two minutes was a constant, which made it a guess the app was unwilling to
+ * revisit -- and the right number depends entirely on where you are. Two is
+ * plenty when the kit is at your feet; it is nothing at all when the rower is
+ * across a busy gym and somebody is on it. So it is a default now, and
+ * `COND_REST_CHOICES` is what the user can say instead.
+ */
 export const BLOCK_REST_MINUTES = 2;
+export const COND_REST_CHOICES = [0, 1, 2, 3, 5];
 const BLOCK_CEILING = 4;
 
 /**
@@ -988,10 +1036,8 @@ const MULTI_BLOCK_FORMATS = ['emom', 'amrap', 'fortime'];
  * the transitions cost more than the work, and a workout that is mostly walking
  * between stations is not a conditioning workout.
  */
-export function maxConditioningBlocks(minutes) {
-  const fit = Math.floor(
-    (minutes + BLOCK_REST_MINUTES) / (BLOCK_MIN_MINUTES + BLOCK_REST_MINUTES)
-  );
+export function maxConditioningBlocks(minutes, restMinutes = BLOCK_REST_MINUTES) {
+  const fit = Math.floor((minutes + restMinutes) / (BLOCK_MIN_MINUTES + restMinutes));
   return Math.max(1, Math.min(BLOCK_CEILING, fit));
 }
 
@@ -1016,10 +1062,16 @@ export function maxConditioningBlocks(minutes) {
  *   most of what makes the second half feel unlike the first.
  */
 export function generateConditioningWorkout(options, catalog) {
-  const { minutes = 12, blocks: requested = 1, seed = 1, format = 'any' } = options;
+  const {
+    minutes = 12,
+    blocks: requested = 1,
+    seed = 1,
+    format = 'any',
+    restBetween = BLOCK_REST_MINUTES,
+  } = options;
 
-  const count = Math.max(1, Math.min(maxConditioningBlocks(minutes), requested));
-  const restTotal = (count - 1) * BLOCK_REST_MINUTES;
+  const count = Math.max(1, Math.min(maxConditioningBlocks(minutes, restBetween), requested));
+  const restTotal = (count - 1) * restBetween;
   const per = Math.floor((minutes - restTotal) / count);
 
   const rand = mulberry32(seed);
@@ -1055,8 +1107,8 @@ export function generateConditioningWorkout(options, catalog) {
   return {
     blocks,
     /** Wall-clock for the whole thing, transitions included. */
-    minutes: worked + (blocks.length - 1) * BLOCK_REST_MINUTES,
-    restBetween: blocks.length > 1 ? BLOCK_REST_MINUTES : 0,
+    minutes: worked + (blocks.length - 1) * restBetween,
+    restBetween: blocks.length > 1 ? restBetween : 0,
     /** Distinct movements across the workout -- the number this feature exists for. */
     distinctMovements: used.size,
     shortfall: false,
@@ -1087,15 +1139,32 @@ export function blockSteps(block) {
 
   switch (block.format) {
     case 'emom': {
-      // One movement per minute, rotating. The whole minute is the step: what
-      // is left after the work is the rest, which is the format's entire idea.
-      return Array.from({ length: block.rounds }, (_, i) => ({
-        kind: 'work',
-        seconds: 60,
-        movement: mv[i % mv.length],
-        round: i + 1,
-        rounds: block.rounds,
-      }));
+      // The whole minute is the step either way: what is left after the work is
+      // the rest, which is the format's entire idea. What differs is what the
+      // minute contains.
+      //
+      // `together` -- every movement, every minute. What most people mean by
+      // "EMOM: 5 burpees and 10 air squats".
+      //
+      // `rotate` -- one movement per minute, cycling. Also a real EMOM, and
+      // what this generator produced exclusively until the plan card and the
+      // clock were found to be describing different workouts.
+      //
+      // Absent `style` means `rotate`, because that is what every block saved
+      // before this existed actually was.
+      const together = block.style === 'together';
+      return Array.from({ length: block.rounds }, (_, i) =>
+        together
+          ? { kind: 'work', seconds: 60, movements: mv, round: i + 1, rounds: block.rounds, style: 'together' }
+          : {
+              kind: 'work',
+              seconds: 60,
+              movement: mv[i % mv.length],
+              round: i + 1,
+              rounds: block.rounds,
+              style: 'rotate',
+            }
+      );
     }
     case 'intervals': {
       const steps = [];

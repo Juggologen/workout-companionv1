@@ -291,6 +291,8 @@ const LOCALES = {
     'cond.blocks': 'How many blocks',
     'cond.blocksOne':
       'One block. The same movements all the way through — simple to run, and the same few muscles the whole time.',
+    'cond.blocksSplitStraight':
+      '{n} blocks of {per} min, running straight on. Each block gets its own movements, so more of you gets worked.',
     'cond.blocksSplit':
       '{n} blocks of {per} min, {rest} min between. Each block gets its own movements, so more of you gets worked.',
     'cond.blockCount.one': '{n} block',
@@ -300,8 +302,20 @@ const LOCALES = {
     'cond.complexity': 'Technique',
     'cond.partner': 'Training with anyone?',
     'cond.people': 'How many of you',
-    'cond.lowImpact': 'No jumping',
-    'cond.lowImpactHint': 'Leaves out box jumps, skipping and burpees. Ergs and carries stay.',
+    'cond.lowImpact': 'Easy on the joints',
+    'cond.lowImpactHint':
+      'Low-impact movements only — no running, jumping, skipping or burpees. Ergs, carries, squats and holds all stay. Worth having when the knees are complaining or the neighbours are below you.',
+    'cond.transition': 'Between blocks',
+    'cond.noTransition': 'Straight on',
+    'cond.transitionHint':
+      'Time to change station, reset a machine and get your breath back. It comes out of the same total, so five minutes of transition is five minutes not spent working.',
+    'cond.emomStyle': 'How the minutes work',
+    'cond.emomStyle.together': 'All of it, every minute',
+    'cond.emomStyle.rotate': 'One movement a minute',
+    'cond.emomStyleHint.together':
+      'Every minute you do the whole list, then rest whatever is left of the minute.',
+    'cond.emomStyleHint.rotate':
+      'The movements take turns: minute one is the first, minute two the second, and round again.',
     'cond.generate': 'Generate',
     'cond.buildOwn': 'Build my own',
 
@@ -411,7 +425,9 @@ const LOCALES = {
     'cond.rounds.one': '{n} round',
     'cond.rounds.other': '{n} rounds',
     'cond.minutes': '{n} min',
-    'cond.emomMeta': '{rounds} min · one movement a minute',
+    'cond.emomMetaTogether': '{rounds} min · everything, every minute',
+    'cond.emomMetaRotate': '{rounds} min · one movement a minute',
+    'cond.everyMinute': 'Every minute, all of this',
     'cond.amrapMeta': 'As many rounds as possible in {n} min',
     'cond.amrapEst': 'about {n} rounds, if it goes well',
     'cond.intervalMeta': '{rounds} × {work}s on, {rest}s off',

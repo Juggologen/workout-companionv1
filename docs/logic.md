@@ -2152,3 +2152,77 @@ exceeding their window, 0 plan-versus-clock drift. Degenerate inputs the UI can
 produce — 0 blocks, 99 blocks, no kit, empty movement lists — clamp or report
 shortfall rather than throwing. Every screen free of raw i18n keys and horizontal
 overflow.
+
+---
+
+## 30. Two EMOMs, a real transition, and an honestly-named switch
+
+### The plan and the clock were describing different workouts
+
+The plan card listed a block's movements under "The minutes rotate", and the
+clock then handed them out one per minute. Both were technically accurate and
+together they were misleading: a card that looks like a list of things reads as
+a list of things you do, and the kicker doing the disambiguating was 10.5px
+uppercase micro-type above it.
+
+Worse, only one of the two real EMOMs existed. Both are ordinary:
+
+- **Together** — every movement, every minute. What most people mean by "EMOM:
+  5 burpees and 10 air squats".
+- **Rotate** — one movement per minute, cycling.
+
+`block.style` now says which, and it changes three things that used to be
+assumed:
+
+| | together | rotate |
+|---|---|---|
+| `blockSteps` | each step carries **all** movements | one movement per step |
+| sizing | movements **share** the 40 s | each gets 40 s |
+| stations | 2–3 (four in forty seconds is ten seconds each) | 2–4, dividing the duration evenly |
+
+The card says which in its header (`everything, every minute` versus `one
+movement a minute`) and in the list label, and the clock shows the whole list
+for a combined minute instead of naming one movement. The generator leans 65/35
+to `together`, since that is the commoner reading; the editor has a toggle.
+
+Absent `style` means `rotate`, because that is what every block saved before this
+existed actually was.
+
+### Transition time is a setting, not a constant
+
+`BLOCK_REST_MINUTES = 2` was a guess the app was unwilling to revisit, and the
+right number depends entirely on where you are: two minutes is plenty when the
+kit is at your feet and nothing at all when the rower is across a busy gym with
+somebody on it. `COND_REST_CHOICES` is `[0, 1, 2, 3, 5]`, stored per workout on
+`session.conditioning.restBetween`, with the constant as the fallback for
+everything saved before.
+
+It is not cosmetic. It comes out of the same total, so it changes how many blocks
+fit: twenty minutes takes three blocks at two minutes and two at five. The block
+chips, the split hint, `maxConditioningBlocks`, the plan total, the saved-workout
+card, the print sheet and the timer's step list all read it.
+
+The running timer **snapshots** it alongside the blocks, so editing the plan
+mid-clock cannot change how long the transition you are standing in lasts. The
+step cache is keyed on it as well as on the blocks, or a changed transition would
+be invisible to a cache that only watched the array's identity.
+
+At zero the divider is not drawn and the print note is omitted — a "0 min" label
+under a control that says "Straight on" is arithmetic where a word was chosen.
+
+### "No jumping" was not about jumping
+
+The switch filtered `impact === 'low'`, which also excludes **running**, shuttle
+runs and skipping. The label named one of the things it removed and hid the rest.
+
+It is worth keeping — bad knees and a neighbour below you are both real, and the
+picker's impact filter is for browsing rather than for constraining a generated
+workout — so it is now **"Easy on the joints"**, with a hint that lists what
+actually goes and what stays.
+
+### Measured
+
+7,500 workouts across 6 durations × 5 transition settings: 0 shortfalls, 0 over
+budget, 0 plan-versus-clock drift, 0 duplicate movements, **0 EMOM steps
+disagreeing with their block's declared style**, and 0 combined minutes
+prescribing more work than fits in sixty seconds.

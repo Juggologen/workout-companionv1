@@ -36,6 +36,7 @@ import {
   COMPLEXITY_LEVELS,
   generateConditioningWorkout,
   maxConditioningBlocks,
+  COND_REST_CHOICES,
   assembleConditioningBlock,
   defaultAmountFor,
   INTERVAL_SHAPES,
@@ -179,6 +180,7 @@ const COND_DEFAULTS = {
   minutes: 12,
   format: 'any',
   blocks: 2,
+  restBetween: BLOCK_REST_MINUTES,
   kit: ['bodyweight'],
   complexity: 'medium',
   lowImpact: false,
@@ -1548,6 +1550,29 @@ function viewConditioning() {
       // nine movements and a second half that does not feel like the first.
       quickSection(t('cond.blocks'), blockChips(c), blockSplitHint(c)),
 
+      // Only worth asking once there is more than one block to be between. The
+      // number matters more than it looks: it comes out of the same total, so
+      // five minutes of transition is five minutes not spent working.
+      maxConditioningBlocks(c.minutes, c.restBetween ?? BLOCK_REST_MINUTES) > 1 &&
+        quickSection(
+          t('cond.transition'),
+          h(
+            'div.chips',
+            COND_REST_CHOICES.map((n) =>
+              h(
+                'button.chip',
+                {
+                  class: (c.restBetween ?? BLOCK_REST_MINUTES) === n ? 'is-on' : '',
+                  'aria-pressed': String((c.restBetween ?? BLOCK_REST_MINUTES) === n),
+                  onclick: () => setCond({ restBetween: n }),
+                },
+                n === 0 ? t('cond.noTransition') : n + ' ' + t('units.min')
+              )
+            )
+          ),
+          t('cond.transitionHint')
+        ),
+
       // Shape gets the scrolling-card treatment the goals get, and for the same
       // reason: "EMOM" and "AMRAP" are jargon that mean nothing until someone
       // tells you, and this is the screen where they need telling.
@@ -1760,7 +1785,7 @@ function cardScroller(keys, current, titlePrefix, blurbPrefix, onPick, colourOf 
  * understandable rather than arbitrary.
  */
 function blockChips(c) {
-  const ceiling = maxConditioningBlocks(c.minutes);
+  const ceiling = maxConditioningBlocks(c.minutes, c.restBetween ?? BLOCK_REST_MINUTES);
   // The ceiling limits what is *shown as chosen*, never what is stored. Writing
   // the clamp back would mean scrolling the time strip down to eight minutes and
   // back up to thirty silently forgot that three blocks were wanted -- and the
@@ -1787,10 +1812,15 @@ function blockChips(c) {
 
 /** "3 × 6 min, 2 min between" — what the choice actually buys, in minutes. */
 function blockSplitHint(c) {
-  const n = Math.min(c.blocks, maxConditioningBlocks(c.minutes));
+  const n = Math.min(c.blocks, maxConditioningBlocks(c.minutes, c.restBetween ?? BLOCK_REST_MINUTES));
   if (n <= 1) return t('cond.blocksOne');
-  const per = Math.floor((c.minutes - (n - 1) * BLOCK_REST_MINUTES) / n);
-  return t('cond.blocksSplit', { n, per, rest: BLOCK_REST_MINUTES });
+  const rest = c.restBetween ?? BLOCK_REST_MINUTES;
+  const per = Math.floor((c.minutes - (n - 1) * rest) / n);
+  // "0 min between" is a number where the control says "Straight on", and the
+  // hint should read back what was chosen rather than restate it as arithmetic.
+  return rest === 0
+    ? t('cond.blocksSplitStraight', { n, per })
+    : t('cond.blocksSplit', { n, per, rest });
 }
 
 /**
@@ -1803,7 +1833,7 @@ function updateBlockChips(minutes) {
   const row = document.getElementById('cond-blocks');
   if (!row) return;
 
-  const ceiling = maxConditioningBlocks(minutes);
+  const ceiling = maxConditioningBlocks(minutes, condState().restBetween ?? BLOCK_REST_MINUTES);
   const c = condState();
   // Shown, not stored -- see `blockChips`. Scrolling past a short time must not
   // cost the user the answer they gave.
@@ -1826,6 +1856,7 @@ function conditioningBlocksFrom(c, seed = Math.floor(Math.random() * 2 ** 31)) {
       minutes: c.minutes,
       format: c.format,
       blocks: c.blocks || 1,
+      restBetween: c.restBetween ?? BLOCK_REST_MINUTES,
       kit: c.kit,
       complexity: c.complexity,
       lowImpact: c.lowImpact,
@@ -1903,7 +1934,7 @@ function runConditioning() {
  */
 function applyConditioning(blocks, standalone) {
   if (standalone) state.session = blankSession();
-  state.session.conditioning = { blocks };
+  state.session.conditioning = { blocks, restBetween: condState().restBetween ?? BLOCK_REST_MINUTES };
   saveDraft();
 
   state.freshQuick = true;
@@ -1942,6 +1973,7 @@ function editConditioning(index = 0) {
     index,
     isNew: !existing,
     format: existing?.format || 'emom',
+    style: existing?.style || 'together',
     minutes: existing?.minutes || 10,
     rounds: existing?.rounds || 3,
     intervalShape:
@@ -1975,6 +2007,7 @@ function condEditPreview() {
     minutes: e.minutes,
     rounds: e.rounds,
     movements: e.movements,
+    style: e.style,
     partner: e.partner,
     intervalShape: e.intervalShape,
   });
@@ -1993,7 +2026,7 @@ function saveCondEdit() {
   const blocks = conditioningBlocks().slice();
   blocks[e.index] = block;
 
-  state.session.conditioning = { blocks: blocks.filter(Boolean) };
+  state.session.conditioning = { blocks: blocks.filter(Boolean), restBetween: condRest() };
   state.condEdit = null;
   saveDraft();
   go('plan');
@@ -2043,6 +2076,28 @@ function viewCondEdit() {
             state.condEdit.minutes = minutes;
             updateCondPreview();
           })
+        ),
+
+      // The choice the plan card and the clock were disagreeing about, made
+      // explicit and put where it is decided.
+      e.format === 'emom' &&
+        quickSection(
+          t('cond.emomStyle'),
+          h(
+            'div.chips',
+            ['together', 'rotate'].map((s) =>
+              h(
+                'button.chip.chip-stack',
+                {
+                  class: (e.style || 'together') === s ? 'is-on' : '',
+                  'aria-pressed': String((e.style || 'together') === s),
+                  onclick: () => setCondEdit({ style: s }),
+                },
+                h('span.chip-name', t('cond.emomStyle.' + s))
+              )
+            )
+          ),
+          t('cond.emomStyleHint.' + (e.style || 'together'))
         ),
 
       e.format === 'intervals' &&
@@ -2639,7 +2694,7 @@ function reshuffleConditioning() {
   const blocks = conditioningBlocksFrom(inputs);
   if (!blocks) return;
 
-  state.session.conditioning = { blocks };
+  state.session.conditioning = { blocks, restBetween: condRest() };
   saveDraft();
   render();
 }
@@ -3687,10 +3742,23 @@ function condFormat() {
 }
 
 /** Wall-clock for the conditioning, transitions between blocks included. */
+/**
+ * How long you get between blocks in THIS workout.
+ *
+ * Stored on the session rather than read from the constant, because the right
+ * number depends on where you are: two minutes is plenty when the kit is at
+ * your feet and nothing at all when the rower is across a busy gym. Falls back
+ * to the default for every workout saved before the setting existed.
+ */
+function condRest(session = state.session) {
+  const stored = session?.conditioning?.restBetween;
+  return Number.isFinite(stored) ? stored : BLOCK_REST_MINUTES;
+}
+
 function condMinutes() {
   const blocks = conditioningBlocks();
   const worked = blocks.reduce((sum, b) => sum + (b.minutes || 0), 0);
-  return worked + Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
+  return worked + Math.max(0, blocks.length - 1) * condRest();
 }
 
 /** Every movement across every block, as catalog rows, for the body map. */
@@ -3726,7 +3794,13 @@ function condAmount(m) {
 function condMeta(block) {
   switch (block.format) {
     case 'emom':
-      return t('cond.emomMeta', { rounds: block.rounds });
+      // Which EMOM, in the header, because it is the difference between doing
+      // two movements every minute and doing one of them each minute -- and the
+      // card used to show a list that read as the first while the clock ran the
+      // second.
+      return block.style === 'rotate'
+        ? t('cond.emomMetaRotate', { rounds: block.rounds })
+        : t('cond.emomMetaTogether', { rounds: block.rounds });
     case 'amrap':
       return t('cond.amrapMeta', { n: block.minutes });
     case 'intervals':
@@ -3740,7 +3814,9 @@ function condMeta(block) {
 
 /** What the list underneath the header is a list OF. */
 function condListLabel(block) {
-  if (block.format === 'emom') return t('cond.eachMinute');
+  if (block.format === 'emom') {
+    return block.style === 'rotate' ? t('cond.eachMinute') : t('cond.everyMinute');
+  }
   if (block.format === 'intervals') return t('cond.eachInterval');
   if (block.format === 'tabata') return t('cond.tabataEach');
   return t('cond.roundIs');
@@ -3784,13 +3860,13 @@ function conditioningSection() {
     // attackable, so a plan that jumped straight from one card to the next
     // would be describing a harder session than the one it costed.
     blocks.flatMap((block, i) =>
-      i === 0
+      i === 0 || condRest() === 0
         ? [condCard(block, i)]
         : [
             h(
               'div.cond-rest',
               h('span.cond-rest-line'),
-              h('span.cond-rest-label', t('cond.between', { n: BLOCK_REST_MINUTES })),
+              h('span.cond-rest-label', t('cond.between', { n: condRest() })),
               h('span.cond-rest-line')
             ),
             condCard(block, i),
@@ -4780,6 +4856,9 @@ function startConditioning(session = state.session) {
     sessionName: sessionTitle(session),
     date: today(),
     blocks: JSON.parse(JSON.stringify(blocks)),
+    // Snapshotted with the blocks: editing the plan mid-clock must not change
+    // how long the transition you are standing in lasts.
+    restBetween: condRest(session),
     index: 0,
     running: false,
     endsAt: 0,
@@ -4804,12 +4883,17 @@ function startConditioning(session = state.session) {
  * nothing. Keyed on the blocks array's identity, which only changes when a new
  * timer is started.
  */
-let stepCache = { blocks: null, steps: [] };
+let stepCache = { blocks: null, rest: null, steps: [] };
 
 function timerSteps() {
   const blocks = state.timer?.blocks;
   if (!blocks) return [];
-  if (stepCache.blocks !== blocks) stepCache = { blocks, steps: workoutSteps(blocks) };
+  // The transition is part of the key, not just the blocks: it is stored on the
+  // running timer and decides how many transition steps the list holds.
+  const rest = state.timer.restBetween ?? BLOCK_REST_MINUTES;
+  if (stepCache.blocks !== blocks || stepCache.rest !== rest) {
+    stepCache = { blocks, rest, steps: workoutSteps(blocks, rest) };
+  }
   return stepCache.steps;
 }
 
@@ -5188,6 +5272,8 @@ function viewTimer() {
   const countUp = step.kind === 'fortime';
   const shown = countUp ? step.seconds - remaining : remaining;
   const open = step.kind === 'amrap' || step.kind === 'fortime';
+  // A combined EMOM minute has a list worth showing too: it IS the minute.
+  const showList = open || !!step.movements;
   const resting = step.kind === 'rest' || step.kind === 'between';
   const score = tm.scores[step.block ?? 0] || { rounds: 0 };
 
@@ -5239,9 +5325,10 @@ function viewTimer() {
         )
       ),
 
-      // The round list for the open formats: what one round is, so you know
-      // what you are repeating without leaving the screen.
-      open &&
+      // What this window contains: one AMRAP round, or everything a combined
+      // EMOM minute asks for. Either way it is the thing you are reading off
+      // the screen mid-effort, so it stays on it.
+      showList &&
         h(
           'ol.tmr-list',
           step.movements.map((m) =>
@@ -5305,6 +5392,10 @@ function stepName(step) {
   if (step.kind === 'amrap' || step.kind === 'fortime') {
     return tp('cond.movementCount', step.movements.length);
   }
+  // A combined EMOM minute holds every movement, and the list underneath is
+  // what you read. The heading counts them rather than naming one, because
+  // naming one would be the same lie the plan card was telling.
+  if (step.movements) return tp('cond.movementCount', step.movements.length);
   if (!step.movement) return t('cond.rest');
   const name = localized(state.catalog.byId.get(step.movement.ref)?.name) || '—';
   return `${condAmount(step.movement)} ${name}`;
@@ -5658,7 +5749,7 @@ function savedRow(s) {
   const blocks = s.conditioning?.blocks || [];
   const condMins =
     blocks.reduce((sum, b) => sum + (b.minutes || 0), 0) +
-    Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
+    Math.max(0, blocks.length - 1) * condRest(s);
   const contents = exercises.length
     ? tp('saved.lifts', exercises.length)
     : tp('cond.blockCount', blocks.length);
@@ -7038,7 +7129,7 @@ function buildPrintSheet(session) {
   const blocks = session.conditioning?.blocks || [];
   const condTotal =
     blocks.reduce((sum, b) => sum + (b.minutes || 0), 0) +
-    Math.max(0, blocks.length - 1) * BLOCK_REST_MINUTES;
+    Math.max(0, blocks.length - 1) * condRest(session);
   const liftless = exercises.length === 0 && blocks.length > 0;
 
   return h(
@@ -7132,7 +7223,8 @@ function buildPrintSheet(session) {
         h(
           'div',
           h('p.print-how', condMeta(block)),
-          i > 0 && h('p.print-how', t('cond.betweenPrint', { n: BLOCK_REST_MINUTES })),
+          i > 0 && condRest(session) > 0 &&
+            h('p.print-how', t('cond.betweenPrint', { n: condRest(session) })),
           h(
             'ol.print-list',
             block.movements.map((m) =>
